@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>매트릭스 플래너</title>
+<meta name="description" content="명조: 워더링 웨이브 종말 매트릭스 파티 배치 도구">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbit&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: 3-column ops console — roster pool | team stack | cycle intel. Stacks to one column on phones. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --panel-2:#f5f7fa; --line:#d6dce4; --fg:#18202b; --muted:#5b6778;
+  --accent:#0f8f8a; --accent-ink:#ffffff; --warn:#c2551a; --ok:#1f8a4c; --danger:#b4233c;
+  --glacio:#2f8fd0; --fusion:#d9542e; --electro:#8a4fd6; --aero:#1d9f7c; --spectro:#b8901a; --havoc:#a8336b;
+  --f-display:"Orbit","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Consolas",monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1218; --panel:#141b24; --panel-2:#1a232e; --line:#2a3644; --fg:#e4eaf1; --muted:#8d9aab;
+  --accent:#2ec4bc; --accent-ink:#06201f; --warn:#f08a4b; --ok:#4fc583; --danger:#f0607a;
+  --glacio:#5cb6f0; --fusion:#f07a55; --electro:#b383f5; --aero:#45cfa6; --spectro:#e6c04e; --havoc:#e0679f;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1218; --panel:#141b24; --panel-2:#1a232e; --line:#2a3644; --fg:#e4eaf1; --muted:#8d9aab;
+  --accent:#2ec4bc; --accent-ink:#06201f; --warn:#f08a4b; --ok:#4fc583; --danger:#f0607a;
+  --glacio:#5cb6f0; --fusion:#f07a55; --electro:#b383f5; --aero:#45cfa6; --spectro:#e6c04e; --havoc:#e0679f;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:16px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand h1{font-family:var(--f-display);font-size:22px;margin:0;letter-spacing:.02em;font-weight:400}
+.brand small{color:var(--muted);font-family:var(--f-mono);font-size:11px;letter-spacing:.08em}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+nav.tabs a{padding:7px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;border:1px solid transparent}
+nav.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg)}
+nav.tabs a:hover:not([aria-current]){border-color:var(--line);color:var(--fg)}
+.save{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.save.ok i{background:var(--ok)} .save.busy i{background:var(--warn)}
+main{padding-top:16px}
+section.view{display:none} section.view.on{display:block}
+
+/* plan layout */
+.plan{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr) minmax(250px,320px);gap:16px;align-items:start}
+@media (max-width:1100px){.plan{grid-template-columns:minmax(240px,300px) minmax(0,1fr)} .intel{grid-column:1/-1}}
+@media (max-width:720px){.plan{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.panel>h2,.ph{display:flex;align-items:center;gap:8px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;letter-spacing:.04em}
+.ph .sp{margin-left:auto}
+.lbl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pool{position:sticky;top:12px}
+.pool .tools{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+input[type=search],input[type=text],input[type=number],select,textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+.elf{display:flex;gap:4px;flex-wrap:wrap}
+.elf button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:2px 9px;font-size:12px;color:var(--muted)}
+.elf button[aria-pressed="true"]{color:var(--fg);border-color:currentColor;background:var(--panel-2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;padding:12px 14px;max-height:62vh;overflow:auto}
+@media (max-width:720px){.grid{max-height:40vh}}
+
+/* character token */
+.tok{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tok .face{width:56px;height:56px;border-radius:10px;display:grid;place-items:center;position:relative;color:#fff;
+  background:linear-gradient(150deg,var(--ec) 0%,color-mix(in srgb,var(--ec) 55%,#000) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.tok .face .g{font-family:var(--f-display);font-size:20px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tok .face svg{position:absolute;left:4px;top:4px;width:14px;height:14px;opacity:.9}
+.tok .face .r{position:absolute;right:4px;top:3px;font-size:9px;font-family:var(--f-mono);opacity:.9}
+.tok .face.pic{background-size:cover;background-position:center 18%;background-color:var(--ec)}
+.tok .face.pic .g{display:none}
+.tok .face.pic svg,.tok .face.pic .r{filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
+.tok .face.pic::after{content:"";position:absolute;inset:0;border-radius:10px;box-shadow:inset 0 -3px 0 var(--ec),inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none}
+.pt{display:flex;align-items:center;gap:6px}
+.pt .th{width:34px;height:34px;border-radius:6px;background:var(--panel-2) center 18%/cover no-repeat;border:1px solid var(--line);flex:none}
+.pt button{border:1px solid var(--line);background:transparent;border-radius:5px;padding:2px 7px;font-size:12px}
+.pt button.del{color:var(--danger)}
+.tok .nm{font-size:11px;text-align:center;line-height:1.2;max-width:68px;word-break:keep-all}
+.tok .cnt{position:absolute;right:-3px;bottom:16px;font-family:var(--f-mono);font-size:10px;background:var(--fg);color:var(--bg);border-radius:999px;padding:0 5px;min-width:16px;text-align:center}
+.tok .cnt.two{background:var(--accent);color:var(--accent-ink)}
+.tok .bonus{position:absolute;left:-3px;bottom:16px;font-size:9px;font-weight:700;background:var(--warn);color:#fff;border-radius:4px;padding:0 3px}
+.grid .tok{cursor:grab}
+.grid .tok.used{opacity:.32;cursor:not-allowed}
+.grid .tok.sel .face{outline:3px solid var(--accent);outline-offset:2px}
+.tok.dragging{opacity:.4}
+
+/* teams */
+.teams-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.teams-h h2{font-family:var(--f-display);font-weight:400;font-size:18px;margin:0 auto 0 0}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 11px;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--fg)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.hint{color:var(--muted);font-size:12px;margin:0 0 10px}
+.teams{display:flex;flex-direction:column;gap:8px}
+.team{display:grid;grid-template-columns:44px repeat(3,74px) minmax(0,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+@media (max-width:560px){.team{grid-template-columns:36px repeat(3,minmax(0,1fr))} .team .meta{grid-column:1/-1}}
+.team .no{font-family:var(--f-mono);font-size:20px;font-weight:700;color:var(--muted);text-align:center;line-height:1}
+.team .no small{display:block;font-size:9px;letter-spacing:.1em;margin-top:2px}
+.slot{height:84px;border:1.5px dashed var(--line);border-radius:10px;display:grid;place-items:center;transition:border-color .12s,background .12s}
+.slot.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.slot.empty::after{content:"+";color:var(--line);font-size:22px}
+.slot.filled{border-style:solid;border-color:transparent}
+.slot .tok{cursor:grab}
+.meta{display:flex;flex-direction:column;gap:6px;min-width:0}
+.meta .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.meta select{width:auto;max-width:100%;padding:4px 6px;font-size:12px}
+.score{font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.score b{font-size:15px}
+.chip{font-size:11px;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
+.chip.w{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.chip.g{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}
+.chip.el{color:var(--ec);border-color:color-mix(in srgb,var(--ec) 55%,transparent)}
+.mini{display:flex;gap:2px;margin-left:auto}
+.mini button{border:0;background:transparent;color:var(--muted);padding:2px 6px;border-radius:4px;font-size:13px}
+.mini button:hover{background:var(--panel-2);color:var(--fg)}
+
+/* intel */
+.intel{display:flex;flex-direction:column;gap:12px}
+.intel .body{padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.boss{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.boss .ix{font-family:var(--f-mono);color:var(--muted);font-size:12px;padding-top:2px}
+.boss b{font-size:13px}
+.boss p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.fx{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.fx li{font-size:12px;line-height:1.45;color:var(--fg);padding-left:8px;border-left:2px solid var(--ok)}
+.fx li.t{border-left-color:var(--warn)}
+.fx li span{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;margin-right:6px;color:var(--ok)}
+.fx li.t span{color:var(--warn)}
+.buff b{font-size:13px} .buff ul{margin:4px 0 0;padding-left:16px;font-size:12px;color:var(--muted)}
+.buff .tag{font-size:11px;color:var(--accent);font-weight:600}
+.ench{display:flex;flex-wrap:wrap;gap:4px}
+.period{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+
+/* roster page */
+.roster-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.roster-h h2{font-family:var(--f-display);font-weight:400;font-size:18px;margin:0 auto 0 0}
+.rtable-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:middle}
+th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);font-weight:500;text-transform:uppercase;background:var(--panel-2);position:sticky;top:0}
+td .nmc{display:flex;align-items:center;gap:8px}
+td .dot{width:10px;height:10px;border-radius:3px;background:var(--ec);flex:none}
+td input[type=number]{width:64px;padding:4px 6px}
+td select{width:auto;padding:4px 6px}
+tr.off td:not(:first-child){opacity:.45}
+.sw{width:18px;height:18px;accent-color:var(--accent)}
+
+/* cycle / data pages */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.card-b{padding:14px;display:flex;flex-direction:column;gap:10px}
+textarea{min-height:360px;font-family:var(--f-mono);font-size:12px;line-height:1.45;resize:vertical}
+.msg{font-size:12px;min-height:18px}
+.msg.err{color:var(--danger)} .msg.okm{color:var(--ok)}
+.prose{max-width:66ch;color:var(--muted);font-size:13px}
+.prose b{color:var(--fg)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>매트릭스 플래너</h1><small id="cycleTag">ENDSTATE MATRIX</small></div>
+  <nav class="tabs" aria-label="페이지">
+    <a href="#plan" data-v="plan">배치</a>
+    <a href="#roster" data-v="roster">보유 캐릭터</a>
+    <a href="#cycle" data-v="cycle">주기 설정</a>
+    <a href="#data" data-v="data">데이터</a>
+  </nav>
+  <div class="save" id="save"><i></i><span>불러오는 중</span></div>
+  <button class="btn" id="authBtn" type="button" hidden>Google로 로그인</button>
+</header>
+
+<main>
+<!-- PLAN -->
+<section class="view" id="v-plan">
+  <div class="plan">
+    <aside class="panel pool" aria-label="보유 공명자">
+      <div class="ph">보유 공명자 <span class="sp lbl" id="poolCount"></span></div>
+      <div class="tools">
+        <input type="search" id="q" placeholder="이름으로 검색" autocomplete="off">
+        <div class="elf" id="elFilter"></div>
+      </div>
+      <div class="grid" id="pool"></div>
+    </aside>
+
+    <div>
+      <div class="teams-h">
+        <h2>파티 편성</h2>
+        <button class="btn pri" id="btnSort" title="약한 파티가 앞, 강한 파티가 뒤로 가도록 정렬">추천 순서로 정렬</button>
+        <button class="btn" id="btnAdd">+ 파티 추가</button>
+        <button class="btn ghost danger" id="btnClear">전체 비우기</button>
+      </div>
+      <p class="hint">공명자를 슬롯으로 끌어다 놓으세요. 슬롯의 공명자를 우클릭하면 해제됩니다. 터치 화면에서는 공명자를 누른 뒤 빈 슬롯을 누르고, 배치된 공명자를 길게 누르면 해제됩니다.</p>
+      <div class="teams" id="teams"></div>
+    </div>
+
+    <aside class="intel" id="intel"></aside>
+  </div>
+</section>
+
+<!-- ROSTER -->
+<section class="view" id="v-roster">
+  <div class="roster-h">
+    <h2>보유 캐릭터</h2>
+    <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
+    <button class="btn" id="ownAll">전체 보유</button>
+    <button class="btn ghost" id="ownNone">전체 해제</button>
+  </div>
+  <p class="hint">체크한 공명자만 배치 화면에 나타납니다. 레벨·공명 체인·무기 정보는 파티 강도 점수와 이후 추천 기능에 쓰입니다.</p>
+  <div class="rtable-wrap">
+    <table>
+      <thead><tr><th>보유</th><th>초상화</th><th>공명자</th><th>속성</th><th>성급</th><th>배치 횟수</th><th>레벨</th><th>공명 체인</th><th>무기 성급</th><th>재련</th><th>점수</th></tr></thead>
+      <tbody id="rbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CYCLE -->
+<section class="view" id="v-cycle">
+  <div class="two">
+    <div class="panel">
+      <div class="ph">현재 주기 데이터</div>
+      <div class="card-b" id="cycleView"></div>
+    </div>
+    <div class="panel">
+      <div class="ph">주기 데이터 편집 (JSON) <span class="sp"></span></div>
+      <div class="card-b">
+        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 내 데이터에만 적용됩니다.</p>
+        <textarea id="cycleJson" spellcheck="false" aria-label="주기 데이터 JSON"></textarea>
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn pri" id="cycleSave">적용</button>
+          <button class="btn" id="cycleReset">기본값(3.7)으로 되돌리기</button>
+        </div>
+        <div class="msg" id="cycleMsg"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA -->
+<section class="view" id="v-data">
+  <div class="two">
+    <div class="panel">
+      <div class="ph">저장과 백업</div>
+      <div class="card-b">
+        <dl class="kv" id="storeInfo"></dl>
+        <p class="prose">오른쪽 위 <b>Google로 로그인</b>을 누르면 보유 캐릭터·성장도·파티 편성이 <b>내 계정에만</b> 저장되어 다른 기기에서도 그대로 열립니다. 다른 사람은 자기 데이터만 볼 수 있습니다. 로그인하지 않으면 이 브라우저에 저장되니, 아래 JSON으로 백업해 두세요.</p>
+        <label class="lbl" for="exportBox">내보내기 (복사해서 보관)</label>
+        <textarea id="exportBox" readonly spellcheck="false" style="min-height:140px"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btnCopy">복사</button>
+          <button class="btn" id="btnDownload" hidden>파일로 저장</button>
+        </div>
+        <label class="lbl" for="importBox">가져오기 (백업 JSON 붙여넣기)</label>
+        <textarea id="importBox" spellcheck="false" style="min-height:120px" placeholder='{"v":1, ...}'></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn pri" id="btnImport">가져오기</button>
+          <label class="btn" style="display:inline-flex;gap:6px;align-items:center">파일 선택<input type="file" id="fileIn" accept=".json,application/json" hidden></label>
+        </div>
+        <div class="msg" id="dataMsg"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph">공명자 데이터 (JSON)</div>
+      <div class="card-b">
+        <p class="prose">새 공명자가 나오면 목록 끝에 한 줄을 추가하세요. 속성은 <b>glacio, fusion, electro, aero, spectro, havoc</b> 중 하나, 역할은 <b>dps, sub, support</b> 중 하나입니다. 추가한 공명자는 보유 목록과 배치 화면, 점수 계산에 바로 반영됩니다.</p>
+        <textarea id="charJson" spellcheck="false" aria-label="공명자 데이터 JSON"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn pri" id="charSave">적용</button>
+          <button class="btn" id="charReset">기본 목록으로 되돌리기</button>
+        </div>
+        <div class="msg" id="charMsg"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script src="firebase-config.js"></script>
+<script>
+(()=>{
+"use strict";
+/* ---------- static data ---------- */
+const EL={glacio:"응결",fusion:"용융",electro:"전도",aero:"기류",spectro:"회절",havoc:"인멸"};
+const EL_ORDER=["glacio","fusion","electro","aero","spectro","havoc"];
+const ICON={ // original simple glyphs, not game assets
+ glacio:'<svg viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.6"><path d="M7 1v12M1.8 4l10.4 6M12.2 4L1.8 10"/></svg>',
+ fusion:'<svg viewBox="0 0 14 14" fill="#fff"><path d="M7 1C9 4 11 5.5 11 8.5a4 4 0 0 1-8 0C3 6.5 4.5 5.5 5 4c.6 1.5 1.3 2 2 2.2C6.6 4.6 6.5 3 7 1z"/></svg>',
+ electro:'<svg viewBox="0 0 14 14" fill="#fff"><path d="M8.5 1L3 8h3.5L5.5 13 11 6H7.5z"/></svg>',
+ aero:'<svg viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M1.5 5h7a2 2 0 1 0-2-2M1.5 9h9.5a1.8 1.8 0 1 1-1.8 1.8"/></svg>',
+ spectro:'<svg viewBox="0 0 14 14" fill="#fff"><path d="M7 1l1.4 4.6L13 7l-4.6 1.4L7 13l-1.4-4.6L1 7l4.6-1.4z"/></svg>',
+ havoc:'<svg viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 2a5 5 0 0 1 0 10a2.5 2.5 0 0 1 0-5a2.5 2.5 0 0 0 0-5z" fill="#fff"/></svg>'
+};
+// id, 이름, 속성, 성급, 역할
+const DEFAULT_CHARS=[
+ ["hiyuki","히유키","glacio",5,"dps"],["lucilla","루실라","glacio",5,"sub"],["suisui","수수","glacio",5,"support"],
+ ["carlotta","카를로타","glacio",5,"dps"],["zhezhi","절지","glacio",5,"sub"],["lingyang","능양","glacio",5,"dps"],
+ ["sanhua","산화","glacio",4,"sub"],["baizhi","백지","glacio",4,"support"],["youhu","유호","glacio",4,"support"],
+ ["mornye","모니에","fusion",5,"support"],["aemeath","에이메스","fusion",5,"dps"],["denia","데니아","fusion",5,"sub"],
+ ["jingran","경연","fusion",5,"dps"],["lupa","루파","fusion",5,"sub"],["galbrena","갈브레나","fusion",5,"dps"],
+ ["encore","앙코","fusion",5,"dps"],["changli","장리","fusion",5,"dps"],["brant","브렌트","fusion",5,"sub"],
+ ["mortefi","모르테피","fusion",4,"sub"],["chixia","치샤","fusion",4,"dps"],
+ ["hsin","여우의 별자리","electro",5,"dps"],["suoming","쇄명","electro",5,"dps"],["augusta","아우구스타","electro",5,"dps"],
+ ["rebecca","레베카","electro",5,"sub"],["rover_e","방랑자(전도)","electro",5,"sub"],["calcharo","카카로","electro",5,"dps"],
+ ["xiangliyao","상리요","electro",5,"dps"],["yinlin","음림","electro",5,"sub"],["buling","복링","electro",4,"support"],
+ ["yuanwu","연무","electro",4,"sub"],["lumi","루미","electro",4,"sub"],
+ ["sigrika","시그리카","aero",5,"dps"],["ciaccona","샤콘","aero",5,"sub"],["cartethyia","카르티시아","aero",5,"dps"],
+ ["iuno","유노","aero",5,"sub"],["qiuyuan","구원","aero",5,"dps"],["qingxiao","청초","aero",5,"dps"],
+ ["jiyan","기염","aero",5,"dps"],["rover_a","방랑자(기류)","aero",5,"sub"],["jianxin","감심","aero",5,"support"],
+ ["aalto","알토","aero",4,"sub"],["yangyang","양양","aero",4,"sub"],
+ ["shorekeeper","파수인","spectro",5,"support"],["lynae","린네","spectro",5,"sub"],["verina","벨리나","spectro",5,"support"],
+ ["luuk","루크 헤르센","spectro",5,"dps"],["jinhsi","금희","spectro",5,"dps"],["phoebe","페비","spectro",5,"sub"],
+ ["zani","자니","spectro",5,"dps"],["lucy","루시","spectro",5,"dps"],["rover_s","방랑자(회절)","spectro",5,"sub"],
+ ["chisa","치사","havoc",5,"sub"],["xuanling","양양·현령","havoc",5,"dps"],["phrolova","플로로","havoc",5,"dps"],
+ ["cantarella","칸타렐라","havoc",5,"sub"],["camellya","카멜리아","havoc",5,"dps"],["roccia","로코코","havoc",5,"sub"],
+ ["rover_h","방랑자(인멸)","havoc",5,"dps"],["danjin","단근","havoc",4,"dps"],["taoqi","도기","havoc",4,"support"]
+].map(([id,name,el,rar,role])=>({id,name,el,rar,role}));
+
+const DEFAULT_CYCLE={
+ name:"S2 적대의 선봉 · 3페이즈 (3.7)",
+ period:"2026-10-07 ~ 2026-11-12",
+ bosses:[
+  {name:"지옥불 기사",en:"Inferno Rider",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다.",effects:[
+    {kind:"benefit",tags:["shield"],text:"공명자가 보호막을 가지고 있으면 받는 피해가 줄어듭니다. (보스의 화상 지속 피해가 HP 50% 초과 또는 보호막 보유 시 90% 감소)"},
+    {kind:"threat",round:"2R+",text:"공중에 있지 않은 주변 공명자에게 용융 지속 피해"}]},
+  {name:"봉정계유",en:"Forbidden Bastion",res:"glacio",note:"응결 메인 딜러는 피하는 편이 좋습니다.",effects:[
+    {kind:"benefit",tags:["shield"],text:"공명자가 실드를 얻으면 보스가 받는 피해 증가 (최대 40%)"},
+    {kind:"benefit",tags:["dodge"],text:"회피 반격마다 공명 에너지 10 회복, 진동 강도 20% 감소 (2초 쿨타임)"},
+    {kind:"threat",round:"2R+",text:"공격력 30% 증가"}]},
+  {name:"크라운리스",en:"Crownless",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
+    {kind:"benefit",tags:["unison"],text:"협주 반응을 발동한 공명자에게 받는 모든 피해 40% 증가 (30초)"},
+    {kind:"threat",round:"2R+",text:"진동 강도 감소 효율 20% 감소"}]},
+  {name:"하늘의 기관 인형 - 겁살",en:"Calamity Effigy",res:"aero",note:"전도 이상 효과를 걸 수 있는 파티가 유리합니다.",effects:[
+    {kind:"benefit",tags:["dodge"],text:"회피 반격 명중 시 불굴 2중첩 (경직·제어 무효, 피격마다 1중첩 소모, 1초에 최대 1회)"},
+    {kind:"threat",round:"2R+",tags:["electro","negative"],text:"공격력 40% 증가. 전도 이상(Electro Flare) 상태에서는 해제"}]},
+  {name:"매트릭스 미믹",en:"Matrix Mimic",res:null,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
+    {kind:"benefit",tags:["any"],text:"준 피해가 1.1배 점수로 계산, 처치 시 1,000점 (S2 한정)"},
+    {kind:"benefit",text:"처치 후 15초간 파티 전체 피해·경직 무효"}]}
+ ],
+ buffs:[
+  {id:"general",name:"일반 강화",type:"일반 공격",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 일반 공격 피해 +20%",dmg:20,cond:"basic"}]},
+  {id:"negative",name:"강화: 이상 효과",type:"이상효과",effects:[{text:"이상 효과에 걸린 대상이 받는 모든 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"추가로 전도 피해 +30%",dmg:30,cond:"electro"}]},
+  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 협주 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"협주 반응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
+  {id:"tune",name:"강화: 조화도 파괴",type:"조화 밀집",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"해킹 이탈 부여 시 해당 공명자 피해 +30% (30초)",dmg:30,cond:"hack"}]}
+ ],
+ vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling"],
+ emergency:{id:"lynae",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
+ dmgBonus:{roccia:20,brant:25,cantarella:25,camellya:25,phoebe:20,carlotta:25,zhezhi:20,yinlin:20,jinhsi:25,changli:25,jiyan:25,xiangliyao:25}
+};
+
+const EXAMPLE_TEAMS=[
+ {slots:["camellya","sanhua","verina"],buff:"general",example:true},
+ {slots:["qingxiao","denia","mornye"],buff:"tune",example:true},
+ {slots:["jingran","iuno","shorekeeper"],buff:"basic",example:true},
+ {slots:["hsin","suoming","shorekeeper"],buff:"negative",example:true}
+];
+
+/* ---------- state ---------- */
+const LS_KEY="wuwa-matrix-planner-v1";
+let state=null;            // {v,owned,growth,teams,cycle,chars}
+let chars=[], charMap={}, cycle=null;
+let db=null, docRef=null, storeMode="local";
+let selected=null;         // tap-to-place selection
+let portraits={};          // charId -> file name in portraits/
+const picUrl=id=>"portraits/"+encodeURIComponent(portraits[id]);
+let currentUser=null, fb=null;
+const ui={el:null,q:"",rq:""};
+
+const clone=o=>JSON.parse(JSON.stringify(o));
+function freshState(){return {v:1,owned:Object.fromEntries(DEFAULT_CHARS.map(c=>[c.id,true])),growth:{},teams:clone(EXAMPLE_TEAMS).concat(Array.from({length:4},()=>({slots:[null,null,null],buff:null}))),cycle:null,chars:null}}
+function normalize(s){
+  const d=freshState();
+  if(!s||typeof s!=="object") return d;
+  const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
+    teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null};
+  return o;
+}
+function derive(){
+  chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
+  charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
+  chars.forEach(c=>{ if(!(c.id in state.owned)) state.owned[c.id]=true; });
+  cycle=state.cycle||DEFAULT_CYCLE;
+}
+function vigorOf(id){
+  let v=(cycle.vigor2||[]).includes(id)?2:1;
+  if(cycle.emergency&&cycle.emergency.id===id) v+= (cycle.emergency.extraVigor||1);
+  return v;
+}
+function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(s===id)n++}));return n}
+
+/* strength — placeholder formula, replace when growth-based recommendation is built */
+function charScore(id){
+  const c=charMap[id]; if(!c) return 0;
+  const g=state.growth[id]||{};
+  const lv=clamp(+g.lv||90,1,90), ch=clamp(+g.chain||0,0,6), wr=+g.wr||(c.rar===5?5:4), rf=clamp(+g.ref||1,1,5);
+  let s=(c.rar===5?10:6);
+  s+=ch*1.5;
+  s+=(wr===5?4:wr===4?1.5:0)+(rf-1)*0.4;
+  s*=0.5+0.5*(lv/90);
+  const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
+  return s;
+}
+function teamScore(t){return t.slots.reduce((a,id)=>a+(id?charScore(id):0),0)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
+
+/* ---------- persistence ---------- */
+let saveTimer=null;
+function setSave(cls,text){const el=document.getElementById("save");el.className="save "+cls;el.lastElementChild.textContent=text}
+function persist(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}
+  if(!docRef){setSave("ok","이 브라우저에 저장됨");refreshExport();return}
+  setSave("busy","저장 중");
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{await fb.fsM.setDoc(docRef,{data:JSON.stringify(state),savedAt:Date.now()});setSave("ok","내 계정에 저장됨")}
+    catch(e){setSave("busy","계정 저장 실패 · 브라우저에 보관됨")}
+  },700);
+  refreshExport();
+}
+function loadLocal(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+
+const FB_VER="10.12.2";
+async function connect(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!cfg||!cfg.apiKey){renderAuth();renderStoreInfo();return}
+  try{
+    const base=`https://www.gstatic.com/firebasejs/${FB_VER}/`;
+    const [appM,authM,fsM]=await Promise.all([import(base+"firebase-app.js"),import(base+"firebase-auth.js"),import(base+"firebase-firestore.js")]);
+    const app=appM.initializeApp(cfg);
+    fb={auth:authM.getAuth(app),fs:fsM.getFirestore(app),authM,fsM};
+    renderAuth();
+    authM.onAuthStateChanged(fb.auth,async u=>{
+      currentUser=u;renderAuth();
+      if(!u){docRef=null;storeMode="local";setSave("ok","이 브라우저에 저장됨");renderStoreInfo();return}
+      docRef=fsM.doc(fb.fs,"users",u.uid);
+      try{
+        setSave("busy","계정에서 불러오는 중");
+        const snap=await fsM.getDoc(docRef);storeMode="account";
+        let parsed=null;
+        if(snap.exists()){try{parsed=JSON.parse(snap.data().data)}catch(e){}}
+        if(parsed){state=normalize(parsed);derive();renderAll();try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}setSave("ok","내 계정에서 불러옴")}
+        else persist(); // 이 계정의 첫 로그인: 지금 브라우저의 데이터를 계정에 올림
+      }catch(e){docRef=null;storeMode="local";setSave("busy","계정 데이터를 불러오지 못함 · 브라우저에 저장")}
+      renderStoreInfo();
+    });
+  }catch(e){fb=null;renderAuth();}
+}
+function renderAuth(){
+  const b=document.getElementById("authBtn");
+  if(!fb){b.hidden=true;return}
+  b.hidden=false;
+  b.textContent=currentUser?`로그아웃 (${currentUser.displayName||currentUser.email||"계정"})`:"Google로 로그인";
+}
+document.getElementById("authBtn").addEventListener("click",async()=>{
+  if(!fb)return;
+  try{
+    if(currentUser) await fb.authM.signOut(fb.auth);
+    else await fb.authM.signInWithPopup(fb.auth,new fb.authM.GoogleAuthProvider());
+  }catch(e){flash("로그인하지 못했습니다: "+(e&&e.code||"오류"))}
+});
+
+/* ---------- portraits (portraits/ 폴더 + 빌드 때 만드는 index.json) ---------- */
+function matchChar(fname){
+  const base=fname.replace(/\.[^.]+$/,"").normalize("NFC").trim().toLowerCase().replace(/[\s_\-·]/g,"");
+  return chars.find(c=>c.id.toLowerCase().replace(/[_\-]/g,"")===base||c.name.replace(/[\s·]/g,"").toLowerCase()===base);
+}
+async function loadPortraits(){
+  try{
+    const r=await fetch("portraits/index.json",{cache:"no-cache"});if(!r.ok)return;
+    const files=await r.json();if(!Array.isArray(files))return;
+    const m={};files.forEach(f=>{if(typeof f!=="string")return;const c=matchChar(f);if(c)m[c.id]=f});
+    portraits=m;rerenderPlan();renderRoster();
+  }catch(e){}
+}
+
+/* ---------- render: pool ---------- */
+const $=s=>document.querySelector(s);
+function tokenHTML(c,extra=""){
+  const bonus=(cycle.dmgBonus||{})[c.id];
+  const pic=portraits[c.id];
+  return `<div class="face${pic?" pic":""}" style="--ec:var(--${c.el})${pic?`;background-image:url('${picUrl(c.id)}')`:""}">${ICON[c.el]}<span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}</span>`:""}${extra}`;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderFilter(){
+  const box=$("#elFilter");
+  box.innerHTML=`<button data-el="" aria-pressed="${!ui.el}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" style="color:var(--${e})" aria-pressed="${ui.el===e}">${EL[e]}</button>`).join("");
+}
+function renderPool(){
+  const q=ui.q.trim();
+  const list=chars.filter(c=>state.owned[c.id]).filter(c=>!ui.el||c.el===ui.el).filter(c=>!q||c.name.includes(q)||c.id.includes(q.toLowerCase()));
+  list.sort((a,b)=>EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||b.rar-a.rar);
+  $("#poolCount").textContent=`${list.length}명`;
+  const pool=$("#pool");
+  if(!list.length){pool.innerHTML=`<p class="hint" style="grid-column:1/-1">${chars.some(c=>state.owned[c.id])?"검색 결과가 없습니다.":"보유 캐릭터 탭에서 가진 공명자를 체크하세요."}</p>`;return}
+  pool.innerHTML=list.map(c=>{
+    const max=vigorOf(c.id),left=max-usedCount(c.id);
+    const cnt=`<span class="cnt ${max>1?"two":""}" title="남은 배치 횟수">${left}/${max}</span>`;
+    return `<div class="tok ${left<=0?"used":""} ${selected===c.id?"sel":""}" draggable="${left>0}" data-id="${c.id}" data-src="pool" role="button" tabindex="0" aria-label="${esc(c.name)} 남은 ${left}회">${tokenHTML(c,cnt)}</div>`;
+  }).join("");
+}
+
+/* ---------- render: teams ---------- */
+function buffOptions(sel){return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}
+function teamWarnings(t){
+  const out=[];const ids=t.slots.filter(Boolean);
+  const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
+  (cycle.bosses||[]).forEach(b=>{ if(b.res&&dps.some(c=>c.el===b.res)) out.push(`<span class="chip w" title="${esc(b.name)}는 ${EL[b.res]} 저항">${esc(b.name)} 비추천</span>`); });
+  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
+  const BT={general:["basic"],negative:["negative","electro"],basic:["echo","unison","shield"],tune:["tunability","hack"]};
+  if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean).concat(BT[buff.id]||[]));
+    (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
+  if(buff&&buff.id==="negative"&&ids.some(id=>charMap[id]&&charMap[id].el==="electro")) out.push(`<span class="chip g">전도 추가 피해 적용</span>`);
+  return out.join("");
+}
+function renderTeams(){
+  const order=state.teams.map((t,i)=>({t,i,s:teamScore(t)}));
+  const box=$("#teams");
+  box.innerHTML=state.teams.map((t,i)=>{
+    const els=[...new Set(t.slots.filter(Boolean).map(id=>charMap[id]&&charMap[id].el).filter(Boolean))];
+    const sc=teamScore(t);
+    return `<div class="team" data-team="${i}">
+      <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
+      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}" data-team="${i}" data-slot="${si}">${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}" title="우클릭하면 해제">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
+      <div class="meta">
+        <div class="row"><span class="score">강도 <b>${sc.toFixed(1)}</b></span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
+          <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
+        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${teamWarnings(t)}</div>
+      </div>
+    </div>`;
+  }).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
+}
+
+/* ---------- render: intel ---------- */
+function renderIntel(){
+  $("#cycleTag").textContent=(cycle.name||"").toUpperCase();
+  const em=cycle.emergency&&charMap[cycle.emergency.id];
+  const bonusIds=Object.keys(cycle.dmgBonus||{}).filter(id=>charMap[id]);
+  $("#intel").innerHTML=`
+  <div class="panel"><div class="ph">이번 주기 적 <span class="sp period">${esc(cycle.period||"")}</span></div><div class="body">
+    ${(cycle.bosses||[]).map((b,i)=>`<div class="boss"><span class="ix">${String(i+1).padStart(2,"0")}</span><div><b>${esc(b.name)}</b>${b.tentative?` <span class="chip" title="한국어 공식 표기를 확인하지 못한 이름입니다. 주기 설정 탭에서 고칠 수 있습니다.">가칭</span>`:""} ${b.res?`<span class="chip el" style="--ec:var(--${b.res})">${EL[b.res]} 저항</span>`:`<span class="chip">저항 동일</span>`}${b.en?`<p class="period">${esc(b.en)}</p>`:""}<p>${esc(b.note||"")}</p>${(b.effects||[]).length?`<ul class="fx">${b.effects.map(f=>`<li class="${f.kind==="threat"?"t":"b"}"><span>${f.kind==="threat"?"주의":"유리"}${f.round?" · "+esc(f.round):""}</span>${esc(f.text)}</li>`).join("")}</ul>`:""}</div></div>`).join("")}
+  </div></div>
+  <div class="panel"><div class="ph">파워 서킷 (강화 효과)</div><div class="body">
+    ${(cycle.buffs||[]).map(b=>`<div class="buff"><b>${esc(b.name)}</b> <span class="tag">${esc(b.type||"")}</span><ul>${(b.effects||[]).map(e=>`<li>${esc(e.text)}</li>`).join("")}</ul></div>`).join("")}
+  </div></div>
+  <div class="panel"><div class="ph">배치 횟수 · 강화 공명자</div><div class="body">
+    <div><span class="lbl">배치 2회</span><div class="ench" style="margin-top:4px">${(cycle.vigor2||[]).filter(id=>charMap[id]).map(id=>`<span class="chip">${esc(charMap[id].name)}</span>`).join("")}${em?`<span class="chip g" title="${esc(cycle.emergency.note||"")}">${esc(em.name)} (긴급 +${cycle.emergency.extraVigor||1})</span>`:""}</div></div>
+    <div><span class="lbl">피해 증가</span><div class="ench" style="margin-top:4px">${bonusIds.map(id=>`<span class="chip w">${esc(charMap[id].name)} +${cycle.dmgBonus[id]}%</span>`).join("")}</div></div>
+  </div></div>`;
+}
+
+/* ---------- render: roster ---------- */
+function renderRoster(){
+  const q=ui.rq.trim();
+  const list=chars.filter(c=>!q||c.name.includes(q));
+  list.sort((a,b)=>EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||b.rar-a.rar);
+  $("#rbody").innerHTML=list.map(c=>{
+    const g=state.growth[c.id]||{};const on=!!state.owned[c.id];
+    return `<tr class="${on?"":"off"}" data-id="${c.id}" style="--ec:var(--${c.el})">
+      <td><input type="checkbox" class="sw" data-f="own" id="own-${c.id}" ${on?"checked":""} aria-label="${esc(c.name)} 보유"></td>
+      <td><span class="pt"><span class="th" ${portraits[c.id]?`style="background-image:url('${picUrl(c.id)}')"`:""}></span></span></td>
+      <td><span class="nmc"><span class="dot"></span>${esc(c.name)}</span></td>
+      <td>${EL[c.el]}</td><td>${c.rar}★</td><td>${vigorOf(c.id)}회</td>
+      <td><input type="number" min="1" max="90" data-f="lv" id="lv-${c.id}" value="${g.lv??90}"></td>
+      <td><select data-f="chain" id="ch-${c.id}">${[0,1,2,3,4,5,6].map(n=>`<option ${+(g.chain||0)===n?"selected":""}>${n}</option>`).join("")}</select></td>
+      <td><select data-f="wr" id="wr-${c.id}">${[5,4,3].map(n=>`<option value="${n}" ${+(g.wr||(c.rar===5?5:4))===n?"selected":""}>${n}★</option>`).join("")}</select></td>
+      <td><select data-f="ref" id="rf-${c.id}">${[1,2,3,4,5].map(n=>`<option ${+(g.ref||1)===n?"selected":""}>${n}</option>`).join("")}</select></td>
+      <td class="score">${charScore(c.id).toFixed(1)}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- render: cycle/data ---------- */
+function renderCycleView(){
+  $("#cycleView").innerHTML=`<dl class="kv"><dt>주기</dt><dd>${esc(cycle.name||"")}</dd><dt>기간</dt><dd>${esc(cycle.period||"")}</dd><dt>보스</dt><dd>${(cycle.bosses||[]).length}종</dd><dt>강화 효과</dt><dd>${(cycle.buffs||[]).map(b=>esc(b.name)).join(", ")}</dd><dt>상태</dt><dd>${state.cycle?"내가 수정한 값 사용 중":"기본값(3.7) 사용 중"}</dd></dl>
+  <p class="prose">필드 설명: <b>bosses[].name</b>은 표시 이름, <b>effects[]</b>는 보스 특성(kind: benefit=유리, threat=주의 / round: 적용 라운드 / tags: shield, unison, dodge, electro, negative 등 상성 판정용), <b>en</b>은 영어판 이름, <b>tentative</b>는 가칭 여부, <b>bosses[].res</b>는 보스의 속성 저항(없으면 null), <b>buffs[].effects[].dmg</b>는 피해 증가 수치(%), <b>cond</b>는 적용 조건(basic, negative, electro, echo, unison, shield, tunability, hack). <b>vigor2</b>는 배치 2회 공명자 id 목록, <b>emergency</b>는 이번 페이즈 긴급 공명자, <b>dmgBonus</b>는 공명자별 피해 증가(%)입니다. 이 값들은 이후 추천 로직이 그대로 읽어 쓰도록 남겨 둡니다.</p>
+  <p class="prose">출처: Game8, TOPUPlive의 3.7 종말 매트릭스 공략(2026년 10월 기준). 보스 이름은 한국어판 표기이고, "가칭"이 붙은 이름은 공식 표기를 확인하지 못한 임시 이름입니다(en에 영어판 이름).</p>`;
+  $("#cycleJson").value=JSON.stringify(cycle,null,2);
+}
+function renderCharJson(){ $("#charJson").value="[\n"+chars.map(c=>"  "+JSON.stringify(c)).join(",\n")+"\n]"; }
+function refreshExport(){ const b=$("#exportBox"); if(b) b.value=JSON.stringify(state); }
+function renderStoreInfo(){
+  $("#storeInfo").innerHTML=`<dt>저장 위치</dt><dd>${storeMode==="account"?"내 Google 계정 (나만 볼 수 있음)":"이 브라우저"}</dd><dt>보유 공명자</dt><dd>${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}</dd><dt>파티 수</dt><dd>${state.teams.length}</dd>`;
+}
+function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport()}
+function rerenderPlan(){renderPool();renderTeams();renderStoreInfo()}
+
+/* ---------- placement logic ---------- */
+function place(id,ti,si,from){
+  const t=state.teams[ti]; if(!t||!charMap[id]) return;
+  if(from){ // move/swap between slots
+    const src=state.teams[from.team];
+    const prev=t.slots[si];
+    t.slots[si]=id; src.slots[from.slot]=prev||null;
+    if(from.team===ti&&from.slot===si) return;
+  }else{
+    if(vigorOf(id)-usedCount(id)<=0 && t.slots[si]!==id) return flash("배치 횟수를 모두 사용했습니다.");
+    t.slots[si]=id;
+  }
+  if(t.slots.filter(x=>x===id).length>1){ // same character twice in one party is not allowed
+    if(from){const src=state.teams[from.team];src.slots[from.slot]=id;t.slots[si]=null}
+    else t.slots[si]=null;
+    flash("같은 파티에 같은 공명자는 넣을 수 없습니다.");
+  }
+  t.example=false; persist(); rerenderPlan();
+}
+function unplace(ti,si){const t=state.teams[ti];if(!t)return;t.slots[si]=null;t.example=false;persist();rerenderPlan()}
+let flashT=null;
+function flash(msg){setSave("busy",msg);clearTimeout(flashT);flashT=setTimeout(()=>setSave("ok",storeMode==="account"?"내 계정에 저장됨":"이 브라우저에 저장됨"),1800)}
+
+/* ---------- events ---------- */
+let dragData=null;
+document.addEventListener("dragstart",e=>{
+  const tk=e.target.closest&&e.target.closest(".tok[draggable=true]"); if(!tk) return;
+  dragData={id:tk.dataset.id,src:tk.dataset.src,team:+tk.dataset.team,slot:+tk.dataset.slot};
+  tk.classList.add("dragging"); try{e.dataTransfer.setData("text/plain",tk.dataset.id);e.dataTransfer.effectAllowed="move"}catch(_){}
+});
+document.addEventListener("dragend",e=>{document.querySelectorAll(".dragging,.over").forEach(n=>n.classList.remove("dragging","over"));
+  // dropped outside any slot while dragging from a slot → leave as is
+  dragData=null});
+document.addEventListener("dragover",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s&&dragData){e.preventDefault();s.classList.add("over")}});
+document.addEventListener("dragleave",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s)s.classList.remove("over")});
+document.addEventListener("drop",e=>{
+  const s=e.target.closest&&e.target.closest(".slot");
+  if(s&&dragData){e.preventDefault();const ti=+s.dataset.team,si=+s.dataset.slot;
+    place(dragData.id,ti,si,dragData.src==="slot"?{team:dragData.team,slot:dragData.slot}:null);}
+  else if(dragData&&dragData.src==="slot"&&e.target.closest&&e.target.closest("#pool")){e.preventDefault();unplace(dragData.team,dragData.slot)}
+  dragData=null;
+});
+document.getElementById("pool").addEventListener("dragover",e=>{if(dragData&&dragData.src==="slot")e.preventDefault()});
+document.addEventListener("contextmenu",e=>{
+  const tk=e.target.closest&&e.target.closest(".slot .tok"); if(!tk) return;
+  e.preventDefault(); unplace(+tk.dataset.team,+tk.dataset.slot);
+});
+// long press to remove (touch)
+let lp=null;
+document.addEventListener("touchstart",e=>{const tk=e.target.closest&&e.target.closest(".slot .tok");if(!tk)return;lp=setTimeout(()=>{unplace(+tk.dataset.team,+tk.dataset.slot);lp=null},550)},{passive:true});
+["touchend","touchmove","touchcancel"].forEach(ev=>document.addEventListener(ev,()=>{clearTimeout(lp)},{passive:true}));
+// tap-to-place
+document.getElementById("pool").addEventListener("click",e=>{
+  const tk=e.target.closest(".tok"); if(!tk||tk.classList.contains("used")) return;
+  selected=selected===tk.dataset.id?null:tk.dataset.id; renderPool();
+});
+document.getElementById("pool").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("tok")){e.preventDefault();e.target.click()}});
+document.getElementById("teams").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-act]");
+  if(b){const i=+b.dataset.team;const T=state.teams;
+    if(b.dataset.act==="up"&&i>0)[T[i-1],T[i]]=[T[i],T[i-1]];
+    if(b.dataset.act==="down"&&i<T.length-1)[T[i+1],T[i]]=[T[i],T[i+1]];
+    if(b.dataset.act==="del")T.splice(i,1);
+    persist();rerenderPlan();return}
+  const s=e.target.closest(".slot");
+  if(s&&selected&&!s.querySelector(".tok")){const id=selected;selected=null;place(id,+s.dataset.team,+s.dataset.slot,null)}
+});
+document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-buff]");if(!sel)return;state.teams[+sel.dataset.buff].buff=sel.value||null;persist();renderTeams()});
+$("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
+$("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});
+$("#btnAdd").addEventListener("click",()=>{state.teams.push({slots:[null,null,null],buff:null});persist();renderTeams()});
+let clearArm=false;
+$("#btnClear").addEventListener("click",e=>{
+  if(!clearArm){clearArm=true;e.target.textContent="한 번 더 누르면 비웁니다";setTimeout(()=>{clearArm=false;e.target.textContent="전체 비우기"},2500);return}
+  clearArm=false;e.target.textContent="전체 비우기";
+  state.teams.forEach(t=>{t.slots=[null,null,null];t.buff=null;t.example=false});persist();rerenderPlan();
+});
+$("#btnSort").addEventListener("click",()=>{
+  // 약한 파티는 앞, 강한 파티는 뒤. 빈 파티는 맨 뒤.
+  state.teams.sort((a,b)=>{const ea=a.slots.every(x=>!x),eb=b.slots.every(x=>!x);if(ea!==eb)return ea?1:-1;return teamScore(a)-teamScore(b)});
+  persist();renderTeams();flash("약한 파티부터 정렬했습니다.");
+});
+// roster
+$("#rq").addEventListener("input",e=>{ui.rq=e.target.value;renderRoster()});
+$("#rbody").addEventListener("change",e=>{
+  const tr=e.target.closest("tr");const id=tr.dataset.id;const f=e.target.dataset.f;
+  if(f==="own"){state.owned[id]=e.target.checked;
+    if(!e.target.checked) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
+    tr.classList.toggle("off",!e.target.checked);
+  }else{const g=state.growth[id]=state.growth[id]||{};g[f]=f==="lv"?clamp(+e.target.value,1,90):+e.target.value;}
+  tr.querySelector("td.score").textContent=charScore(id).toFixed(1);
+  persist();rerenderPlan();
+});
+$("#ownAll").addEventListener("click",()=>{chars.forEach(c=>state.owned[c.id]=true);persist();renderRoster();rerenderPlan()});
+$("#ownNone").addEventListener("click",()=>{chars.forEach(c=>state.owned[c.id]=false);state.teams.forEach(t=>t.slots=[null,null,null]);persist();renderRoster();rerenderPlan()});
+// cycle
+$("#cycleSave").addEventListener("click",()=>{
+  const m=$("#cycleMsg");
+  try{const o=JSON.parse($("#cycleJson").value);
+    if(!Array.isArray(o.bosses)||!Array.isArray(o.buffs)) throw new Error("bosses와 buffs는 배열이어야 합니다.");
+    state.cycle=o;derive();persist();renderAll();m.className="msg okm";m.textContent="주기 데이터를 적용했습니다.";
+  }catch(err){m.className="msg err";m.textContent="적용하지 못했습니다: "+err.message}
+});
+$("#cycleReset").addEventListener("click",()=>{state.cycle=null;derive();persist();renderAll();$("#cycleMsg").className="msg okm";$("#cycleMsg").textContent="기본값(3.7)으로 되돌렸습니다."});
+// chars
+$("#charSave").addEventListener("click",()=>{
+  const m=$("#charMsg");
+  try{const arr=JSON.parse($("#charJson").value);if(!Array.isArray(arr))throw new Error("배열이어야 합니다.");
+    const bad=arr.find(c=>!c||!c.id||!c.name||!EL[c.el]||![4,5].includes(+c.rar));
+    if(bad) throw new Error(`형식이 맞지 않는 항목: ${JSON.stringify(bad)}`);
+    const ids=new Set();for(const c of arr){if(ids.has(c.id))throw new Error("중복된 id: "+c.id);ids.add(c.id);c.rar=+c.rar;c.role=c.role||"dps"}
+    state.chars=arr;derive();persist();renderAll();m.className="msg okm";m.textContent=`공명자 ${arr.length}명을 적용했습니다.`;
+  }catch(err){m.className="msg err";m.textContent="적용하지 못했습니다: "+err.message}
+});
+$("#charReset").addEventListener("click",()=>{state.chars=null;derive();persist();renderAll();$("#charMsg").className="msg okm";$("#charMsg").textContent="기본 목록으로 되돌렸습니다."});
+// data
+$("#btnCopy").addEventListener("click",async()=>{const b=$("#exportBox");try{await navigator.clipboard.writeText(b.value);$("#dataMsg").className="msg okm";$("#dataMsg").textContent="복사했습니다."}catch(e){b.focus();b.select();$("#dataMsg").className="msg";$("#dataMsg").textContent="선택해 두었습니다. Ctrl+C로 복사하세요."}});
+function doImport(text){
+  const m=$("#dataMsg");
+  try{const o=JSON.parse(text);if(!o||typeof o!=="object"||!o.owned)throw new Error("편성기 백업 형식이 아닙니다.");
+    state=normalize(o);derive();persist();renderAll();m.className="msg okm";m.textContent="백업을 불러왔습니다.";
+  }catch(err){m.className="msg err";m.textContent="불러오지 못했습니다: "+err.message}
+}
+$("#btnImport").addEventListener("click",()=>doImport($("#importBox").value));
+$("#fileIn").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>doImport(String(r.result));r.readAsText(f);e.target.value=""});
+$("#btnDownload").hidden=false;
+$("#btnDownload").addEventListener("click",()=>{
+  const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));
+  const a=document.createElement("a");a.href=url;a.download="matrix-planner-backup.json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+/* ---------- routing ---------- */
+const VIEWS=["plan","roster","cycle","data"];
+function route(){const h=(location.hash||"").slice(1);const v=VIEWS.includes(h)?h:"plan";
+  VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
+  document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});}
+window.addEventListener("hashchange",route);
+
+/* ---------- boot ---------- */
+state=normalize(loadLocal()||freshState());derive();renderAll();route();
+setSave("ok","이 브라우저에 저장됨");
+connect();
+loadPortraits();
+})();
+</script>
+
+</body>
+</html>
