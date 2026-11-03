@@ -120,6 +120,21 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .slot.empty::after{content:"+";color:var(--line);font-size:25px}
 .slot.filled{border-style:solid;border-color:transparent}
 .slot .tok{cursor:grab}
+.slot{position:relative}
+.slot.syn.filled{border-color:color-mix(in srgb,var(--ok) 55%,transparent);background:color-mix(in srgb,var(--ok) 6%,transparent)}
+.slot .lnk{position:absolute;left:-12px;top:50%;width:14px;height:3px;transform:translate(-1px,-50%);background:var(--line);border-radius:2px;z-index:2}
+.slot .lnk.on{left:-17px;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 3px var(--panel)}
+.team.wrap .no::after{content:"↺";display:block;color:var(--ok);font-size:16px;margin-top:4px}
+.chip.syn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.chip.syn.star{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent);font-weight:700}
+#tip{position:fixed;z-index:50;max-width:340px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 8px 28px rgba(0,0,0,.28);font-size:14px;line-height:1.5;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;display:flex;flex-direction:column;gap:8px}
+#tip.on{opacity:1;transform:none}
+#tip .th{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#tip .th b{font-size:16px}
+#tip .tl{display:block;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:2px}
+#tip p{margin:0}
+#tip .tc{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+@media (hover:none){#tip{display:none}}
 .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
 .meta .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .meta select{width:auto;max-width:100%;padding:4px 6px;font-size:14px}
@@ -323,7 +338,7 @@ const DEFAULT_CHARS=[
  ["sanhua","산화","glacio",4,"sub"],["baizhi","설지","glacio",4,"support"],["youhu","유호","glacio",4,"support"],
  ["mornye","모니에","fusion",5,"support"],["aemeath","에이메스","fusion",5,"dps"],["denia","데니아","fusion",5,"sub"],
  ["jingran","경연","fusion",5,"dps"],["lupa","루파","fusion",5,"sub"],["galbrena","갈브레나","fusion",5,"dps"],
- ["encore","앙코","fusion",5,"dps"],["changli","장리","fusion",5,"dps"],["brant","브랜트","fusion",5,"sub"],
+ ["encore","앙코","fusion",5,"dps"],["changli","장리","fusion",5,"dps"],["brant","브렌트","fusion",5,"sub"],
  ["mortefi","모르테피","fusion",4,"sub"],["chixia","치샤","fusion",4,"dps"],
  ["hsin","여우의 별자리","electro",5,"dps"],["suoming","쇄명","electro",5,"dps"],["augusta","아우구스타","electro",5,"dps"],
  ["rebecca","레베카","electro",5,"sub"],["rover_e","방랑자(전도)","electro",5,"sub"],["calcharo","카카루","electro",5,"dps"],
@@ -334,12 +349,101 @@ const DEFAULT_CHARS=[
  ["jiyan","기염","aero",5,"dps"],["rover_a","방랑자(기류)","aero",5,"sub"],["jianxin","감심","aero",5,"support"],
  ["aalto","알토","aero",4,"sub"],["yangyang","양양","aero",4,"sub"],
  ["shorekeeper","파수인","spectro",5,"support"],["lynae","린네","spectro",5,"sub"],["verina","벨리나","spectro",5,"support"],
- ["luuk","루크 헤르센","spectro",5,"dps"],["jinhsi","금희","spectro",5,"dps"],["phoebe","페비","spectro",5,"sub"],
+ ["luuk","루크 · 헤르센","spectro",5,"dps"],["jinhsi","금희","spectro",5,"dps"],["phoebe","페비","spectro",5,"sub"],
  ["zani","젠니","spectro",5,"dps"],["lucy","루시","spectro",5,"dps"],["rover_s","방랑자(회절)","spectro",5,"sub"],
  ["chisa","치사","havoc",5,"sub"],["xuanling","양양·현령","havoc",5,"dps"],["phrolova","플로로","havoc",5,"dps"],
  ["cantarella","칸타렐라","havoc",5,"sub"],["camellya","카멜리아","havoc",5,"dps"],["roccia","로코코","havoc",5,"sub"],
  ["rover_h","방랑자(인멸)","havoc",5,"dps"],["danjin","단근","havoc",4,"dps"],["taoqi","도기","havoc",4,"support"]
 ].map(([id,name,el,rar,role])=>({id,name,el,rar,role}));
+
+/* ---------- synergy data (출처: encore.moe 반주 스킬·고유 스킬 설명) ----------
+   o  : 반주 스킬 요약
+   ob : 반주 버프 대상 — basic 일반 공격 / heavy 강공격 / skill 공명 스킬 / lib 공명 해방 / echo 에코 어빌리티 / coord 협동 공격 / el 자기 속성 피해 / all 전체 피해
+   p  : 1이면 파티 전체(또는 필드)에 걸리는 버프, 없으면 다음 등장 캐릭터
+   w  : 주력 피해 유형 (반주 버프를 받으면 좋은 유형)
+   m  : 메커니즘 — frost 서리 / burn 불꽃 / erosion 풍식 / flare 전자 / frazzle 광학 / bane 암흑 / anom 이상 효과 전반 / tuneD 조화 밀집 / tuneW 조화 파동 / hack 해킹 / unison 합일 / shield 실드 / echo 에코 */
+const SYN={
+ hiyuki:{o:"근처 아군이 서리 효과 대상에게 주는 응결 피해 +20% (20초)",ob:["el"],p:1,w:["lib"],m:["frost"]},
+ lucilla:{o:"서리 모드: 서리 효과 피해 +60% (30초) · 에코 모드: 다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["basic"],m:["frost","echo"]},
+ suisui:{o:"파티 전체 피해 +25% (30초), 꽃향기의 편지 소모량에 따라 추가 효과",ob:["all"],p:1,w:[],m:["frost","anom"]},
+ carlotta:{o:"응결 피해 (버프 없음)",ob:[],w:["skill"],m:[]},
+ zhezhi:{o:"다음 캐릭터 응결 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic","skill"],m:[]},
+ lingyang:{o:"응결 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
+ sanhua:{o:"다음 캐릭터 일반 공격 피해 +38% (14초)",ob:["basic"],w:[],m:[]},
+ baizhi:{o:"다음 캐릭터 지속 회복, 회복받으면 전체 피해 +15% (6초)",ob:["all"],w:[],m:[]},
+ youhu:{o:"다음 캐릭터 협동 공격 피해 +100% (28초)",ob:["coord"],w:[],m:[]},
+ mornye:{o:"파티 전체 피해 +25% (30초)",ob:["all"],p:1,w:[],m:["tuneW","tuneD"]},
+ aemeath:{o:"파티 전체 피해 +10%, 조화 파동 이탈·불꽃 효과 부여 시 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW","burn"]},
+ denia:{o:"불꽃 모드: 불꽃 효과 피해 +60% (30초) · 조화 밀집 모드: 다음 캐릭터 전체 피해 +15%, 조화 밀집 이탈 부여 시 +40% (16초)",ob:["all"],w:["lib"],m:["burn","tuneD"]},
+ jingran:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy"],m:["shield"]},
+ lupa:{o:"다음 캐릭터 용융 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["lib"],m:[]},
+ galbrena:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy","echo"],m:["echo"]},
+ encore:{o:"대지의 불길 지속 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
+ changli:{o:"다음 캐릭터 용융 피해 +20%, 공명 해방 피해 +25% (10초)",ob:["el","lib"],w:["skill","lib"],m:[]},
+ brant:{o:"다음 캐릭터 용융 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic"],m:[]},
+ mortefi:{o:"다음 캐릭터 강공격 피해 +38% (14초)",ob:["heavy"],w:[],m:[]},
+ chixia:{o:"용융 피해 (버프 없음)",ob:[],w:["skill"],m:[]},
+ hsin:{o:"합일 모드: 합일 보유 캐릭터 전체 피해 +20% (30초) · 전자 모드: 파티 전도 피해 +20% (20초)",ob:["all","el"],p:1,w:["skill"],m:["unison","flare"]},
+ suoming:{o:"다음 캐릭터 전도 피해 +20%, 합일 버프 보유 시 공명 스킬 피해 +25% (8초)",ob:["el","skill"],w:["basic"],m:["unison"]},
+ augusta:{o:"다음 캐릭터 전체 피해 +15% (14초)",ob:["all"],w:["heavy"],m:["shield"]},
+ rebecca:{o:"다음 캐릭터 전체 피해 +15%, 강공격 피해 최대 +35% (14초)",ob:["all","heavy"],w:["basic"],m:["hack"]},
+ rover_e:{o:"다음 캐릭터가 이상 효과 부여 시 전체 피해 +25% (14초)",ob:["all"],w:[],m:["flare","anom"]},
+ calcharo:{o:"사냥 그림자 전도 피해 (버프 없음)",ob:[],w:["lib"],m:[]},
+ xiangliyao:{o:"다음 캐릭터 일반 공격 명중 시 협동 공격 (8초)",ob:[],w:["lib"],m:[]},
+ yinlin:{o:"다음 캐릭터 전도 피해 +20%, 공명 해방 피해 +25% (14초)",ob:["el","lib"],w:["skill"],m:[]},
+ buling:{o:"지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:["flare"]},
+ yuanwu:{o:"공진 수치 피해 (버프 없음)",ob:[],w:[],m:[]},
+ lumi:{o:"다음 캐릭터 공명 스킬 피해 +38% (10초)",ob:["skill"],w:[],m:[]},
+ sigrika:{o:"기류 피해, 에코 어빌리티 사용 시 목표 정체",ob:[],w:["echo"],m:["echo"]},
+ ciaccona:{o:"주변 적이 받는 풍식 효과 피해 +100% (30초)",ob:[],p:1,w:["lib"],m:["erosion"]},
+ cartethyia:{o:"이상 효과 대상에게 주는 기류 피해 +17.5% (20초)",ob:["el"],p:1,w:["basic"],m:["erosion","anom"]},
+ iuno:{o:"다음 캐릭터 강공격 피해 +50% (14초)",ob:["heavy"],w:["lib"],m:["shield"]},
+ qiuyuan:{o:"다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["heavy","echo"],m:["echo"]},
+ qingxiao:{o:"기류 피해 (버프 없음)",ob:[],w:["basic","heavy"],m:["tuneD"]},
+ jiyan:{o:"다음 캐릭터 강공격 명중 시 협동 공격 (8초)",ob:[],w:["heavy"],m:[]},
+ rover_a:{o:"파티 전체 침식의 경계: 풍식 효과 최대 스택 +3 (30초)",ob:[],p:1,w:[],m:["erosion","anom"]},
+ jianxin:{o:"다음 캐릭터 공명 해방 피해 +38% (14초)",ob:["lib"],w:[],m:[]},
+ aalto:{o:"다음 캐릭터 기류 피해 +23% (14초)",ob:["el"],w:[],m:[]},
+ yangyang:{o:"다음 캐릭터 공명 에너지 회복 (5초)",ob:[],w:[],m:[]},
+ shorekeeper:{o:"파티 전체 피해 +15%, 피격 회피 보조 (30초)",ob:["all"],p:1,w:[],m:[]},
+ lynae:{o:"다음 캐릭터 전체 피해 +15%, 공명 해방 피해 +25% (14초)",ob:["all","lib"],w:["basic"],m:["tuneW","tuneD"]},
+ verina:{o:"다음 캐릭터 지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:[]},
+ luuk:{o:"회절 피해 (버프 없음)",ob:[],w:["basic"],m:["tuneD"]},
+ jinhsi:{o:"봄의 빛 공생 강화 (20초)",ob:[],w:["skill"],m:[]},
+ phoebe:{o:"고해 상태: 회절 저항 -10%, 광학 효과 피해 +100% (30초)",ob:[],p:1,w:["heavy"],m:["frazzle"]},
+ zani:{o:"강렬한 불기운 대상에게 주는 회절 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["frazzle"]},
+ lucy:{o:"다음 캐릭터 일반 공격 피해 +25%, 해킹 이탈 부여 시 전체 피해 +20%",ob:["basic","all"],w:["heavy"],m:["hack"]},
+ rover_s:{o:"다음 캐릭터 주변 정체 구역 (3초)",ob:[],w:[],m:["frazzle"]},
+ chisa:{o:"파티 전체 이상 효과·자기 폭발 최대 스택 +3 (20초)",ob:[],p:1,w:["lib"],m:["anom","bane"]},
+ xuanling:{o:"암흑 효과 부여 시 파티 인멸 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["bane"]},
+ phrolova:{o:"다음 캐릭터 인멸 피해 +20%, 강공격 피해 +25% (14초)",ob:["el","heavy"],w:["echo","skill"],m:["echo"]},
+ cantarella:{o:"다음 캐릭터 인멸 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic"],m:[]},
+ camellya:{o:"인멸 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
+ roccia:{o:"다음 캐릭터 인멸 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["heavy"],m:[]},
+ rover_h:{o:"인멸 필드 지속 피해 (버프 없음)",ob:[],w:["basic","lib"],m:[]},
+ danjin:{o:"다음 캐릭터 인멸 피해 +23% (14초)",ob:["el"],w:["heavy"],m:[]},
+ taoqi:{o:"다음 캐릭터 공명 스킬 피해 +38% (14초)",ob:["skill"],w:[],m:[]}
+};
+/* 추천 조합: 2~3명 모두 같은 파티에 있으면 표시 */
+const COMBOS=[
+ {ids:["qingxiao","denia","mornye"],name:"조화 밀집"},
+ {ids:["hsin","suoming"],name:"합일"},
+ {ids:["lucy","rebecca"],name:"해킹"},
+ {ids:["cartethyia","ciaccona","rover_a"],name:"풍식"},
+ {ids:["zani","phoebe"],name:"광학"},
+ {ids:["hiyuki","lucilla"],name:"서리"},
+ {ids:["xuanling","chisa"],name:"암흑"},
+ {ids:["aemeath","mornye"],name:"조화 파동"},
+ {ids:["jinhsi","zhezhi","shorekeeper"],name:"금희 정석"},
+ {ids:["carlotta","zhezhi"],name:"카를로타 정석"},
+ {ids:["xiangliyao","yinlin"],name:"전도 정석"},
+ {ids:["jiyan","mortefi"],name:"강공격 정석"},
+ {ids:["phrolova","cantarella"],name:"인멸 정석"},
+ {ids:["camellya","sanhua"],name:"일반 공격 정석"}
+];
+const DT={basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티",coord:"협동 공격",all:"전체 피해"};
+const MT={frost:"서리 효과",burn:"불꽃 효과",erosion:"풍식 효과",flare:"전자 효과",frazzle:"광학 효과",bane:"암흑 효과",anom:"이상 효과",tuneD:"조화 밀집",tuneW:"조화 파동",hack:"해킹",unison:"합일",shield:"실드",echo:"에코"};
+const ANOM=["frost","burn","erosion","flare","frazzle","bane"];
 
 const DEFAULT_CYCLE={
  name:"S2 적대의 선봉 · 3페이즈 (3.7)",
@@ -353,7 +457,7 @@ const DEFAULT_CYCLE={
     {kind:"benefit",tags:["dodge"],text:"회피 반격마다 공명 에너지 10 회복, 진동 강도 20% 감소 (2초 쿨타임)"},
     {kind:"threat",round:"2R+",text:"공격력 30% 증가"}]},
   {name:"크라운리스",en:"Crownless",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["unison"],text:"협주 반응을 발동한 공명자에게 받는 모든 피해 40% 증가 (30초)"},
+    {kind:"benefit",tags:["unison"],text:"합일 대응을 발동한 공명자에게 받는 모든 피해 40% 증가 (30초)"},
     {kind:"threat",round:"2R+",text:"진동 강도 감소 효율 20% 감소"}]},
   {name:"하늘의 기관 인형 - 겁살",en:"Calamity Effigy",res:"aero",note:"전도 이상 효과를 걸 수 있는 파티가 유리합니다.",effects:[
     {kind:"benefit",tags:["dodge"],text:"회피 반격 명중 시 불굴 2중첩 (경직·제어 무효, 피격마다 1중첩 소모, 1초에 최대 1회)"},
@@ -365,7 +469,7 @@ const DEFAULT_CYCLE={
  buffs:[
   {id:"general",name:"일반 강화",type:"일반 공격",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 일반 공격 피해 +20%",dmg:20,cond:"basic"}]},
   {id:"negative",name:"강화: 이상 효과",type:"이상효과",effects:[{text:"이상 효과에 걸린 대상이 받는 모든 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"추가로 전도 피해 +30%",dmg:30,cond:"electro"}]},
-  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 협주 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"협주 반응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
+  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"합일 대응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
   {id:"tune",name:"강화: 조화도 파괴",type:"조화 밀집",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"해킹 이탈 부여 시 해당 공명자 피해 +30% (30초)",dmg:30,cond:"hack"}]}
  ],
  vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling"],
@@ -525,6 +629,69 @@ function renderPool(){
   }).join("");
 }
 
+/* ---------- synergy ---------- */
+function synOf(id){const c=charMap[id];return (c&&c.syn)||SYN[id]||{o:"",ob:[],w:[],m:[]}}
+// pairwise links between two characters in the same party
+function pairLinks(a,b){
+  const out=[],A=synOf(a),B=synOf(b),ca=charMap[a],cb=charMap[b];if(!ca||!cb)return out;
+  const outro=(x,y,X,Y,cx,cy)=>{const hit=(X.ob||[]).filter(t=>(Y.w||[]).includes(t)).map(t=>DT[t]);
+    if((X.ob||[]).includes("el")&&cx.el===cy.el&&(Y.w||[]).length) hit.unshift(EL[cy.el]+" 피해");
+    if(hit.length) out.push({k:"outro",from:x,to:y,txt:`${cx.name} 반주 → ${cy.name} ${hit.join("·")}`});};
+  outro(a,b,A,B,ca,cb);outro(b,a,B,A,cb,ca);
+  const ma=A.m||[],mb=B.m||[];
+  const shared=ma.filter(t=>mb.includes(t));
+  if(ma.includes("anom")&&!mb.includes("anom")) shared.push(...mb.filter(t=>ANOM.includes(t)));
+  if(mb.includes("anom")&&!ma.includes("anom")) shared.push(...ma.filter(t=>ANOM.includes(t)));
+  [...new Set(shared)].forEach(t=>out.push({k:"mech",tag:t,txt:MT[t]}));
+  return out;
+}
+function teamSynergy(t){
+  const ids=t.slots.filter(Boolean),links=[],adj=[false,false,false];
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const a=t.slots[i],b=t.slots[j];if(!a||!b)continue;
+    const l=pairLinks(a,b);if(l.length){links.push(...l.map(x=>({...x,i,j})));if(j===i+1)adj[j]=true;else adj.wrap=true}}
+  const combos=COMBOS.filter(c=>c.ids.every(id=>ids.includes(id)));
+  return {links,adj,combos};
+}
+function synChips(t){
+  const {links,combos}=teamSynergy(t);let h="";
+  combos.forEach(c=>h+=`<span class="chip syn star" title="추천 조합: ${esc(c.ids.map(id=>charMap[id]?charMap[id].name:id).join(" · "))}">★ ${esc(c.name)}</span>`);
+  const mech={};links.filter(l=>l.k==="mech").forEach(l=>{(mech[l.tag]=mech[l.tag]||new Set()).add(t.slots[l.i]);mech[l.tag].add(t.slots[l.j])});
+  Object.entries(mech).forEach(([tag,s])=>h+=`<span class="chip syn" title="${esc([...s].map(id=>charMap[id].name).join(" · "))}">⛓ ${esc(MT[tag])}</span>`);
+  links.filter(l=>l.k==="outro").forEach(l=>h+=`<span class="chip syn">→ ${esc(l.txt)}</span>`);
+  // cycle power circuit ↔ party mechanics
+  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
+  if(buff){const CM={tunability:["tuneD","tuneW"],hack:["hack"],unison:["unison"],shield:["shield"],echo:["echo"],negative:ANOM.concat("anom"),basic:[]};
+    const want=new Set((buff.effects||[]).flatMap(e=>CM[e.cond]||[]));
+    const have=[...new Set(t.slots.filter(Boolean).flatMap(id=>synOf(id).m||[]))].filter(x=>want.has(x));
+    if(buff.id==="general"&&t.slots.some(id=>id&&(synOf(id).w||[]).includes("basic"))) have.push("basic");
+    if(have.length) h+=`<span class="chip g" title="선택한 파워 서킷과 파티 메커니즘이 맞습니다">서킷 맞춤: ${esc(have.map(x=>MT[x]||DT[x]).join(", "))}</span>`;}
+  return h;
+}
+
+/* ---------- hover overlay ---------- */
+const tip=document.createElement("div");tip.id="tip";tip.setAttribute("role","tooltip");document.body.appendChild(tip);
+function tipHTML(id){
+  const c=charMap[id],S=synOf(id);if(!c)return"";
+  const ob=(S.ob||[]).map(t=>t==="el"?EL[c.el]+" 피해":DT[t]).filter(Boolean);
+  const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
+  return `<div class="th"><b>${esc(c.name)}</b><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span></div>
+  <div class="tr"><span class="tl">반주 스킬${S.p?" · 파티":""}</span><p>${esc(S.o||"정보 없음")}</p>${ob.length?`<div class="tc">${ob.map(x=>`<span class="chip g">${esc(x)} ↑</span>`).join("")}</div>`:""}</div>
+  ${(S.w||[]).length?`<div class="tr"><span class="tl">주력 피해</span><div class="tc">${S.w.map(x=>`<span class="chip">${DT[x]}</span>`).join("")}</div></div>`:""}
+  ${(S.m||[]).length?`<div class="tr"><span class="tl">메커니즘</span><div class="tc">${S.m.map(x=>`<span class="chip syn">${MT[x]}</span>`).join("")}</div></div>`:""}`;
+}
+let tipFor=null;
+document.addEventListener("mouseover",e=>{
+  const tk=e.target.closest&&e.target.closest(".tok[data-id]");
+  if(!tk||dragData){if(tipFor&&!(e.target.closest&&e.target.closest("#tip"))){tip.classList.remove("on");tipFor=null}return}
+  if(tipFor===tk)return;tipFor=tk;tip.innerHTML=tipHTML(tk.dataset.id)+(tk.dataset.src==="slot"?`<div class="tl">우클릭하면 해제</div>`:"");tip.classList.add("on");
+  const r=tk.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let x=r.right+10,y=r.top;if(x+tw>innerWidth-8)x=r.left-tw-10;if(x<8)x=Math.max(8,Math.min(innerWidth-tw-8,r.left));
+  if(y+th>innerHeight-8)y=Math.max(8,innerHeight-th-8);
+  tip.style.left=x+"px";tip.style.top=y+"px";
+});
+document.addEventListener("dragstart",()=>{tip.classList.remove("on");tipFor=null},true);
+addEventListener("scroll",()=>{tip.classList.remove("on");tipFor=null},true);
+
 /* ---------- render: teams ---------- */
 function buffOptions(sel){return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}
 function teamWarnings(t){
@@ -544,13 +711,19 @@ function renderTeams(){
   box.innerHTML=state.teams.map((t,i)=>{
     const els=[...new Set(t.slots.filter(Boolean).map(id=>charMap[id]&&charMap[id].el).filter(Boolean))];
     const sc=teamScore(t);
-    return `<div class="team" data-team="${i}">
+    const sy=teamSynergy(t);
+    const chips=synChips(t);
+    const linked=new Set(sy.links.flatMap(l=>[l.i,l.j]));
+    const lk=si=>{if(si===0)return"";const on=sy.adj[si];const a=t.slots[si-1],b=t.slots[si];if(!a||!b)return"";
+      const l=sy.links.filter(x=>x.i===si-1&&x.j===si).map(x=>x.txt);return `<span class="lnk ${on?"on":""}" title="${esc(on?l.join("\n"):"연결된 시너지 없음")}">${on?"✓":""}</span>`};
+    return `<div class="team${sy.adj.wrap?" wrap":""}"${sy.adj.wrap?` title="1번과 3번 슬롯도 시너지로 연결됩니다"`:""} data-team="${i}">
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
-      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}" data-team="${i}" data-slot="${si}">${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}" title="우클릭하면 해제">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
+      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
         <div class="row"><span class="score">강도 <b>${sc.toFixed(1)}</b></span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
         <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${teamWarnings(t)}</div>
+        ${chips?`<div class="row">${chips}</div>`:""}
       </div>
     </div>`;
   }).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
