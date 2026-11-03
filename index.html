@@ -56,8 +56,8 @@ main{padding-top:16px}
 section.view{display:none} section.view.on{display:block}
 
 /* plan layout */
-.plan{display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,760px) minmax(270px,340px);gap:16px;align-items:start}
-@media (max-width:1100px){.plan{grid-template-columns:minmax(280px,1fr) minmax(0,720px)} .intel{grid-column:1/-1}}
+.plan{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1040px) 300px;gap:16px;align-items:start}
+@media (max-width:1100px){.plan{grid-template-columns:minmax(280px,1fr) minmax(0,1040px)} .intel{grid-column:1/-1}}
 @media (max-width:720px){.plan{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0}
 .panel>h2,.ph{display:flex;align-items:center;gap:8px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;letter-spacing:.04em}
@@ -110,9 +110,14 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .btn.danger{color:var(--danger)}
 .hint{color:var(--muted);font-size:14px;margin:0 0 10px}
 .teams{display:flex;flex-direction:column;gap:8px;container-type:inline-size}
-@container (max-width:660px){.team .meta{grid-column:1/-1}}
-.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
-@media (max-width:560px){:root{--face:84px}.team{grid-template-columns:32px repeat(3,minmax(0,1fr))} .team .meta{grid-column:1/-1}}
+@container (max-width:845px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr)}.team .synbox{grid-column:2/-1}}
+@container (max-width:660px){.team .meta{grid-column:1/-1}.team .synbox{grid-column:1/-1}}
+.synbox{display:flex;flex-direction:column;align-items:flex-start;gap:4px;align-self:stretch;justify-content:center;border-left:1px dashed var(--line);padding-left:10px;min-width:0}
+.synbox .chip{font-size:12.5px;max-width:100%;line-height:1.45;word-break:keep-all}
+.synbox .none{font-size:13px;color:var(--muted)}
+.score small.up{font-size:12px;color:var(--ok);margin-left:4px;font-weight:700}
+.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(140px,1fr) minmax(160px,1.1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+@media (max-width:560px){:root{--face:84px}.team{grid-template-columns:32px repeat(3,minmax(0,1fr))} .team .meta,.team .synbox{grid-column:1/-1}.synbox{border-left:0;padding-left:0}}
 .team .no{font-family:var(--f-mono);font-size:23px;font-weight:700;color:var(--muted);text-align:center;line-height:1}
 .team .no small{display:block;font-size:11px;letter-spacing:.1em;margin-top:2px}
 .slot{height:calc(var(--face) + 40px);border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;transition:border-color .12s,background .12s}
@@ -530,7 +535,26 @@ function charScore(id){
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
   return s;
 }
-function teamScore(t){return t.slots.reduce((a,id)=>a+(id?charScore(id):0),0)}
+// 파워 서킷(강화 효과) 반영: 조건을 만족하는 공명자 점수에 효과 수치(%)를 곱한다
+function circuitMul(t,id){
+  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);if(!buff)return {mul:1,hits:[]};
+  const c=charMap[id],S=synOf(id),ids=t.slots.filter(Boolean);
+  const teamM=new Set(ids.flatMap(x=>synOf(x).m||[]));
+  const anom=ANOM.concat("anom").some(x=>teamM.has(x));
+  const ok={
+    "":true,
+    basic:(S.w||[]).includes("basic"), echo:(S.w||[]).includes("echo")||(S.m||[]).includes("echo"),
+    electro:c.el==="electro", negative:anom,
+    tunability:teamM.has("tuneD")||teamM.has("tuneW"), hack:(S.m||[]).includes("hack"),
+    unison:teamM.has("unison"), shield:teamM.has("shield")
+  };
+  let add=0;const hits=[];
+  (buff.effects||[]).forEach(e=>{const k=e.cond||"";const v=+e.dmg||0;
+    if(!v)return; if(k in ok?ok[k]:false){add+=v;hits.push(e.text)}});
+  return {mul:1+add/100,hits};
+}
+function teamBase(t){return t.slots.reduce((a,id)=>a+(id?charScore(id):0),0)}
+function teamScore(t){return t.slots.reduce((a,id)=>a+(id?charScore(id)*circuitMul(t,id).mul:0),0)}
 function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 
 /* ---------- persistence ---------- */
@@ -636,7 +660,7 @@ function pairLinks(a,b){
   const out=[],A=synOf(a),B=synOf(b),ca=charMap[a],cb=charMap[b];if(!ca||!cb)return out;
   const outro=(x,y,X,Y,cx,cy)=>{const hit=(X.ob||[]).filter(t=>(Y.w||[]).includes(t)).map(t=>DT[t]);
     if((X.ob||[]).includes("el")&&cx.el===cy.el&&(Y.w||[]).length) hit.unshift(EL[cy.el]+" 피해");
-    if(hit.length) out.push({k:"outro",from:x,to:y,txt:`${cx.name} 반주 → ${cy.name} ${hit.join("·")}`});};
+    if(hit.length) out.push({k:"outro",from:x,to:y,n:hit.length,txt:`${cx.name} → ${cy.name} · ${hit.join("·")}`});};
   outro(a,b,A,B,ca,cb);outro(b,a,B,A,cb,ca);
   const ma=A.m||[],mb=B.m||[];
   const shared=ma.filter(t=>mb.includes(t));
@@ -646,9 +670,15 @@ function pairLinks(a,b){
   return out;
 }
 function teamSynergy(t){
-  const ids=t.slots.filter(Boolean),links=[],adj=[false,false,false];
+  const ids=t.slots.filter(Boolean),adj=[false,false,false];let links=[];
   for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const a=t.slots[i],b=t.slots[j];if(!a||!b)continue;
-    const l=pairLinks(a,b);if(l.length){links.push(...l.map(x=>({...x,i,j})));if(j===i+1)adj[j]=true;else adj.wrap=true}}
+    links.push(...pairLinks(a,b).map(x=>({...x,i,j})));}
+  // 다음 등장 캐릭터에게만 걸리는 반주는 조건을 가장 많이 만족하는 대상 하나만 남긴다 (동률이면 메인 딜러 우선)
+  const best={};
+  links.filter(l=>l.k==="outro"&&!synOf(l.from).p).forEach(l=>{const b=best[l.from];
+    const r=x=>x.n*10+(charMap[x.to].role==="dps"?1:0);if(!b||r(l)>r(b))best[l.from]=l;});
+  links=links.filter(l=>l.k!=="outro"||synOf(l.from).p||best[l.from]===l);
+  links.forEach(l=>{if(l.j===l.i+1)adj[l.j]=true;else adj.wrap=true});
   const combos=COMBOS.filter(c=>c.ids.every(id=>ids.includes(id)));
   return {links,adj,combos};
 }
@@ -657,7 +687,7 @@ function synChips(t){
   combos.forEach(c=>h+=`<span class="chip syn star" title="추천 조합: ${esc(c.ids.map(id=>charMap[id]?charMap[id].name:id).join(" · "))}">★ ${esc(c.name)}</span>`);
   const mech={};links.filter(l=>l.k==="mech").forEach(l=>{(mech[l.tag]=mech[l.tag]||new Set()).add(t.slots[l.i]);mech[l.tag].add(t.slots[l.j])});
   Object.entries(mech).forEach(([tag,s])=>h+=`<span class="chip syn" title="${esc([...s].map(id=>charMap[id].name).join(" · "))}">⛓ ${esc(MT[tag])}</span>`);
-  links.filter(l=>l.k==="outro").forEach(l=>h+=`<span class="chip syn">→ ${esc(l.txt)}</span>`);
+  links.filter(l=>l.k==="outro").forEach(l=>h+=`<span class="chip syn" title="반주 스킬: ${esc(l.txt)}">${esc(l.txt)}</span>`);
   // cycle power circuit ↔ party mechanics
   const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
   if(buff){const CM={tunability:["tuneD","tuneW"],hack:["hack"],unison:["unison"],shield:["shield"],echo:["echo"],negative:ANOM.concat("anom"),basic:[]};
@@ -720,11 +750,12 @@ function renderTeams(){
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
       ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
-        <div class="row"><span class="score">강도 <b>${sc.toFixed(1)}</b></span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
+        <div class="row"><span class="score" title="기본 ${teamBase(t).toFixed(1)}${t.buff?` · 파워 서킷 반영 +${(sc-teamBase(t)).toFixed(1)}`:" · 강화 효과를 고르면 반영됩니다"}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
         <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${teamWarnings(t)}</div>
-        ${chips?`<div class="row">${chips}</div>`:""}
+
       </div>
+      <div class="synbox">${chips||`<span class="none">시너지 없음</span>`}</div>
     </div>`;
   }).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
 }
