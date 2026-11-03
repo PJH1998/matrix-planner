@@ -523,6 +523,7 @@ function normalize(s){
 function derive(){
   chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
   charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
+  for(const k in _dpsAvg)delete _dpsAvg[k];
   chars.forEach(c=>{ if(!(c.id in state.owned)) state.owned[c.id]=true; });
   cycle=(IS_ADMIN&&state.cycle)||DEFAULT_CYCLE; // 주기 수정값은 관리자 모드에서만 사용
 }
@@ -538,6 +539,14 @@ function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(s==
    파티 강도 = Σ(캐릭터 점수 × 역할 비중 × 파워 서킷) × (1 + 서포터 딜증%) × (1 + 시너지%) */
 // 캐릭터별 0~6체인 DPS 배율 (Prydwen 'Calculations' 탭의 S0 대비 DPS %, 1타깃 기준. 2026-11 수집)
 const CHAIN_DATA={"aalto":[1,1.0,1.067,1.313,1.374,1.421,1.52],"augusta":[1,1.17,1.464,1.723,1.815,1.815,2.466],"brant":[1,1.158,1.563,1.92,1.92,1.995,2.487],"camellya":[1,1.102,1.354,1.521,1.592,1.709,2.169],"cantarella":[1,1.183,1.564,1.843,1.843,1.859,2.288],"chixia":[1,1.05,1.05,1.077,1.077,1.196,1.196],"ciaccona":[1,1.123,1.193,1.22,1.397,1.469,1.599],"danjin":[1,1.101,1.208,1.254,1.288,1.452,1.557],"encore":[1,1.038,1.071,1.071,1.151,1.162,1.243],"hsin":[1,1.089,1.286,1.591,1.685,1.685,2.692],"iuno":[1,1.128,1.312,1.556,1.556,1.65,2.158],"jinhsi":[1,1.151,1.151,1.328,1.425,1.642,2.014],"jiyan":[1,1.0,1.111,1.364,1.461,1.714,2.248],"lucilla":[1,1.063,1.25,1.409,1.416,1.444,2.152],"lucy":[1,1.055,1.313,1.782,1.879,1.879,2.622],"lupa":[1,1.159,1.338,1.738,2.103,2.187,2.524],"lynae":[1,1.07,1.197,1.442,1.523,1.651,1.898],"mortefi":[1,1.052,1.052,1.09,1.418,1.504,1.633],"phrolova":[1,1.077,1.316,1.744,1.87,1.87,2.626],"qingxiao":[1,1.151,1.329,1.611,1.713,1.73,2.33],"rover_e":[1,1.0,1.0,1.084,1.138,1.209,1.209],"sigrika":[1,1.071,1.392,1.549,1.661,1.707,2.723],"suoming":[1,1.111,1.257,1.478,1.591,1.656,2.037],"taoqi":[1,1.0,1.084,1.084,1.084,1.16,1.189],"xiangliyao":[1,1.147,1.246,1.371,1.416,1.79,2.142],"xuanling":[1,1.105,1.278,1.555,1.65,1.65,2.743],"zani":[1,1.213,1.42,1.558,1.676,1.722,2.098],"zhezhi":[1,1.099,1.206,1.383,1.461,1.825,2.159],"aemeath":[1,1.069,1.304,1.689,1.785,1.785,3.175],"calcharo":[1,1.0,1.003,1.094,1.179,1.191,1.3],"carlotta":[1,1.104,1.334,1.68,1.781,1.84,2.336],"cartethyia":[1,1.146,1.507,1.884,1.994,1.994,2.455],"changli":[1,1.003,1.176,1.246,1.336,1.646,2.065],"chisa":[1,1.184,1.597,2.022,2.022,2.181,2.801],"denia":[1,1.068,1.411,2.031,2.126,2.172,3.172],"galbrena":[1,1.078,1.347,1.619,1.738,1.769,2.508],"hiyuki":[1,1.134,1.358,1.787,1.885,1.963,2.603],"jingran":[1,1.074,1.441,1.663,1.753,1.753,2.813],"lingyang":[1,1.0,1.0,1.041,1.123,1.163,1.282],"lumi":[1,1.0,1.031,1.075,1.137,1.137,1.166],"luuk":[1,1.136,1.416,1.766,1.887,1.939,2.768],"phoebe":[1,1.106,1.29,1.615,1.792,1.863,1.995],"qiuyuan":[1,1.153,1.301,1.589,1.724,1.867,2.192],"rebecca":[1,1.021,1.177,1.464,1.597,1.684,2.127],"roccia":[1,1.04,1.222,1.442,1.787,1.881,2.288],"rover_a":[1,1.0,1.0,1.084,1.14,1.181,1.302],"rover_h":[1,1.025,1.025,1.025,1.117,1.161,1.361],"rover_s":[1,1.086,1.197,1.197,1.197,1.272,1.406],"sanhua":[1,1.0,1.0,1.129,1.232,1.576,1.734],"yangyang":[1,1.0,1.0,1.034,1.119,1.308,1.336],"yinlin":[1,1.034,1.075,1.402,1.49,1.569,1.764],"yuanwu":[1,1.0,1.0,1.238,1.238,1.316,1.471]};
+// 캐릭터별 S0 기본 DPS (Prydwen Calculations, 1타깃 솔로 로테이션). 같은 역할 평균 대비 비율을 기본 체급으로 쓴다.
+const BASE_DPS={"aalto":12903,"aemeath":146568,"augusta":117278,"brant":78893,"calcharo":29219,"camellya":74249,"encore":31763,"rover_h":28228,"yuanwu":26470,"cantarella":40355,"carlotta":90807,"cartethyia":107200,"changli":68304,"chisa":31826,"chixia":29162,"ciaccona":84287,"danjin":16075,"denia":83102,"galbrena":116333,"hiyuki":162781,"hsin":215294,"iuno":112013,"jingran":167329,"jinhsi":96558,"jiyan":58922,"lingyang":25234,"lucilla":91534,"lucy":104445,"lumi":10762,"lupa":55225,"luuk":127869,"lynae":79761,"mortefi":29027,"phoebe":93822,"phrolova":132778,"qingxiao":169516,"qiuyuan":31079,"rebecca":71049,"roccia":47605,"rover_a":19408,"rover_e":41311,"rover_s":21732,"sanhua":32793,"sigrika":153622,"suoming":68857,"taoqi":7222,"xiangliyao":73383,"yangyang":16094,"xuanling":198998,"yinlin":58753,"zani":92760,"zhezhi":55428};
+const DPS_EXP=0.75, DPS_CLAMP=[0.4,2]; // 계산 조건(무기·로테이션·패치) 차이를 감안해 비율을 완만하게 반영
+const _dpsAvg={};
+function dpsFactor(id){const c=charMap[id];if(!c)return 1;const v=c.baseDps!=null?+c.baseDps:BASE_DPS[id];if(!v)return 1;
+  const role=c.role==="dps"?"dps":"sub";
+  if(_dpsAvg[role]==null){const xs=chars.filter(x=>(x.role==="dps"?"dps":"sub")===role&&x.role!=="support").map(x=>x.baseDps!=null?+x.baseDps:BASE_DPS[x.id]).filter(Boolean);_dpsAvg[role]=xs.reduce((a,b)=>a+b,0)/(xs.length||1);}
+  return clamp(Math.pow(v/_dpsAvg[role],DPS_EXP),DPS_CLAMP[0],DPS_CLAMP[1]);}
 // CHAIN_DATA에 없는 캐릭터용 역할별 평균 (위 데이터의 메인 딜러 28명 / 서브 딜러 23명 평균).
 // 서포터는 Prydwen에 DPS 계산이 없어 딜증(AMP)에 곱하는 완만한 배율을 쓴다.
 const CHAIN_MUL={
@@ -555,8 +564,10 @@ function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
   const lv=clamp(+g.lv||90,1,90), ch=clamp(+g.chain||0,0,6), wr=+g.wr||(c.rar===5?5:4), rf=clamp(+g.ref||1,1,5);
-  let s=(c.rar===5?10:6);
+  const hasDps=c.baseDps!=null||BASE_DPS[id]!=null; // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
+  let s=(hasDps?10:(c.rar===5?10:6));
   s+=(wr===5?4:wr===4?1.5:0)+(rf-1)*0.4;
+  s*=dpsFactor(id);
   s*=0.5+0.5*(lv/90);
   s*=c.role==='support'&&!CHAIN_DATA[id]?1:chainMul(id);
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
