@@ -147,6 +147,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .score b{font-size:17px}
 .chip{font-size:13px;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
 .chip.w{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.chip.enc{color:var(--fg)}
 .chip.g{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}
 .chip.el{color:var(--ec);border-color:color-mix(in srgb,var(--ec) 55%,transparent)}
 .mini{display:flex;gap:2px;margin-left:auto}
@@ -231,7 +232,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
     <div>
       <div class="teams-h">
         <h2>파티 편성</h2>
-        <button class="btn pri" id="btnSort" title="약한 파티가 앞, 강한 파티가 뒤로 가도록 정렬">추천 순서로 정렬</button>
+        <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">추천 순서로 정렬</button>
         <button class="btn" id="btnAdd">+ 파티 추가</button>
         <button class="btn ghost danger" id="btnClear">전체 비우기</button>
       </div>
@@ -653,6 +654,43 @@ function renderPool(){
   }).join("");
 }
 
+
+/* ---------- boss-run simulation ----------
+   파티는 순서대로 보스를 상대하고, 남은 HP는 다음 파티가 이어받는다고 가정한다.
+   보스 HP = 편성된 파티 평균 강도 × ROUND_HP^(라운드-1). 메인 딜러 속성을 보스가 저항하면 피해 × RES_MUL. */
+const RES_MUL=0.6, ROUND_HP=1.5, MAX_ROUNDS=8;
+function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
+  const pool=ids.filter(id=>charMap[id]&&charMap[id].role==="dps");
+  return (pool.length?pool:ids).slice().sort((a,b)=>charScore(b)-charScore(a))[0];}
+function simulate(teams){
+  const bosses=(cycle.bosses||[]);const live=teams.filter(t=>t.slots.some(Boolean));
+  const res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
+  const base=live.reduce((a,t)=>a+teamScore(t),0)/live.length;
+  let bi=0,round=1,hp=base,progress=0,bad=0;
+  teams.forEach((t,ti)=>{
+    if(!t.slots.some(Boolean))return;
+    const d=mainDps(t),el=d&&charMap[d].el;let D=teamScore(t);
+    while(D>1e-9&&round<=MAX_ROUNDS){
+      const b=bosses[bi],f=b.res&&b.res===el?RES_MUL:1;
+      if(!res[ti].hits.length&&f<1)bad++;
+      res[ti].hits.push({name:b.name,round,resisted:f<1});
+      if(D*f>=hp){D-=hp/f;progress+=hp/(base*Math.pow(ROUND_HP,round-1));bi++;if(bi>=bosses.length){bi=0;round++}hp=base*Math.pow(ROUND_HP,round-1);}
+      else{hp-=D*f;progress+=D*f/(base*Math.pow(ROUND_HP,round-1));D=0;}
+    }
+  });
+  return {progress,res,bad};
+}
+function permutations(a){if(a.length<=1)return [a];const out=[];a.forEach((x,i)=>permutations(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>out.push([x].concat(p))));return out}
+function bestOrder(){
+  const live=state.teams.filter(t=>t.slots.some(Boolean)),empty=state.teams.filter(t=>!t.slots.some(Boolean));
+  // 진행도 차이가 0.05 보스 미만이면 같은 것으로 보고, 약한 파티가 앞인 순서를 고른다
+  const val=o=>{const r=simulate(o);const asc=o.reduce((a,t,i)=>a+i*teamScore(t),0);return Math.round((r.progress-0.15*r.bad)*20)*1e4+asc};
+  let best=live.slice().sort((a,b)=>teamScore(a)-teamScore(b)),bv=val(best);
+  if(live.length<=8){permutations(live).forEach(o=>{const v=val(o);if(v>bv){bv=v;best=o}})}
+  else{let improved=true;while(improved){improved=false;for(let i=0;i<best.length;i++)for(let j=i+1;j<best.length;j++){const o=best.slice();[o[i],o[j]]=[o[j],o[i]];const v=val(o);if(v>bv){bv=v;best=o;improved=true}}}}
+  return best.concat(empty);
+}
+
 /* ---------- synergy ---------- */
 function synOf(id){const c=charMap[id];return (c&&c.syn)||SYN[id]||{o:"",ob:[],w:[],m:[]}}
 // pairwise links between two characters in the same party
@@ -727,7 +765,9 @@ function buffOptions(sel){return `<option value="">강화 효과 선택</option>
 function teamWarnings(t){
   const out=[];const ids=t.slots.filter(Boolean);
   const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
-  (cycle.bosses||[]).forEach(b=>{ if(b.res&&dps.some(c=>c.el===b.res)) out.push(`<span class="chip w" title="${esc(b.name)}는 ${EL[b.res]} 저항">${esc(b.name)} 비추천</span>`); });
+  const ti=state.teams.indexOf(t),hits=(simCache&&simCache.res[ti]||{hits:[]}).hits;
+  if(hits.length){const first=hits[0],more=hits.length-1;
+    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 상대 (앞 파티가 남긴 HP를 이어받는다고 가정): ${esc(hits.map(h=>`${h.round}R ${h.name}${h.resisted?" (저항)":""}`).join(" → "))}">vs ${first.round}R ${esc(first.name)}${first.resisted?" · 저항":""}${more?` 외 ${more}`:""}</span>`);}
   const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
   const BT={general:["basic"],negative:["negative","electro"],basic:["echo","unison","shield"],tune:["tunability","hack"]};
   if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean).concat(BT[buff.id]||[]));
@@ -735,7 +775,9 @@ function teamWarnings(t){
   if(buff&&buff.id==="negative"&&ids.some(id=>charMap[id]&&charMap[id].el==="electro")) out.push(`<span class="chip g">전도 추가 피해 적용</span>`);
   return out.join("");
 }
+let simCache=null;
 function renderTeams(){
+  simCache=simulate(state.teams);
   const order=state.teams.map((t,i)=>({t,i,s:teamScore(t)}));
   const box=$("#teams");
   box.innerHTML=state.teams.map((t,i)=>{
@@ -891,9 +933,9 @@ $("#btnClear").addEventListener("click",e=>{
   state.teams.forEach(t=>{t.slots=[null,null,null];t.buff=null;t.example=false});persist();rerenderPlan();
 });
 $("#btnSort").addEventListener("click",()=>{
-  // 약한 파티는 앞, 강한 파티는 뒤. 빈 파티는 맨 뒤.
-  state.teams.sort((a,b)=>{const ea=a.slots.every(x=>!x),eb=b.slots.every(x=>!x);if(ea!==eb)return ea?1:-1;return teamScore(a)-teamScore(b)});
-  persist();renderTeams();flash("약한 파티부터 정렬했습니다.");
+  // 보스 진행을 시뮬레이션해 가장 멀리 가는 순서를 고른다 (메인 딜러 저항 보스는 피하고, 비슷하면 약한 파티를 앞으로). 빈 파티는 맨 뒤.
+  state.teams=bestOrder();const r=simulate(state.teams);
+  persist();renderTeams();flash(r.bad?`정렬했습니다. 저항 보스를 만나는 파티 ${r.bad}개는 피할 수 없었습니다.`:"저항 보스를 피하면서 약한 파티부터 정렬했습니다.");
 });
 // roster
 $("#rq").addEventListener("input",e=>{ui.rq=e.target.value;renderRoster()});
