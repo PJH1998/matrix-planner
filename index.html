@@ -121,6 +121,8 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .team .no{font-family:var(--f-mono);font-size:23px;font-weight:700;color:var(--muted);text-align:center;line-height:1}
 .team .no small{display:block;font-size:11px;letter-spacing:.1em;margin-top:2px}
 .slot{height:calc(var(--face) + 40px);border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;transition:border-color .12s,background .12s}
+.slot.just{animation:just .7s ease-out}
+@keyframes just{0%{box-shadow:0 0 0 0 var(--accent)}100%{box-shadow:0 0 0 10px transparent}}
 .slot.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .slot.empty::after{content:"+";color:var(--line);font-size:25px}
 .slot.filled{border-style:solid;border-color:transparent}
@@ -236,7 +238,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
         <button class="btn" id="btnAdd">+ 파티 추가</button>
         <button class="btn ghost danger" id="btnClear">전체 비우기</button>
       </div>
-      <p class="hint">공명자를 슬롯으로 끌어다 놓으세요. 슬롯의 공명자를 우클릭하면 해제됩니다. 터치 화면에서는 공명자를 누른 뒤 빈 슬롯을 누르고, 배치된 공명자를 길게 누르면 해제됩니다.</p>
+      <p class="hint">공명자를 슬롯으로 끌어다 놓거나, 누르면 첫 번째 빈 칸에 바로 들어갑니다. 슬롯의 공명자를 우클릭(터치 화면은 길게 누르기)하면 해제됩니다.</p>
       <div class="teams" id="teams"></div>
     </div>
 
@@ -955,8 +957,18 @@ document.addEventListener("touchstart",e=>{const tk=e.target.closest&&e.target.c
 // tap-to-place
 document.getElementById("pool").addEventListener("click",e=>{
   const tk=e.target.closest(".tok"); if(!tk||tk.classList.contains("used")) return;
-  selected=selected===tk.dataset.id?null:tk.dataset.id; renderPool();
+  quickPlace(tk.dataset.id);
 });
+// 초상화를 누르면 위에서부터 첫 번째 빈 칸(같은 공명자가 없는 파티)에 넣는다. 빈 칸이 없으면 파티를 하나 추가한다.
+function quickPlace(id){
+  if(vigorOf(id)-usedCount(id)<=0) return flash("배치 횟수를 모두 사용했습니다.");
+  let ti=state.teams.findIndex(t=>!t.slots.includes(id)&&t.slots.some(x=>!x));
+  if(ti<0){state.teams.push({slots:[null,null,null],buff:null});ti=state.teams.length-1}
+  const si=state.teams[ti].slots.findIndex(x=>!x);
+  place(id,ti,si,null);
+  const el=document.querySelector(`.slot[data-team="${ti}"][data-slot="${si}"]`);
+  if(el){el.classList.add("just");el.scrollIntoView({block:"nearest",behavior:"smooth"});setTimeout(()=>el.classList.remove("just"),700)}
+}
 document.getElementById("pool").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("tok")){e.preventDefault();e.target.click()}});
 document.getElementById("teams").addEventListener("click",e=>{
   const b=e.target.closest("button[data-act]");
