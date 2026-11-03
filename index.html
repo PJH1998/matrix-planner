@@ -92,7 +92,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .pt button.del{color:var(--danger)}
 .tok .nm{font-size:15px;font-weight:600;text-align:center;line-height:1.25;max-width:calc(var(--face) + 12px);word-break:keep-all}
 .tok .cnt{position:absolute;right:-4px;bottom:26px;font-family:var(--f-mono);font-size:14px;font-weight:700;background:var(--fg);color:var(--bg);border-radius:999px;padding:0;width:40px;box-sizing:border-box;text-align:center;line-height:1.5;font-variant-numeric:tabular-nums}
-.tok .cnt.two{background:var(--accent);color:var(--accent-ink)}
+.tok .cnt.dbl{background:var(--accent);color:var(--accent-ink)}
 .tok .bonus{position:absolute;left:-4px;bottom:26px;font-size:13px;font-weight:700;background:var(--warn);color:#fff;border-radius:4px;padding:0 3px}
 .grid .tok{cursor:grab}
 .grid .tok.used{opacity:.32;cursor:not-allowed}
@@ -519,7 +519,7 @@ function renderPool(){
   if(!list.length){pool.innerHTML=`<p class="hint" style="grid-column:1/-1">${chars.some(c=>state.owned[c.id])?"검색 결과가 없습니다.":"보유 캐릭터 탭에서 가진 공명자를 체크하세요."}</p>`;return}
   pool.innerHTML=list.map(c=>{
     const max=vigorOf(c.id),left=max-usedCount(c.id);
-    const cnt=`<span class="cnt ${max>1?"two":""}" title="남은 배치 횟수">${left}/${max}</span>`;
+    const cnt=`<span class="cnt ${max>1?"dbl":""}" title="남은 배치 횟수">${left}/${max}</span>`;
     return `<div class="tok ${left<=0?"used":""} ${selected===c.id?"sel":""}" draggable="${left>0}" data-id="${c.id}" data-src="pool" role="button" tabindex="0" aria-label="${esc(c.name)} 남은 ${left}회">${tokenHTML(c,cnt)}</div>`;
   }).join("");
 }
