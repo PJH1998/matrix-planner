@@ -524,18 +524,31 @@ function vigorOf(id){
 }
 function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(s===id)n++}));return n}
 
-/* strength — placeholder formula, replace when growth-based recommendation is built */
+/* ---------- strength ----------
+   캐릭터 점수 = (등급 + 무기 + 재련) × 레벨 배율 × 공명 체인 배율(역할별) × 주기 피해 증가
+   파티 강도 = Σ(캐릭터 점수 × 역할 비중 × 파워 서킷) × (1 + 서포터 딜증%) × (1 + 시너지%) */
+const CHAIN_MUL={ // 0~6체인 배율. 메인 딜러 기준 3체인 170%, 6체인 285% (260~310% 중간값)
+  dps:[1,1.2,1.45,1.7,1.9,2.1,2.85],
+  sub:[1,1.1,1.2,1.3,1.38,1.45,1.6],
+  support:[1,1.03,1.06,1.1,1.13,1.16,1.2]};
+const ROLE_W={main:1,dps:0.5,sub:0.5,support:0.2}; // 파티 내 피해 비중 (메인 딜러는 1)
+// 반주 연결과 관계없이 파티 피해를 올려 주는 캐릭터의 딜증(%) 추정치. 메인 딜러 본인에게는 적용하지 않는다.
+const AMP={shorekeeper:40,verina:30,mornye:35,suisui:35,baizhi:15,buling:20,youhu:10,lynae:15,augusta:15,rebecca:15,
+  denia:15,aemeath:10,rover_e:20,lucy:15,hsin:15,chisa:20,ciaccona:20,rover_a:15,phoebe:20,jianxin:10};
+const SYN_BONUS={outroMain:8,outroOther:4,mech:5,combo:5,cap:40};
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
   const lv=clamp(+g.lv||90,1,90), ch=clamp(+g.chain||0,0,6), wr=+g.wr||(c.rar===5?5:4), rf=clamp(+g.ref||1,1,5);
   let s=(c.rar===5?10:6);
-  s+=ch*1.5;
   s+=(wr===5?4:wr===4?1.5:0)+(rf-1)*0.4;
   s*=0.5+0.5*(lv/90);
+  s*=(CHAIN_MUL[c.role]||CHAIN_MUL.sub)[Math.round(ch)];
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
   return s;
 }
+function ampOf(id){const c=charMap[id];if(!c)return 0;const a=c.amp!=null?+c.amp:(AMP[id]||0);
+  const ch=clamp(+((state.growth[id]||{}).chain)||0,0,6);return a*(CHAIN_MUL.support[Math.round(ch)]);}
 // 파워 서킷(강화 효과) 반영: 조건을 만족하는 공명자 점수에 효과 수치(%)를 곱한다
 function circuitMul(t,id){
   const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);if(!buff)return {mul:1,hits:[]};
@@ -554,8 +567,22 @@ function circuitMul(t,id){
     if(!v)return; if(k in ok?ok[k]:false){add+=v;hits.push(e.text)}});
   return {mul:1+add/100,hits};
 }
-function teamBase(t){return t.slots.reduce((a,id)=>a+(id?charScore(id):0),0)}
-function teamScore(t){return t.slots.reduce((a,id)=>a+(id?charScore(id)*circuitMul(t,id).mul:0),0)}
+function teamCalc(t){
+  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null};if(!ids.length)return r;
+  const main=mainDps(t);r.main=main;
+  let dmg=0,dmgC=0;
+  ids.forEach(id=>{const c=charMap[id];const w=id===main?ROLE_W.main:(ROLE_W[c.role]||0.5);const v=charScore(id)*w;dmg+=v;dmgC+=v*circuitMul(t,id).mul;});
+  r.amp=ids.filter(id=>id!==main).reduce((a,id)=>a+ampOf(id),0);
+  const sy=teamSynergy(t);let syn=0;const seen=new Set();
+  sy.links.forEach(l=>{if(l.k==="outro")syn+=l.n*(l.to===main?SYN_BONUS.outroMain:SYN_BONUS.outroOther);
+    else if(!seen.has(l.tag)){seen.add(l.tag);syn+=SYN_BONUS.mech}});
+  syn+=sy.combos.length*SYN_BONUS.combo;r.syn=Math.min(SYN_BONUS.cap,syn);
+  const mul=(1+r.amp/100)*(1+r.syn/100);
+  r.base=dmg*mul;r.total=dmgC*mul;r.circuit=r.total-r.base;return r;
+}
+const _tc=new Map(); // bestOrder 계산 중 캐시
+function teamBase(t){return (_tc.get(t)||teamCalc(t)).base}
+function teamScore(t){return (_tc.get(t)||teamCalc(t)).total}
 function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 
 /* ---------- persistence ---------- */
@@ -682,6 +709,10 @@ function simulate(teams){
 }
 function permutations(a){if(a.length<=1)return [a];const out=[];a.forEach((x,i)=>permutations(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>out.push([x].concat(p))));return out}
 function bestOrder(){
+  _tc.clear();state.teams.forEach(t=>_tc.set(t,teamCalc(t)));
+  try{return bestOrder_()}finally{_tc.clear()}
+}
+function bestOrder_(){
   const live=state.teams.filter(t=>t.slots.some(Boolean)),empty=state.teams.filter(t=>!t.slots.some(Boolean));
   // 진행도 차이가 0.05 보스 미만이면 같은 것으로 보고, 약한 파티가 앞인 순서를 고른다
   const val=o=>{const r=simulate(o);const asc=o.reduce((a,t,i)=>a+i*teamScore(t),0);return Math.round((r.progress-0.15*r.bad)*20)*1e4+asc};
@@ -775,6 +806,8 @@ function teamWarnings(t){
   if(buff&&buff.id==="negative"&&ids.some(id=>charMap[id]&&charMap[id].el==="electro")) out.push(`<span class="chip g">전도 추가 피해 적용</span>`);
   return out.join("");
 }
+function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
+  return `메인 딜러: ${charMap[r.main].name}\n서포터 딜증 +${Math.round(r.amp)}% · 시너지 +${Math.round(r.syn)}%\n${t.buff?`파워 서킷 반영 +${r.circuit.toFixed(1)}`:"강화 효과를 고르면 파워 서킷이 반영됩니다"}`;}
 let simCache=null;
 function renderTeams(){
   simCache=simulate(state.teams);
@@ -792,7 +825,7 @@ function renderTeams(){
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
       ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
-        <div class="row"><span class="score" title="기본 ${teamBase(t).toFixed(1)}${t.buff?` · 파워 서킷 반영 +${(sc-teamBase(t)).toFixed(1)}`:" · 강화 효과를 고르면 반영됩니다"}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
+        <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
         <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${teamWarnings(t)}</div>
 
