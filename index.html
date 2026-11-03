@@ -56,8 +56,8 @@ main{padding-top:16px}
 section.view{display:none} section.view.on{display:block}
 
 /* plan layout */
-.plan{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1040px) 300px;gap:16px;align-items:start}
-@media (max-width:1100px){.plan{grid-template-columns:minmax(280px,1fr) minmax(0,1040px)} .intel{grid-column:1/-1}}
+.plan{display:grid;grid-template-columns:minmax(240px,1fr) minmax(0,1100px) 360px;gap:16px;align-items:start}
+@media (max-width:1100px){.plan{grid-template-columns:minmax(260px,1fr) minmax(0,1100px)} .intel{grid-column:1/-1}}
 @media (max-width:720px){.plan{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0}
 .panel>h2,.ph{display:flex;align-items:center;gap:8px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;letter-spacing:.04em}
@@ -110,13 +110,13 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .btn.danger{color:var(--danger)}
 .hint{color:var(--muted);font-size:14px;margin:0 0 10px}
 .teams{display:flex;flex-direction:column;gap:8px;container-type:inline-size}
-@container (max-width:845px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr)}.team .synbox{grid-column:2/-1}}
+@container (max-width:910px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr)}.team .synbox{grid-column:2/-1}}
 @container (max-width:660px){.team .meta{grid-column:1/-1}.team .synbox{grid-column:1/-1}}
 .synbox{display:flex;flex-direction:column;align-items:flex-start;gap:4px;align-self:stretch;justify-content:center;border-left:1px dashed var(--line);padding-left:10px;min-width:0}
 .synbox .chip{font-size:12.5px;max-width:100%;line-height:1.45;word-break:keep-all}
 .synbox .none{font-size:13px;color:var(--muted)}
 .score small.up{font-size:12px;color:var(--ok);margin-left:4px;font-weight:700}
-.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(140px,1fr) minmax(160px,1.1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(200px,1fr) minmax(180px,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
 @media (max-width:560px){:root{--face:84px}.team{grid-template-columns:32px repeat(3,minmax(0,1fr))} .team .meta,.team .synbox{grid-column:1/-1}.synbox{border-left:0;padding-left:0}}
 .team .no{font-family:var(--f-mono);font-size:23px;font-weight:700;color:var(--muted);text-align:center;line-height:1}
 .team .no small{display:block;font-size:11px;letter-spacing:.1em;margin-top:2px}
@@ -208,7 +208,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
   <nav class="tabs" aria-label="페이지">
     <a href="#plan" data-v="plan">배치</a>
     <a href="#roster" data-v="roster">보유 캐릭터</a>
-    <a href="#cycle" data-v="cycle">주기 설정</a>
+    <a href="#cycle" data-v="cycle" id="cycleTab" hidden>주기 설정</a>
     <a href="#data" data-v="data">데이터</a>
   </nav>
   <div class="save" id="save"><i></i><span>불러오는 중</span></div>
@@ -271,7 +271,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
     <div class="panel">
       <div class="ph">주기 데이터 편집 (JSON) <span class="sp"></span></div>
       <div class="card-b">
-        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 내 데이터에만 적용됩니다.</p>
+        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 이 브라우저에만 적용됩니다. 모두에게 반영하려면 이 JSON을 <code>index.html</code>의 <code>DEFAULT_CYCLE</code>에 넣고 커밋하세요.</p>
         <textarea id="cycleJson" spellcheck="false" aria-label="주기 데이터 JSON"></textarea>
         <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn pri" id="cycleSave">적용</button>
@@ -290,7 +290,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
       <div class="ph">저장과 백업</div>
       <div class="card-b">
         <dl class="kv" id="storeInfo"></dl>
-        <p class="prose">오른쪽 위 <b>Google로 로그인</b>을 누르면 보유 캐릭터·성장도·파티 편성이 <b>내 계정에만</b> 저장되어 다른 기기에서도 그대로 열립니다. 다른 사람은 자기 데이터만 볼 수 있습니다. 로그인하지 않으면 이 브라우저에 저장되니, 아래 JSON으로 백업해 두세요.</p>
+        <p class="prose">보유 캐릭터·성장도·파티 편성은 <b>이 브라우저에 자동 저장</b>되며 서버로 전송되지 않습니다. 다른 기기나 브라우저로 옮기려면 아래 JSON을 내보내서 옮길 곳에서 가져오세요. 브라우저의 사이트 데이터를 지우면 함께 지워지니 가끔 백업해 두세요.</p>
         <label class="lbl" for="exportBox">내보내기 (복사해서 보관)</label>
         <textarea id="exportBox" readonly spellcheck="false" style="min-height:140px"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -490,6 +490,13 @@ const EXAMPLE_TEAMS=[
  {slots:["hsin","suoming","shorekeeper"],buff:"negative",example:true}
 ];
 
+/* ---------- admin mode ----------
+   주기 설정 탭은 관리자 모드에서만 보인다. 주소 뒤에 ?admin=1 을 붙여 한 번 열면 이 브라우저에 기억되고, ?admin=0 으로 끈다.
+   (정적 사이트라 진짜 잠금은 아님. 다른 사람이 켜도 자기 브라우저에만 적용되고, 모두에게 보이는 값은 DEFAULT_CYCLE뿐이다.) */
+const IS_ADMIN=(()=>{try{const q=new URLSearchParams(location.search).get("admin");
+  if(q==="1")localStorage.setItem("mp-admin","1");else if(q==="0")localStorage.removeItem("mp-admin");
+  return localStorage.getItem("mp-admin")==="1";}catch(e){return false}})();
+
 /* ---------- state ---------- */
 const LS_KEY="wuwa-matrix-planner-v1";
 let state=null;            // {v,owned,growth,teams,cycle,chars}
@@ -515,7 +522,7 @@ function derive(){
   chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
   charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
   chars.forEach(c=>{ if(!(c.id in state.owned)) state.owned[c.id]=true; });
-  cycle=state.cycle||DEFAULT_CYCLE;
+  cycle=(IS_ADMIN&&state.cycle)||DEFAULT_CYCLE; // 주기 수정값은 관리자 모드에서만 사용
 }
 function vigorOf(id){
   let v=(cycle.vigor2||[]).includes(id)?2:1;
@@ -848,7 +855,7 @@ function renderIntel(){
   const bonusIds=Object.keys(cycle.dmgBonus||{}).filter(id=>charMap[id]);
   $("#intel").innerHTML=`
   <div class="panel"><div class="ph">이번 주기 적 <span class="sp period">${esc(cycle.period||"")}</span></div><div class="body">
-    ${(cycle.bosses||[]).map((b,i)=>`<div class="boss"><span class="ix">${String(i+1).padStart(2,"0")}</span><div><b>${esc(b.name)}</b>${b.tentative?` <span class="chip" title="한국어 공식 표기를 확인하지 못한 이름입니다. 주기 설정 탭에서 고칠 수 있습니다.">가칭</span>`:""} ${b.res?`<span class="chip el" style="--ec:var(--${b.res})">${EL[b.res]} 저항</span>`:`<span class="chip">저항 동일</span>`}${b.en?`<p class="period">${esc(b.en)}</p>`:""}<p>${esc(b.note||"")}</p>${(b.effects||[]).length?`<ul class="fx">${b.effects.map(f=>`<li class="${f.kind==="threat"?"t":"b"}"><span>${f.kind==="threat"?"주의":"유리"}${f.round?" · "+esc(f.round):""}</span>${esc(f.text)}</li>`).join("")}</ul>`:""}</div></div>`).join("")}
+    ${(cycle.bosses||[]).map((b,i)=>`<div class="boss"><span class="ix">${String(i+1).padStart(2,"0")}</span><div><b>${esc(b.name)}</b>${b.tentative?` <span class="chip" title="한국어 공식 표기를 확인하지 못한 이름입니다. 주기 설정 탭에서 고칠 수 있습니다.">가칭</span>`:""} ${b.res?`<span class="chip el" style="--ec:var(--${b.res})">${EL[b.res]} 저항</span>`:`<span class="chip">저항 동일</span>`}<p>${esc(b.note||"")}</p>${(b.effects||[]).length?`<ul class="fx">${b.effects.map(f=>`<li class="${f.kind==="threat"?"t":"b"}"><span>${f.kind==="threat"?"주의":"유리"}${f.round?" · "+esc(f.round):""}</span>${esc(f.text)}</li>`).join("")}</ul>`:""}</div></div>`).join("")}
   </div></div>
   <div class="panel"><div class="ph">파워 서킷 (강화 효과)</div><div class="body">
     ${(cycle.buffs||[]).map(b=>`<div class="buff"><b>${esc(b.name)}</b> <span class="tag">${esc(b.type||"")}</span><ul>${(b.effects||[]).map(e=>`<li>${esc(e.text)}</li>`).join("")}</ul></div>`).join("")}
@@ -889,7 +896,7 @@ function renderCycleView(){
 function renderCharJson(){ $("#charJson").value="[\n"+chars.map(c=>"  "+JSON.stringify(c)).join(",\n")+"\n]"; }
 function refreshExport(){ const b=$("#exportBox"); if(b) b.value=JSON.stringify(state); }
 function renderStoreInfo(){
-  $("#storeInfo").innerHTML=`<dt>저장 위치</dt><dd>${storeMode==="account"?"내 Google 계정 (나만 볼 수 있음)":"이 브라우저"}</dd><dt>보유 공명자</dt><dd>${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}</dd><dt>파티 수</dt><dd>${state.teams.length}</dd>`;
+  $("#storeInfo").innerHTML=`<dt>저장 위치</dt><dd>${"이 브라우저"}</dd><dt>보유 공명자</dt><dd>${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}</dd><dt>파티 수</dt><dd>${state.teams.length}</dd>`;
 }
 function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport()}
 function rerenderPlan(){renderPool();renderTeams();renderStoreInfo()}
@@ -1028,7 +1035,8 @@ $("#btnDownload").addEventListener("click",()=>{
 
 /* ---------- routing ---------- */
 const VIEWS=["plan","roster","cycle","data"];
-function route(){const h=(location.hash||"").slice(1);const v=VIEWS.includes(h)?h:"plan";
+document.getElementById("cycleTab").hidden=!IS_ADMIN;
+function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});}
 window.addEventListener("hashchange",route);
