@@ -746,7 +746,7 @@ function renderTeams(){
     const linked=new Set(sy.links.flatMap(l=>[l.i,l.j]));
     const lk=si=>{if(si===0)return"";const on=sy.adj[si];const a=t.slots[si-1],b=t.slots[si];if(!a||!b)return"";
       const l=sy.links.filter(x=>x.i===si-1&&x.j===si).map(x=>x.txt);return `<span class="lnk ${on?"on":""}" title="${esc(on?l.join("\n"):"연결된 시너지 없음")}">${on?"✓":""}</span>`};
-    return `<div class="team${sy.adj.wrap?" wrap":""}"${sy.adj.wrap?` title="1번과 3번 슬롯도 시너지로 연결됩니다"`:""} data-team="${i}">
+    return `<div class="team${sy.adj.wrap?" wrap":""}" data-team="${i}">
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
       ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
