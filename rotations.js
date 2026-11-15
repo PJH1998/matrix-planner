@@ -51,7 +51,7 @@ window.ROTATIONS=[
      {who:"suisui",steps:["평(4타)","Q","R","아웃트로"]},
      {who:"lucilla",steps:["인트로","R","강(홀드)","Q","아웃트로"]},
      {who:"hiyuki",steps:["인트로","강","Q","R","평3","회피","평3","튠 브레이크","평(3타)","점프","E","회피","거합2","평3","회피","평3","점프","E","회피","거합2","강","R","E","아웃트로"]}],
-    tips:[{who:"suisui",text:"수수 평3 후딜레이 동안 히유키로 퀵스왑해 평타를 넣고 다시 수수로 돌아옵니다. 첫 사이클은 히유키 평3, 이후에는 평타 1타입니다."}],
+    tips:[{who:"suisui",text:"평3 후딜레이 동안 히유키로 퀵스왑해 평타를 넣고 다시 수수로 돌아옵니다. 첫 사이클은 히유키 평3, 이후에는 평타 1타입니다."}],
     source:{name:"arabwuwa.com 커뮤니티 로테이션 #118",url:"https://arabwuwa.com/rotations/",date:"2026-09"}}]},
 
  {id:"aemeath-lynae-mornye",title:"에이메스 · 린네 · 모니에",tag:"용융",members:["aemeath","lynae","mornye"],calc:"rupture",
