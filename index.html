@@ -274,9 +274,20 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
   box-shadow:0 2px 8px rgba(0,0,0,.35);transition:border-color .12s}
 .grid .tok:hover:not(.used),.slot .tok:hover{border-color:#e6c36a}
 .tok .face{border-radius:0;background-color:var(--card);box-shadow:none}
-.tok .face.pic{background-position:center 12%}
-.tok .face.pic::after{border-radius:0;box-shadow:none;
-  background:linear-gradient(to top,color-mix(in srgb,#e6c36a 38%,transparent) 0,transparent 42%)}
+/* 초상화 뒤 배경: 별이 뜬 밤하늘에서 아래로 갈수록 푸른 안개 (편성 화면 느낌) */
+.tok .face{--sky:
+  radial-gradient(1px 1px at 18% 22%,rgba(255,255,255,.9),transparent 70%),
+  radial-gradient(1px 1px at 72% 14%,rgba(255,255,255,.8),transparent 70%),
+  radial-gradient(1.5px 1.5px at 86% 38%,rgba(255,255,255,.75),transparent 70%),
+  radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.7),transparent 70%),
+  radial-gradient(1px 1px at 9% 52%,rgba(255,255,255,.6),transparent 70%),
+  radial-gradient(1px 1px at 58% 32%,rgba(255,255,255,.55),transparent 70%),
+  linear-gradient(158deg,transparent 38%,rgba(175,205,235,.16) 50%,transparent 62%),
+  radial-gradient(130% 55% at 50% 108%,rgba(205,228,245,.85),transparent 62%),
+  linear-gradient(to bottom,#060a13 0%,#101c2e 45%,#2c4663 78%,#7f9fbb 100%)}
+.tok .face{background:var(--sky)}
+.tok .face.pic{background:var(--pic) center 12%/cover no-repeat,var(--sky)}
+.tok .face.pic::after{border-radius:0;box-shadow:none;background:none}
 .tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
   background:#1e2226;border-top:2px solid #e6c36a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tok .face .elb{left:6px;top:6px;width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;
@@ -808,7 +819,7 @@ const $=s=>document.querySelector(s);
 function tokenHTML(c,extra=""){
   const bonus=(cycle.dmgBonus||{})[c.id];
   const pic=portraits[c.id];
-  return `<div class="face${pic?" pic":""}" style="--ec:var(--${c.el})${pic?`;background-image:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
+  return `<div class="face${pic?" pic":""}" style="--ec:var(--${c.el})${pic?`;--pic:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderFilter(){
