@@ -483,7 +483,7 @@ const DEFAULT_CHARS=[
  ["aalto","알토","aero",4,"sub"],["yangyang","양양","aero",4,"sub"],
  ["shorekeeper","파수인","spectro",5,"support"],["lynae","린네","spectro",5,"sub"],["verina","벨리나","spectro",5,"support"],
  ["luuk","루크 · 헤르센","spectro",5,"dps"],["jinhsi","금희","spectro",5,"dps"],["phoebe","페비","spectro",5,"sub"],
- ["zani","젠니","spectro",5,"dps"],["lucy","루시","spectro",5,"dps"],["rover_s","방랑자(회절)","spectro",5,"sub"],
+ ["zani","젠니","spectro",5,"dps"],["lucy","루시","spectro",5,"dps"],["rover_s","방랑자(회절)","spectro",5,"sub"],["lily","릴리","spectro",5,"support"],
  ["chisa","치사","havoc",5,"sub"],["xuanling","양양·현령","havoc",5,"dps"],["phrolova","플로로","havoc",5,"dps"],
  ["cantarella","칸타렐라","havoc",5,"sub"],["camellya","카멜리아","havoc",5,"dps"],["roccia","로코코","havoc",5,"sub"],
  ["rover_h","방랑자(인멸)","havoc",5,"dps"],["danjin","단근","havoc",4,"dps"],["taoqi","도기","havoc",4,"support"]
@@ -546,6 +546,7 @@ const SYN={
  phoebe:{o:"고해 상태: 회절 저항 -10%, 광학 효과 피해 +100% (30초)",ob:[],p:1,w:["heavy"],m:["frazzle"]},
  zani:{o:"강렬한 불기운 대상에게 주는 회절 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["frazzle"]},
  lucy:{o:"다음 캐릭터 일반 공격 피해 +25%, 해킹 이탈 부여 시 전체 피해 +20%",ob:["basic","all"],w:["heavy"],m:["hack"]},
+ lily:{o:"파티 전체 피해 +25% (30초). 공명 해방 후 다른 캐릭터가 변주 스킬을 쓰면 꿈내음(파티 공격력 증가, 최대 4스택). 강공격 종막 뒤 반주 시 빛바랜 꿈결: 합일 버프 스택당 공격력 증가, 에코 어빌리티 크리티컬·크리티컬 피해 증가",ob:["all"],p:1,w:[],m:["unison","echo","shield"]},
  rover_s:{o:"다음 캐릭터 주변 정체 구역 (3초)",ob:[],w:[],m:["frazzle"]},
  chisa:{o:"파티 전체 이상 효과·자기 폭발 최대 스택 +3 (20초)",ob:[],p:1,w:["lib"],m:["anom","bane"]},
  xuanling:{o:"암흑 효과 부여 시 파티 인멸 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["bane"]},
@@ -679,7 +680,7 @@ function chainMul(id){const c=charMap[id];const ch=clamp(Math.round(+((state.gro
   const t=(c&&c.chainMul)||CHAIN_DATA[id]||CHAIN_MUL[c&&c.role]||CHAIN_MUL.sub;return t[ch]||1;}
 const ROLE_W={main:1,dps:0.5,sub:0.5,support:0.2}; // 파티 내 피해 비중 (메인 딜러는 1)
 // 반주 연결과 관계없이 파티 피해를 올려 주는 캐릭터의 딜증(%) 추정치. 메인 딜러 본인에게는 적용하지 않는다.
-const AMP={shorekeeper:40,verina:30,mornye:35,suisui:35,baizhi:15,buling:20,youhu:10,lynae:15,augusta:15,rebecca:15,
+const AMP={lily:40,shorekeeper:40,verina:30,mornye:35,suisui:35,baizhi:15,buling:20,youhu:10,lynae:15,augusta:15,rebecca:15,
   denia:15,aemeath:10,rover_e:20,lucy:15,hsin:15,chisa:20,ciaccona:20,rover_a:15,phoebe:20,jianxin:10};
 const SYN_BONUS={outroMain:8,outroOther:4,mech:5,combo:5,cap:40};
 function charScore(id){
