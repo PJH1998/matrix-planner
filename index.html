@@ -275,7 +275,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .grid .tok:hover:not(.used),.slot .tok:hover{border-color:#e6c36a}
 .tok .face{border-radius:0;background-color:var(--card);box-shadow:none}
 /* 초상화 뒤 배경: 별이 뜬 밤하늘에서 아래로 갈수록 푸른 안개 (편성 화면 느낌) */
-.tok .face{--sky:
+.tok .face,.pf-l .face{--sky:
   radial-gradient(1px 1px at 18% 22%,rgba(255,255,255,.9),transparent 70%),
   radial-gradient(1px 1px at 72% 14%,rgba(255,255,255,.8),transparent 70%),
   radial-gradient(1.5px 1.5px at 86% 38%,rgba(255,255,255,.75),transparent 70%),
@@ -287,6 +287,8 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
   linear-gradient(to bottom,#060a13 0%,#101c2e 45%,#2c4663 78%,#7f9fbb 100%)}
 .tok .face{background:var(--sky)}
 .tok .face.pic{background:var(--pic) center 12%/cover no-repeat,var(--sky)}
+.pf-l .face{background:var(--sky)}
+.pf-l .face.pic{background:var(--pic) center 8%/cover no-repeat,var(--sky)}
 .tok .face.pic::after{border-radius:0;box-shadow:none;background:none}
 .tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
   background:#1e2226;border-top:2px solid #e6c36a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -346,6 +348,63 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 #tip em{font-style:normal;color:#f0c95a;font-weight:700}
 /* roster table */
 th{font-family:var(--f-num);background:var(--strip)}
+
+/* ===== 보유 캐릭터: 카드 격자 + 프로필 창 ===== */
+.roster-h{align-items:center}
+.roster-h .elf{display:flex}
+.rgrid{--face:150px;display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--face) + 4px),1fr));gap:16px 12px;justify-items:center;padding:4px 0 24px}
+@media (max-width:560px){.rgrid{--face:104px}}
+.rcard{cursor:pointer}
+.rcard:hover{border-color:#e6c36a}
+.rcard.off .face{filter:grayscale(1) brightness(.42)}
+.rcard.off .nm{color:#8a9097;border-top-color:#5a5f66}
+.rcard .roff{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);padding:2px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(10,12,14,.75);color:#d5dadf;font-size:13px;letter-spacing:.08em;border-radius:2px;z-index:3}
+.rcard .rlv{position:absolute;right:7px;bottom:36px;font-family:var(--f-num);font-size:20px;font-weight:500;color:#fff;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.85);z-index:2}
+.rcard .rlv small{font-size:12px;margin-right:1px;font-weight:400}
+.rcard .rch{position:absolute;right:6px;top:30px;font-family:var(--f-num);font-size:13px;font-weight:600;color:#e6c36a;background:rgba(12,14,17,.72);padding:0 5px;border-radius:2px;z-index:2}
+.rcard .rch small{font-family:var(--f-body);font-size:10.5px;margin-left:1px;color:#cfd4d9;font-weight:400}
+.rcard .rwep{position:absolute;left:6px;bottom:34px;width:40px;height:40px;border-radius:3px;z-index:2;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.6)}
+.rwep.q5,.wt.q5 .wi{background:linear-gradient(160deg,#8a6a2a,#3a2d14)}
+.rwep.q4,.wt.q4 .wi{background:linear-gradient(160deg,#6b4a8c,#2a1d38)}
+.rwep.q3,.wt.q3 .wi{background:linear-gradient(160deg,#2f5f88,#16283a)}
+.rcard .rwep img{width:100%;height:100%;display:block}
+.rcard .rwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:10.5px;font-weight:600;background:#14181c;color:#e6c36a;border-radius:2px;padding:0 3px;line-height:1.35}
+.prof{padding:0;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:#10151a;color:#eef2f5;width:min(1000px,96vw);max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.prof::backdrop{background:rgba(4,7,10,.66);backdrop-filter:blur(3px)}
+.pf{display:grid;grid-template-columns:minmax(200px,270px) minmax(0,1fr)}
+.pf-l{position:relative;border-right:1px solid rgba(255,255,255,.1)}
+.pf-l .face{position:relative;width:100%;height:100%;min-height:440px}
+.pf-l .elb{position:absolute;left:12px;top:12px;width:44px;height:44px}
+.pf-l .elb img{width:100%;height:100%}
+.pf-r{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pf-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pf-h h3{margin:0 6px 0 0;font-size:24px;font-weight:700}
+.pf-h .chip{background:rgba(255,255,255,.06);color:#d9dee3;border-color:rgba(255,255,255,.18)}
+.pf-h .chip.el{color:#fff}
+.pf-h .x{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.2);color:#d9dee3;border-radius:2px;width:32px;height:32px}
+.pf-h .x:hover{border-color:#e6c36a;color:#e6c36a}
+.pf-own{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#cfd4d9;align-self:flex-start}
+.pf-sec{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:8px;padding:5px 10px;background:linear-gradient(90deg,rgba(255,255,255,.09),rgba(255,255,255,.02));font-size:14px}
+.pf-sec span{color:#e9edf0}.pf-sec b{font-weight:500;color:#e6c36a;font-family:var(--f-num),var(--f-body);font-size:14px;text-align:right}
+.pf-lv{display:flex;align-items:center;gap:10px}
+.pf-lv input[type=range]{flex:1;accent-color:#e6c36a}
+.pf-lv input[type=number]{width:72px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);color:#eef2f5}
+.seg{display:flex;gap:4px}
+.seg button{flex:1;padding:6px 0;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#d5dadf;border-radius:2px;font-family:var(--f-num);font-size:15px}
+.seg button:hover{border-color:rgba(230,195,106,.6)}
+.seg button[aria-pressed="true"]{background:#e6c36a;color:#1c1606;border-color:#e6c36a;font-weight:600}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;max-height:min(330px,42vh);overflow:auto;padding:2px}
+.wt{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 5px 7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);border-radius:3px;color:#e9edf0;text-align:center}
+.wt:hover{border-color:rgba(230,195,106,.6)}
+.wt[aria-pressed="true"]{border-color:#e6c36a;box-shadow:0 0 0 1px #e6c36a,0 0 12px rgba(230,195,106,.25);background:rgba(230,195,106,.08)}
+.wt .wi{width:64px;height:64px;border-radius:3px;display:block;overflow:hidden}
+.wt .wi img{width:100%;height:100%;display:block}
+.wt .wn{font-size:12px;line-height:1.3;min-height:2.6em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.wt .wp{font-family:var(--f-num);font-size:13px;color:#e6c36a}
+.wt .wbest{position:absolute;left:4px;top:4px;font-size:10.5px;background:#e6c36a;color:#1c1606;padding:0 4px;border-radius:2px;font-weight:700}
+.pf-foot{margin:6px 0 0;font-size:12.5px;color:#9ba7b3}
+.pf-foot b{color:#e6c36a;font-family:var(--f-num);font-size:15px}
+@media (max-width:760px){.pf{grid-template-columns:1fr}.pf-l{border-right:0}.pf-l .face{min-height:0;height:240px}}
 </style>
 
 </head>
@@ -396,17 +455,15 @@ th{font-family:var(--f-num);background:var(--strip)}
   <div class="roster-h">
     <h2>보유 캐릭터</h2>
     <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
+    <div class="elf" id="rElFilter" aria-label="속성 필터"></div>
+    <span class="lbl" id="ownCount"></span>
     <button class="btn" id="ownAll">전체 보유</button>
     <button class="btn ghost" id="ownNone">전체 해제</button>
   </div>
-  <p class="hint">체크한 공명자만 배치 화면에 나타납니다. 레벨·공명 체인·무기 정보는 파티 강도 점수와 이후 추천 기능에 쓰입니다.</p>
-  <div class="rtable-wrap">
-    <table>
-      <thead><tr><th>보유</th><th>초상화</th><th>공명자</th><th>속성</th><th>성급</th><th>배치 횟수</th><th>레벨</th><th>공명 체인</th><th>무기 성급</th><th>재련</th><th>점수</th></tr></thead>
-      <tbody id="rbody"></tbody>
-    </table>
-  </div>
+  <p class="hint">카드를 누르면 레벨·공명 체인·무기를 설정합니다. 우클릭(터치 화면은 길게 누르기)하면 보유/미보유가 바뀌고, 미보유 공명자는 배치 화면에 나오지 않습니다.</p>
+  <div class="rgrid" id="rgrid"></div>
 </section>
+<dialog class="prof" id="prof" aria-label="공명자 설정"></dialog>
 
 <!-- CYCLE -->
 <section class="view" id="v-cycle">
@@ -471,6 +528,7 @@ th{font-family:var(--f-num);background:var(--strip)}
 
 <script src="firebase-config.js"></script>
 <script src="cycle.js"></script>
+<script src="weapons.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -652,7 +710,7 @@ let selected=null;         // tap-to-place selection
 let portraits={};          // charId -> file name in portraits/
 const picUrl=id=>"portraits/"+encodeURIComponent(portraits[id]);
 let currentUser=null, fb=null;
-const ui={el:null,q:"",rq:""};
+const ui={el:null,q:"",rq:"",rel:null};
 
 const clone=o=>JSON.parse(JSON.stringify(o));
 function freshState(){return {v:1,owned:Object.fromEntries(DEFAULT_CHARS.map(c=>[c.id,true])),growth:{},teams:clone(EXAMPLE_TEAMS).concat(Array.from({length:4},()=>({slots:[null,null,null],buff:null}))),cycle:null,chars:null}}
@@ -704,13 +762,37 @@ const ROLE_W={main:1,dps:0.5,sub:0.5,support:0.2}; // 파티 내 피해 비중 (
 const AMP={lily:40,shorekeeper:40,verina:30,mornye:35,suisui:35,baizhi:15,buling:20,youhu:10,lynae:15,augusta:15,rebecca:15,
   denia:15,aemeath:10,rover_e:20,lucy:15,hsin:15,chisa:20,ciaccona:20,rover_a:15,phoebe:20,jianxin:10};
 const SYN_BONUS={outroMain:8,outroOther:4,mech:5,combo:5,cap:40};
+/* ---------- weapons (weapons.js) ----------
+   무기 성능 = Prydwen 무기별 성능 %를 공명자별 최고값 100으로 맞춘 값 × 재련 보정.
+   목록에 없는 무기는 같은 등급 최저값 - 3 (없으면 5성 85 / 4성 72 / 3성 60)으로 추정한다. */
+const WMAP={};(window.WEAPONS||[]).forEach(([id,name,type,q,icon])=>WMAP[id]={id,name,type,q,icon});
+const WTYPE=window.WEAPON_TYPES||{};
+const REF_STEP={5:3,4:2,3:1.5}; // 재련 1단계당 성능 % (추정)
+const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
+const weaponIcon=w=>WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
+const _perf={};
+function perfList(cid){if(_perf[cid])return _perf[cid];const l=((window.WEAPON_PERF||{})[cid]||[]).filter(x=>WMAP[x[0]]);
+  const mx=Math.max(0,...l.map(x=>x[2]));const seen=new Set();
+  return _perf[cid]=l.filter(x=>!seen.has(x[0])&&seen.add(x[0])).map(([id,r,p])=>({id,r,p:p/mx*100})).sort((a,b)=>b.p-a.p);}
+function weaponPct(cid,wid,ref){const w=WMAP[wid];if(!w)return null;const l=perfList(cid);const e=l.find(x=>x.id===wid);
+  let base,baseR;
+  if(e){base=e.p;baseR=e.r}else{const same=l.filter(x=>WMAP[x.id].q===w.q);base=same.length?Math.min(...same.map(x=>x.p))-3:({5:85,4:72,3:60}[w.q]||55);baseR=w.q===5?1:5}
+  return base*(1+(REF_STEP[w.q]||2)/100*(ref-baseR));}
+function charWType(cid){const c=charMap[cid];return (c&&c.wtype)||(window.CHAR_WTYPE||{})[cid]||null}
+function defaultWeapon(cid){const c=charMap[cid];const g=state.growth[cid]||{};const want=+g.wr||(c&&c.rar===5?5:4);
+  const l=perfList(cid);const best=l.find(x=>WMAP[x.id].q===want)||l[0];if(best)return best.id;
+  const t=charWType(cid);const w=Object.values(WMAP).find(w=>w.type===t&&w.q===want);return w?w.id:null;}
+function weaponOf(cid){const g=state.growth[cid]||{};const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
+  const ref=clamp(+g.ref||(w&&w.q<5?5:1),1,5);return {w,ref,pct:w?weaponPct(cid,id,ref):null,custom:!!(g.wid&&WMAP[g.wid])};}
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
-  const lv=clamp(+g.lv||90,1,90), ch=clamp(+g.chain||0,0,6), wr=+g.wr||(c.rar===5?5:4), rf=clamp(+g.ref||1,1,5);
+  const lv=clamp(+g.lv||90,1,90);
   const hasDps=c.baseDps!=null||BASE_DPS[id]!=null; // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
+  const wp=weaponOf(id);
   let s=(hasDps?10:(c.rar===5?10:6));
-  s+=(wr===5?4:wr===4?1.5:0)+(rf-1)*0.4;
+  if(wp.pct!=null) s=(s+4)*wp.pct/100; // 무기: 공명자별 최고 무기(재련 기준값) = 100%
+  else s+=4;
   s*=dpsFactor(id);
   s*=0.5+0.5*(lv/90);
   s*=c.role==='support'&&!CHAIN_DATA[id]?1:chainMul(id);
@@ -1010,23 +1092,51 @@ function renderIntel(){
 /* ---------- render: roster ---------- */
 function renderRoster(){
   const q=ui.rq.trim();
-  const list=chars.filter(c=>!q||c.name.includes(q));
-  list.sort((a,b)=>EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||b.rar-a.rar);
-  $("#rbody").innerHTML=list.map(c=>{
-    const g=state.growth[c.id]||{};const on=!!state.owned[c.id];
-    return `<tr class="${on?"":"off"}" data-id="${c.id}" style="--ec:var(--${c.el})">
-      <td><input type="checkbox" class="sw" data-f="own" id="own-${c.id}" ${on?"checked":""} aria-label="${esc(c.name)} 보유"></td>
-      <td><span class="pt"><span class="th" ${portraits[c.id]?`style="background-image:url('${picUrl(c.id)}')"`:""}></span></span></td>
-      <td><span class="nmc"><span class="dot"></span>${esc(c.name)}</span></td>
-      <td>${EL[c.el]}</td><td>${c.rar}★</td><td>${vigorOf(c.id)}회</td>
-      <td><input type="number" min="1" max="90" data-f="lv" id="lv-${c.id}" value="${g.lv??90}"></td>
-      <td><select data-f="chain" id="ch-${c.id}">${[0,1,2,3,4,5,6].map(n=>`<option ${+(g.chain||0)===n?"selected":""}>${n}</option>`).join("")}</select></td>
-      <td><select data-f="wr" id="wr-${c.id}">${[5,4,3].map(n=>`<option value="${n}" ${+(g.wr||(c.rar===5?5:4))===n?"selected":""}>${n}★</option>`).join("")}</select></td>
-      <td><select data-f="ref" id="rf-${c.id}">${[1,2,3,4,5].map(n=>`<option ${+(g.ref||1)===n?"selected":""}>${n}</option>`).join("")}</select></td>
-      <td class="score">${charScore(c.id).toFixed(1)}</td></tr>`;
-  }).join("");
+  $("#rElFilter").innerHTML=`<button data-el="" aria-pressed="${!ui.rel}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.rel===e}"><img class="eli" src="icons/el-${e}.png" alt=""></button>`).join("");
+  const list=chars.filter(c=>(!q||c.name.includes(q))&&(!ui.rel||c.el===ui.rel));
+  list.sort((a,b)=>(+!!state.owned[b.id])-(+!!state.owned[a.id])||b.rar-a.rar||EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el));
+  $("#ownCount").textContent=`보유 ${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}`;
+  $("#rgrid").innerHTML=list.map(c=>{
+    const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
+    const extra=`<span class="rlv"><small>Lv.</small>${g.lv??90}</span><span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
+      (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" loading="lazy" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
+      (on?"":`<span class="roff">미보유</span>`);
+    return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
+  }).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;
 }
+function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
+  if(!on) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
+  persist();renderRoster();rerenderPlan();flash(`${charMap[id].name}: ${on?"보유":"미보유"}`);}
 
+/* ---------- profile dialog ---------- */
+let profId=null;
+function openProfile(id){profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
+function setGrowth(id,patch){const g=state.growth[id]=state.growth[id]||{};Object.assign(g,patch);persist();renderProfile();renderRoster();rerenderPlan();}
+function renderProfile(){
+  const id=profId,c=charMap[id];if(!c)return;const g=state.growth[id]||{};const wp=weaponOf(id);const lv=g.lv??90,ch=+g.chain||0;
+  const t=charWType(id);const l=perfList(id);const pmap=Object.fromEntries(l.map(x=>[x.id,x]));const top=l[0];
+  const ws=Object.values(WMAP).filter(w=>w.type===t&&w.q>=3).sort((a,b)=>((pmap[b.id]||{}).p||0)-((pmap[a.id]||{}).p||0)||b.q-a.q||a.id-b.id);
+  const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
+  $("#prof").innerHTML=`<form method="dialog" class="pf">
+   <div class="pf-l"><div class="face${portraits[id]?" pic":""}" style="--ec:var(--${c.el})${portraits[id]?`;--pic:url('${picUrl(id)}')`:""}"><span class="elb"><img src="icons/el-${c.el}.png" alt=""></span></div></div>
+   <div class="pf-r">
+    <div class="pf-h"><h3>${esc(c.name)}</h3><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${c.rar}★</span><span class="chip">${ROLE[c.role]||""}</span><span class="chip">${WTYPE[t]||""}</span>
+      <button class="x" value="close" aria-label="닫기">✕</button></div>
+    <label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
+    <div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>
+    <div class="pf-lv"><input type="range" min="1" max="90" value="${lv}" id="pfLv" aria-label="레벨"><input type="number" min="1" max="90" value="${lv}" id="pfLvN" aria-label="레벨 숫자"></div>
+    <div class="pf-sec"><span>공명 체인 (돌파)</span><b>${ch}돌파 · DPS ${Math.round(chainMul(id)*100)}%</b></div>
+    <div class="seg" id="pfCh">${[0,1,2,3,4,5,6].map(n=>`<button type="button" data-v="${n}" aria-pressed="${ch===n}">${n}</button>`).join("")}</div>
+    <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · 성능 ${wp.pct.toFixed(1)}%`:""}</b></div>
+    <div class="wgrid" id="pfW">${ws.map(w=>{const e=pmap[w.id];const sel=wp.w&&wp.w.id===w.id;
+      return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음(추정)"}">
+        <span class="wi"><img src="${weaponIcon(w)}" alt="" loading="lazy" onerror="this.remove()"></span>
+        <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
+    <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
+    <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
+    <p class="pf-foot">캐릭터 점수 <b>${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
+   </div></form>`;
+}
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
 function renderCycleView(){
@@ -1138,14 +1248,27 @@ $("#btnSort").addEventListener("click",()=>{
 });
 // roster
 $("#rq").addEventListener("input",e=>{ui.rq=e.target.value;renderRoster()});
-$("#rbody").addEventListener("change",e=>{
-  const tr=e.target.closest("tr");const id=tr.dataset.id;const f=e.target.dataset.f;
-  if(f==="own"){state.owned[id]=e.target.checked;
-    if(!e.target.checked) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
-    tr.classList.toggle("off",!e.target.checked);
-  }else{const g=state.growth[id]=state.growth[id]||{};g[f]=f==="lv"?clamp(+e.target.value,1,90):+e.target.value;}
-  tr.querySelector("td.score").textContent=charScore(id).toFixed(1);
-  persist();rerenderPlan();
+$("#rElFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.rel=b.dataset.el||null;renderRoster()});
+$("#rgrid").addEventListener("click",e=>{const tk=e.target.closest(".rcard");if(tk)openProfile(tk.dataset.id)});
+$("#rgrid").addEventListener("keydown",e=>{const tk=e.target.closest(".rcard");if(tk&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProfile(tk.dataset.id)}});
+$("#rgrid").addEventListener("contextmenu",e=>{const tk=e.target.closest(".rcard");if(!tk)return;e.preventDefault();toggleOwned(tk.dataset.id)});
+let rlp=null,rlpFired=false;
+$("#rgrid").addEventListener("touchstart",e=>{const tk=e.target.closest(".rcard");if(!tk)return;rlpFired=false;rlp=setTimeout(()=>{rlpFired=true;toggleOwned(tk.dataset.id)},550)},{passive:true});
+["touchend","touchmove","touchcancel"].forEach(ev=>$("#rgrid").addEventListener(ev,e=>{clearTimeout(rlp);if(ev==="touchend"&&rlpFired){e.preventDefault();rlpFired=false}}));
+$("#prof").addEventListener("click",e=>{
+  const d=$("#prof");if(e.target===d){d.close();return}
+  const ch=e.target.closest("#pfCh button");if(ch)return setGrowth(profId,{chain:+ch.dataset.v});
+  const r=e.target.closest("#pfR button");if(r)return setGrowth(profId,{ref:+r.dataset.v});
+  const w=e.target.closest("#pfW button");if(w){const W=WMAP[+w.dataset.w];const g=state.growth[profId]||{};
+    return setGrowth(profId,{wid:W.id,wr:W.q,ref:g.wid===W.id?g.ref:(W.q<5?5:1)})}
+});
+$("#prof").addEventListener("input",e=>{
+  if(e.target.id==="pfLv"){$("#pfLvN").value=e.target.value;}
+  if(e.target.id==="pfLvN"&&e.target.value===""){return}
+});
+$("#prof").addEventListener("change",e=>{
+  if(e.target.id==="pfLv"||e.target.id==="pfLvN")return setGrowth(profId,{lv:clamp(+e.target.value||90,1,90)});
+  if(e.target.id==="pfOwn"){if(!!state.owned[profId]!==e.target.checked)toggleOwned(profId);renderProfile();}
 });
 $("#ownAll").addEventListener("click",()=>{chars.forEach(c=>state.owned[c.id]=true);persist();renderRoster();rerenderPlan()});
 $("#ownNone").addEventListener("click",()=>{chars.forEach(c=>state.owned[c.id]=false);state.teams.forEach(t=>t.slots=[null,null,null]);persist();renderRoster();rerenderPlan()});
