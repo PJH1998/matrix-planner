@@ -1174,17 +1174,28 @@ async function prepImage(blob){ // 2배 확대 + 흑백 반전(어두운 배경�
   const x=cv.getContext("2d");x.drawImage(bm,0,0,cv.width,cv.height);const im=x.getImageData(0,0,cv.width,cv.height),d=im.data;
   for(let i=0;i<d.length;i+=4){const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];const o=v>150?0:255;d[i]=d[i+1]=d[i+2]=o;d[i+3]=255}
   x.putImageData(im,0,0);return cv;}
-function parseStats(text){
-  const out={b:{}};const num=l=>{const m=l.replace(/[Oo]/g,"0").replace(/[lI|]/g,"1").replace(/\s+(?=[\d.,%])/g,"").match(/(\d[\d,]*(?:\.\d+)?)%?\s*$/);return m?parseFloat(m[1].replace(/,/g,"")):null};
+function parseStats(text,bk){
+  // 1) 항목 이름으로 찾고, 2) 못 찾은 기본 스탯은 스탯 화면의 고정 순서(HP·공격력·방어력·공명 효율·크리티컬·크리티컬 피해)로 채운다.
+  const PCT=new Set(["er","cr","cd"]);
+  const val=(str,pct)=>{const t=str.replace(/[Oo]/g,"0").replace(/[lI|]/g,"1").replace(/,/g,"");
+    if(pct){const m=t.match(/(\d+\.\d)/)||t.match(/(\d+)/);return m?parseFloat(m[1]):null}
+    const m=t.match(/(\d+)/);return m?parseFloat(m[1]):null};
+  const lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.replace(/[Oo](?=[\d.%])|(?<=[\d.])[Oo]/g,"0").match(/(\d[\d,]*(?:\.\d+)?)\s*%?\s*$/);return {l,num:m?m[1]:null,pct:/%|\d\.\d/.test(m?m[0]:"")}}).filter(x=>x.num);
+  const out={b:{}},used=new Set();
   const RULES=[[/크리티컬\s*피해/,"cd"],[/크리티컬|크리티칼/,"cr"],[/공명\s*효율/,"er"],[/공격력/,"atk"],[/방어력/,"def"],[/\bHP\b|H\s*P|체력/i,"hp"],
     [/(응결|용융|전도|기류|회절|인멸)\s*피해/,"b.el"],[/일반\s*공격/,"b.basic"],[/강\s*공격/,"b.heavy"],[/공명\s*스킬/,"b.skill"],[/공명\s*해방/,"b.lib"],[/에코\s*어빌리티/,"b.echo"]];
-  for(const raw of text.split(/\n/)){const l=raw.trim();if(!l)continue;
-    for(const [re,k] of RULES){if(re.test(l)){const v=num(l);if(v!=null){if(k.startsWith("b."))out.b[k.slice(2)]=v;else if(out[k]==null)out[k]=v}break}}}
+  lines.forEach((x,i)=>{for(const [re,k] of RULES){if(re.test(x.l)){const isB=k.startsWith("b.");const v=val(x.num,isB||PCT.has(k));
+    if(v!=null){if(isB){if(out.b[k.slice(2)]==null)out.b[k.slice(2)]=v}else if(out[k]==null)out[k]=v;used.add(i)}break}}});
+  const ORDER=["hp","atk","def","er","cr","cd"];const base=lines.slice(0,6);
+  if(base.length===6) ORDER.forEach((k,i)=>{if(out[k]==null&&!used.has(i)){out[k]=val(base[i].num,PCT.has(k));used.add(i)}});
+  // 이름을 못 읽은 '피해 보너스' 줄: 이 공명자에게 필요한 보너스 칸 중 빈 칸에 순서대로
+  const freeB=(bk||[]).filter(k=>out.b[k]==null);
+  lines.forEach((x,i)=>{if(used.has(i)||!freeB.length)return;if(/보너스|피해/.test(x.l)){out.b[freeB.shift()]=val(x.num,true);used.add(i)}});
   return out;}
 async function ocrStats(blob){
   const m=$("#pfOcr");if(m)m.textContent="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";
   try{const T=await loadTesseract();const cv=await prepImage(blob);
-    const {data}=await T.recognize(cv,"kor+eng");const got=parseStats(data.text);
+    const {data}=await T.recognize(cv,"kor+eng");const got=parseStats(data.text,bonusKeysOf(profId));
     const keys=Object.keys(got).filter(k=>k!=="b");const bkeys=Object.keys(got.b);
     if(!keys.length&&!bkeys.length)throw new Error("스탯을 찾지 못했습니다. 항목 이름과 숫자가 함께 보이게 캡처해 주세요.");
     const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({},g.stats||{});st.b=Object.assign({},st.b||{},got.b);keys.forEach(k=>st[k]=got[k]);
@@ -1193,7 +1204,7 @@ async function ocrStats(blob){
     return got;
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
-window.mpOcrTest=async url=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text)}};
+window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
 
 /* ---------- profile dialog ---------- */
 let profId=null;
