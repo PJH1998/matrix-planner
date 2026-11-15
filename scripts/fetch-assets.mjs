@@ -59,6 +59,15 @@ const weaponFails = await pool(WEAPONS, 8, async ([wid, , , , icon]) => {
   await download(`${WICON}${icon || `T_IconWeapon${wid}_UI`}.webp`, path.join(CACHE, 'weapon', `${wid}.webp`));
 });
 
+// 직접 넣은 이미지(img-manual/char|card|weapon/*.webp)가 있으면 encore.moe 이미지보다 우선한다.
+const MANUAL = 'img-manual';
+for (const kind of ['char', 'card', 'weapon']) {
+  const src = path.join(MANUAL, kind);
+  if (!fs.existsSync(src)) continue;
+  fs.mkdirSync(path.join(CACHE, kind), { recursive: true });
+  for (const f of fs.readdirSync(src).filter((f) => f.endsWith('.webp'))) fs.copyFileSync(path.join(src, f), path.join(CACHE, kind, f));
+}
+
 const index = {};
 for (const kind of ['char', 'card', 'weapon']) {
   const src = path.join(CACHE, kind);

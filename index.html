@@ -455,6 +455,9 @@ select option.rec{color:#e6c36a;font-weight:700}
 .fc-l .hp{flex:none;font-family:var(--f-num);color:var(--muted)}
 .fc-l .hp b{color:var(--fg);font-weight:500}
 .fc-l .hp b.kill{color:var(--ok)}
+#tip .elx{display:inline-flex;align-items:center;gap:5px;padding:1px 9px 1px 2px;border-radius:999px;font-size:13.5px;font-weight:700;color:var(--ec);
+  background:color-mix(in srgb,var(--ec) 18%,rgba(0,0,0,.5));border:1px solid color-mix(in srgb,var(--ec) 60%,transparent)}
+#tip .elx img{width:22px;height:22px}
 </style>
 
 </head>
@@ -1124,7 +1127,7 @@ function tipHTML(id){
   const c=charMap[id],S=synOf(id);if(!c)return"";
   const ob=(S.ob||[]).map(t=>t==="el"?EL[c.el]+" 피해":DT[t]).filter(Boolean);
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
-  return `<div class="th"><b>${esc(c.name)}</b><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span></div>
+  return `<div class="th"><b>${esc(c.name)}</b><span class="elx" style="--ec:var(--${c.el})"><img src="icons/el-${c.el}.png" alt="">${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span></div>
   <div class="tr"><span class="tl"><span>반주 스킬</span><span>${S.p?"파티 전체":"다음 캐릭터"}</span></span><p>${esc(S.o||"정보 없음").replace(/(\d+(?:\.\d+)?%)/g,"<em>$1</em>")}</p>${ob.length?`<div class="tc">${ob.map(x=>`<span class="chip g">${esc(x)} ↑</span>`).join("")}</div>`:""}</div>
   ${(S.w||[]).length?`<div class="tr"><span class="tl">주력 피해</span><div class="tc">${S.w.map(x=>`<span class="chip">${DT[x]}</span>`).join("")}</div></div>`:""}
   ${(S.m||[]).length?`<div class="tr"><span class="tl">메커니즘</span><div class="tc">${S.m.map(x=>`<span class="chip syn">${MT[x]}</span>`).join("")}</div></div>`:""}`;
@@ -1193,7 +1196,7 @@ function renderTeams(){
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
-        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}</div>
+        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select></div>
         <div class="row">${teamWarnings(t)}</div>
 
       </div>
