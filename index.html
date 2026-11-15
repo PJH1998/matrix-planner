@@ -479,6 +479,14 @@ table.rt{min-width:0}
 .thsort{background:none;border:0;padding:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer}
 .thsort:hover,.thsort.on{color:var(--gold)}
 .thsort i{font-style:normal;font-size:11px;margin-left:2px;opacity:.85}
+.upd{display:flex;flex-direction:column;gap:14px;max-width:960px}
+.upd-a .ph{gap:10px}
+.upd-d{font-family:var(--f-num);font-size:16px;color:var(--gold)}
+.upd-t{font-weight:600}
+.upd-l{margin:6px 0 14px;padding:0 18px 0 34px;line-height:1.75;font-size:15px}
+.upd-l ul{margin:2px 0 4px;padding-left:18px;color:var(--muted);font-size:14px}
+nav.tabs a.dot{position:relative}
+nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;height:7px;border-radius:50%;background:#ff8a65;box-shadow:0 0 6px #ff8a65}
 </style>
 
 </head>
@@ -491,6 +499,7 @@ table.rt{min-width:0}
     <a href="#cycle" data-v="cycle" id="cycleTab" hidden>주기 설정</a>
     <a href="#invest" data-v="invest">투자 효율</a>
     <a href="#records" data-v="records">기록</a>
+    <a href="#updates" data-v="updates" id="updTab">업데이트</a>
     <a href="#data" data-v="data">데이터</a>
   </nav>
   <div class="save" id="save"><i></i><span>불러오는 중</span></div>
@@ -588,6 +597,12 @@ table.rt{min-width:0}
   <div id="recList"></div>
 </section>
 
+<!-- UPDATES -->
+<section class="view" id="v-updates">
+  <div class="roster-h"><h2>업데이트 노트</h2></div>
+  <div id="updList" class="upd"></div>
+</section>
+
 <!-- DATA -->
 <section class="view" id="v-data">
   <div class="two">
@@ -630,6 +645,7 @@ table.rt{min-width:0}
 <script src="firebase-config.js"></script>
 <script src="cycle.js"></script>
 <script src="weapons.js"></script>
+<script src="updates.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -1453,7 +1469,17 @@ function recCard(r,idx){const ks=Object.keys(r.actual||{});const sum=ks.reduce((
 function renderRecords(){const el=$("#recList");if(!el)return;if(state.cur&&state.cur.cycle===cycle.name){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}
   el.innerHTML=(state.cur?recCard(state.cur,null):"")+state.records.map((r,i)=>recCard(r,i)).join("")||`<p class="hint">기록이 없습니다.</p>`;}
 
-function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport();renderLeft();renderInvest();renderRecords()}
+/* ---------- 업데이트 노트 (updates.js) ---------- */
+function renderUpdates(){const el=$("#updList");if(!el)return;const U=window.UPDATES||[];
+  el.innerHTML=U.map((u,i)=>`<article class="panel upd-a"><div class="ph"><span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span></div>
+   <ul class="upd-l">${(u.items||[]).map(it=>Array.isArray(it)?`<li>${esc(it[0])}${it.length>1?`<ul>${it.slice(1).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</li>`:`<li>${esc(it)}</li>`).join("")}</ul></article>`).join("");
+  // 최신 업데이트를 아직 안 봤으면 탭에 점 표시
+  const latest=(U[0]||{}).date;let seen=null;try{seen=localStorage.getItem("mp-upd-seen")}catch(e){}
+  const tab=$("#updTab");if(tab)tab.classList.toggle("dot",!!latest&&seen!==latest&&location.hash!=="#updates");
+  if(location.hash==="#updates"&&latest){try{localStorage.setItem("mp-upd-seen",latest)}catch(e){}}}
+window.addEventListener("hashchange",()=>{if(location.hash==="#updates")renderUpdates()});
+
+function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport();renderLeft();renderInvest();renderRecords();renderUpdates()}
 function rerenderPlan(){renderPool();renderTeams();renderStoreInfo()}
 
 /* ---------- placement logic ---------- */
@@ -1634,7 +1660,7 @@ $("#btnDownload").addEventListener("click",()=>{
 });
 
 /* ---------- routing ---------- */
-const VIEWS=["plan","roster","invest","records","cycle","data"];
+const VIEWS=["plan","roster","invest","records","updates","cycle","data"];
 document.getElementById("cycleTab").hidden=!IS_ADMIN;
 function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
