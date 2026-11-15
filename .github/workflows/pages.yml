@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html firebase-config.js cycle.js _site/
-          cp -r portraits _site/
+          cp -r portraits icons _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
