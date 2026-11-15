@@ -489,7 +489,13 @@ kbd.k{display:inline-flex;align-items:baseline;gap:3px;min-width:26px;justify-co
 kbd.k.b{color:var(--fg);border-color:var(--line);background:rgba(255,255,255,.04)}
 kbd.k.io{color:var(--muted);border-color:var(--line);border-style:dashed;font-weight:500;font-size:12px}
 kbd.k small{font-size:10px;font-weight:500;opacity:.85}
-.rot{margin-bottom:18px}.rot .ph{gap:10px;flex-wrap:wrap}.rot h3{font-size:18px;margin:0}
+.rot{margin-bottom:14px}.rot .ph{gap:10px;flex-wrap:wrap;cursor:pointer;list-style:none;user-select:none}.rot .ph::-webkit-details-marker{display:none}
+.rot .ph .rot-sum{flex-basis:100%;padding:6px 0 2px;cursor:pointer}
+.rot-tg{color:var(--muted);font-size:14px;transition:transform .15s;margin-left:4px}.rot[open] .rot-tg{transform:rotate(180deg)}
+.rot:not([open]) .ph{border-bottom:0}
+.rot-sub{font-size:13px;color:var(--muted);border-left:1px solid var(--line);padding-left:10px}
+.rot-v{display:inline-block;font-size:12px;font-weight:700;color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px}
+.rot[open]>.rot-flow{margin-top:14px}.rot h3{font-size:18px;margin:0}
 .rot .rmem{display:flex;align-items:center}.rot .rmem .pt{margin-right:-6px}
 .rot-st{margin-left:auto;font-size:13px;color:var(--muted)}.rot-st b{color:var(--fg)}
 .rot-sum{padding:12px 18px;font-size:17px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
@@ -628,7 +634,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 <section class="view" id="v-rotation">
   <div class="roster-h"><h2>딜 사이클</h2></div>
   <p class="hint">주요 파티 조합의 딜 사이클입니다. 같은 3명으로 편성한 파티는 강도를 계산할 때 이 피해 비중을 씁니다.</p>
-  <div class="rot-legend"><span><kbd class="k">E</kbd>공명 스킬</span><span><kbd class="k">Q</kbd>에코 스킬</span><span><kbd class="k">R</kbd>공명 해방</span><span><kbd class="k b">평3</kbd>일반 공격 3타</span><span><kbd class="k b">강</kbd>강공격</span><span><kbd class="k h">E<small>홀드</small></kbd>길게 누르기</span><span><kbd class="k io">인트로</kbd><kbd class="k io">아웃트로</kbd>교체 스킬</span></div>
+  <div class="rot-legend"><span><kbd class="k">E</kbd>공명 스킬</span><span><kbd class="k">Q</kbd>에코 스킬</span><span><kbd class="k">R</kbd>공명 해방</span><span><kbd class="k b">평3</kbd>일반 공격 3타</span><span><kbd class="k b">강</kbd>강공격</span><span><kbd class="k b">거합3</kbd>거합 3회</span><span><kbd class="k h">E<small>홀드</small></kbd>길게 누르기</span><span><kbd class="k io">인트로</kbd><kbd class="k io">아웃트로</kbd>교체 스킬</span></div>
   <div id="rotList"></div>
 </section>
 
@@ -1517,23 +1523,28 @@ function rotKey(tok){const m=/^(.*?)\((.*)\)$/.exec(tok);const base=m?m[1]:tok,s
   return `<kbd class="k${cls}${sub?" h":""}">${esc(base)}${sub?`<small>${esc(sub)}</small>`:""}</kbd>`}
 function rotCore(steps){const o=[];steps.forEach(x=>{const b=x.replace(/\(.*\)$/,"");if(/^[EQR]$/.test(b)&&o[o.length-1]!==b)o.push(b)});return o.join("-")}
 function rotThumb(id){return `<span class="pt"><span class="th" title="${esc(charMap[id]?charMap[id].name:id)}" ${hasPic(id)?`style="background-image:url('${picUrl(id)}')"`:""}></span></span>`}
+let rotOpen=new Set();try{rotOpen=new Set(JSON.parse(localStorage.getItem("mp-rot-open")||"[]"))}catch(e){}
+document.addEventListener("toggle",e=>{const d=e.target;if(!d.dataset||!d.dataset.rot)return;d.open?rotOpen.add(d.dataset.rot):rotOpen.delete(d.dataset.rot);
+  try{localStorage.setItem("mp-rot-open",JSON.stringify([...rotOpen]))}catch(x){}},true);
 function renderRotation(){const el=$("#rotList");if(!el)return;
   el.innerHTML=ROTS.map(r=>{const nm=id=>charMap[id]?esc(charMap[id].name):esc(id);
-    const sum=r.order.map(id=>`<b>${nm(id)}</b> <span class="core">(${rotCore(r.steps[id]||[])})</span>`).join(`<i class="arr">→</i>`);
+    const vr=id=>r.variant&&r.variant[id]?` <span class="rot-v">${esc(r.variant[id])}</span>`:"";
+    const sum=r.order.map(id=>`<b>${nm(id)}</b>${vr(id)} <span class="core">(${rotCore(r.steps[id]||[])})</span>`).join(`<i class="arr">→</i>`);
     const steps=r.order.map((id,n)=>{const c=charMap[id]||{};const fs=r.first&&r.first[id];
-      return `<div class="rot-c" style="--ec:var(--${c.el||"glacio"})"><div class="rot-h">${rotThumb(id)}<div><span class="rot-n">${n+1}</span> <b>${nm(id)}</b><div class="rot-m">피해 ${r.share[id]??"–"}% · 필드 ${r.time&&r.time[id]!=null?r.time[id]+"초":"–"}</div></div></div>
+      return `<div class="rot-c" style="--ec:var(--${c.el||"glacio"})"><div class="rot-h">${rotThumb(id)}<div><span class="rot-n">${n+1}</span> <b>${nm(id)}</b>${vr(id)}<div class="rot-m">피해 ${r.share[id]??"–"}% · 필드 ${r.time&&r.time[id]!=null?r.time[id]+"초":"–"}</div></div></div>
         <div class="rot-bar"><i style="width:${Math.min(100,r.share[id]||0)}%"></i></div>
         <div class="rot-k">${(r.steps[id]||[]).map(rotKey).join('<span class="sep">›</span>')}</div>
         ${fs?`<div class="rot-f"><span>첫 사이클</span>${fs.map(rotKey).join('<span class="sep">›</span>')}</div>`:""}
         ${r.notes&&r.notes[id]?`<p class="rot-note">${esc(r.notes[id])}</p>`:""}</div>`}).join(`<div class="rot-arr">→</div>`);
     const tips=(r.tips||[]).map(x=>`<li><span class="chip syn">퀵스왑</span> <b>${nm(x.who)}</b> ${esc(x.text)}${x.check?` <span class="chip warn" title="실전 검증 전인 정보입니다">검수 필요</span>`:""}</li>`).join("");
     const inTeam=state.teams.some(t=>rotationOf(t)===r);
-    return `<article class="panel rot"><div class="ph"><span class="rmem">${r.members.map(rotThumb).join("")}</span><h3>${esc(r.title)}</h3>${r.tag?`<span class="chip">${esc(r.tag)}</span>`:""}${inTeam?`<span class="chip syn star">내 편성에 있음</span>`:""}
-      <span class="rot-st">${r.cycleSec?`한 사이클 약 <b>${r.cycleSec}초</b>`:""}${r.teamDps?` · 팀 DPS <b>${r.teamDps.toLocaleString()}</b>`:""}</span></div>
-      <div class="rot-sum">${sum}</div>
+    const vs=Object.entries(r.variant||{}).map(([id,v])=>`${nm(id)} ${esc(v)}`).join(" · ");
+    return `<details class="panel rot" data-rot="${esc(r.id)}"${rotOpen.has(r.id)?" open":""}><summary class="ph"><span class="rmem">${r.members.map(rotThumb).join("")}</span><h3>${esc(r.title)}</h3>${r.tag?`<span class="chip">${esc(r.tag)}</span>`:""}${vs?`<span class="rot-sub">${vs} 기준</span>`:""}${inTeam?`<span class="chip syn star">내 편성에 있음</span>`:""}
+      <span class="rot-st">${r.cycleSec?`한 사이클 약 <b>${r.cycleSec}초</b>`:""}${r.teamDps?` · 팀 DPS <b>${r.teamDps.toLocaleString()}</b>`:""}</span><span class="rot-tg" aria-hidden="true">▾</span>
+      <div class="rot-sum">${sum}</div></summary>
       <div class="rot-flow">${steps}</div>
       ${tips?`<ul class="rot-tips">${tips}</ul>`:""}
-      <p class="rot-src">${r.setup?esc(r.setup)+" · ":""}출처: ${r.source&&r.source.url?`<a href="${esc(r.source.url)}" target="_blank" rel="noopener">${esc(r.source.name)}</a>`:esc((r.source||{}).name||"")}${r.source&&r.source.date?` (${esc(r.source.date)})`:""} · 피해 비중과 시간은 2~3번째 사이클 평균입니다.</p></article>`}).join("")||`<p class="hint">등록된 딜 사이클이 없습니다.</p>`;}
+      <p class="rot-src">${r.setup?esc(r.setup)+" · ":""}출처: ${r.source&&r.source.url?`<a href="${esc(r.source.url)}" target="_blank" rel="noopener">${esc(r.source.name)}</a>`:esc((r.source||{}).name||"")}${r.source&&r.source.date?` (${esc(r.source.date)})`:""} · 피해 비중과 시간은 2~3번째 사이클 평균입니다.</p></details>`}).join("")||`<p class="hint">등록된 딜 사이클이 없습니다.</p>`;}
 
 /* ---------- 업데이트 노트 (updates.js) ---------- */
 function renderUpdates(){const el=$("#updList");if(!el)return;const U=window.UPDATES||[];
