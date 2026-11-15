@@ -110,14 +110,15 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .btn.danger{color:var(--danger)}
 .hint{color:var(--muted);font-size:14px;margin:0 0 10px}
 .teams{display:flex;flex-direction:column;gap:8px;container-type:inline-size}
-@container (max-width:910px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr)}.team .synbox{grid-column:2/-1}}
-@container (max-width:660px){.team .meta{grid-column:1/-1}.team .synbox{grid-column:1/-1}}
+@container (max-width:1070px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr) minmax(0,1fr)}.team .meta{grid-column:5/-1}.team .fcast{grid-column:2/4}.team .synbox{grid-column:4/-1}}
+@container (max-width:910px){.team{grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(0,1fr)}.team .meta{grid-column:auto}.team .fcast,.team .synbox{grid-column:2/-1}}
+@container (max-width:660px){.team .meta,.team .fcast,.team .synbox{grid-column:1/-1}}
 .synbox{display:flex;flex-direction:column;align-items:flex-start;gap:4px;align-self:stretch;justify-content:center;border-left:1px dashed var(--line);padding-left:10px;min-width:0}
 .synbox .chip{font-size:12.5px;max-width:100%;line-height:1.45;word-break:keep-all}
 .synbox .none{font-size:13px;color:var(--muted)}
 .score small.up{font-size:12px;color:var(--ok);margin-left:4px;font-weight:700}
-.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(200px,1fr) minmax(180px,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
-@media (max-width:560px){:root{--face:84px}.team{grid-template-columns:32px repeat(3,minmax(0,1fr))} .team .meta,.team .synbox{grid-column:1/-1}.synbox{border-left:0;padding-left:0}}
+.team{display:grid;grid-template-columns:44px repeat(3,calc(var(--face) + 12px)) minmax(190px,1fr) minmax(200px,1fr) minmax(150px,.75fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+@media (max-width:560px){:root{--face:84px}.team{grid-template-columns:32px repeat(3,minmax(0,1fr))} .team .meta,.team .fcast,.team .synbox{grid-column:1/-1}.synbox{border-left:0;padding-left:0}}
 .team .no{font-family:var(--f-mono);font-size:23px;font-weight:700;color:var(--muted);text-align:center;line-height:1}
 .team .no small{display:block;font-size:11px;letter-spacing:.1em;margin-top:2px}
 .slot{height:calc(var(--face) + 40px);border:1.5px dashed var(--line);border-radius:16px;display:grid;place-items:center;transition:border-color .12s,background .12s}
@@ -442,6 +443,18 @@ select option{background:var(--bg);color:var(--fg)}
 .meta .mini{position:absolute;right:0;top:0;margin:0}
 .chip.bad{color:#ff8a65;border-color:rgba(255,138,101,.6);background:rgba(255,110,80,.08)}
 select option.rec{color:#e6c36a;font-weight:700}
+.fcast{align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:6px;border-left:1px solid var(--line);padding-left:12px;min-width:0}
+.fcast .none{font-size:13px;color:var(--muted)}
+.fc-h{display:flex;align-items:baseline;gap:4px;font-family:var(--f-num);color:var(--muted);font-size:13px;cursor:help}
+.fc-h b{font-size:22px;font-weight:500;color:var(--gold)}
+.fc-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.fc-l li{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:12.5px;line-height:1.35;padding:2px 0 2px 7px;border-left:2px solid color-mix(in srgb,var(--gold) 55%,transparent)}
+.fc-l li.res{border-left-color:#ff8a65}
+.fc-l .bn{min-width:0;color:var(--fg);word-break:keep-all}
+.fc-l .bn em{font-style:normal;color:#ff8a65;font-size:11.5px}
+.fc-l .hp{flex:none;font-family:var(--f-num);color:var(--muted)}
+.fc-l .hp b{color:var(--fg);font-weight:500}
+.fc-l .hp b.kill{color:var(--ok)}
 </style>
 
 </head>
@@ -1140,11 +1153,6 @@ function buffOptions(sel,t){const best=t?bestBuffs(t):new Set();
 function teamWarnings(t){
   const out=[];const ids=t.slots.filter(Boolean);
   const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
-  const ti=state.teams.indexOf(t),hits=(simCache&&simCache.res[ti]||{hits:[]}).hits;
-  if(hits.length){const first=hits[0],more=hits.length-1;
-    const last=hits[hits.length-1];
-    const fmt=h=>`${h.round}R ${h.name}${h.resisted?"(저항)":""} HP ${Math.round(h.from)}%→${h.left>0?Math.round(h.left)+"%":"처치"}`;
-    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 진행 · 예측치 (앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}):\n${esc(hits.map(fmt).join("\n"))}">vs ${first.round}R ${esc(first.name)}${first.resisted?"·저항":""}${more?` → ${esc(last.name)}`:""} · ${last.left>0?`${Math.round(last.left)}% 남김`:"처치"}</span>`);}
   // 보스별 유리/불리: 보스 특성 태그(실드·합일·전자 효과 등)를 이 파티가 만족하면 유리, 메인 딜러 속성을 보스가 저항하면 불리
   const buff=selBuff(t);const btags=new Set(buff?(buff.effects||[]).map(e=>e.cond).filter(Boolean):[]);
   const md=mainDps(t),mel=md&&charMap[md].el;
@@ -1157,9 +1165,11 @@ function teamWarnings(t){
   });
   return out.join("");
 }
-function ptsHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return "";
-  const tip="예상 점수 · 예측치 (1R 보스 1마리 = 4,800점 실측 보정, 라운드 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25)\n"+r.hits.map(h=>`${h.round}R ${h.name}: ${Math.round(h.from-h.left)}% → ${Math.round(h.pts).toLocaleString()}점`).join("\n");
-  return `<span class="pts" title="${esc(tip)}">예상 <b>${Math.round(r.pts).toLocaleString()}</b>점</span>`;}
+// 예상 점수 + 보스별 예상 진행 (예측치)
+function fcastHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return `<span class="none">예상 없음</span>`;
+  const tip=`예상 점수·진행 · 예측치\n점수: 1R 보스 1마리 = 4,800점(실측 보정) × 라운드 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}`;
+  const rows=r.hits.map(h=>`<li class="${h.resisted?"res":""}"><span class="bn">${h.round}R ${esc(h.name)}${h.resisted?" <em>저항</em>":""}</span><span class="hp">${Math.round(h.from)}% → ${h.left>0?`<b>${Math.round(h.left)}%</b>`:`<b class="kill">처치</b>`}</span></li>`).join("");
+  return `<div class="fc-h" title="${esc(tip)}"><span>예상</span><b>${Math.round(r.pts).toLocaleString()}</b><span>점</span></div><ul class="fc-l">${rows}</ul>`;}
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
   return `메인 딜러: ${charMap[r.main].name}\n서포터 딜증 +${Math.round(r.amp)}% · 시너지 +${Math.round(r.syn)}%\n${t.buff?`파워 서킷 반영 +${r.circuit.toFixed(1)}`:"강화 효과를 고르면 파워 서킷이 반영됩니다"}`;}
 let simCache=null;
@@ -1181,12 +1191,13 @@ function renderTeams(){
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
       ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
-        <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${ptsHTML(i)}
+        <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
         <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}</div>
         <div class="row">${teamWarnings(t)}</div>
 
       </div>
+      <div class="fcast">${fcastHTML(i)}</div>
       <div class="synbox">${chips||`<span class="none">시너지 없음</span>`}</div>
     </div>`;
   }).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
