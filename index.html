@@ -440,6 +440,8 @@ select option{background:var(--bg);color:var(--fg)}
 .meta{position:relative}
 .meta .row:first-child{padding-right:84px}
 .meta .mini{position:absolute;right:0;top:0;margin:0}
+.chip.bad{color:#ff8a65;border-color:rgba(255,138,101,.6);background:rgba(255,110,80,.08)}
+select option.rec{color:#e6c36a;font-weight:700}
 </style>
 
 </head>
@@ -718,6 +720,19 @@ const COND={
   unison:{label:"합일",scope:"team",m:["unison"]},
   shield:{label:"실드",scope:"team",m:["shield"]}
 };
+// 공명자별 피해 비중(%) — Prydwen Calculations 탭 Damage Profile(1타깃 로테이션). other = 이상 효과·조화도 파괴 등
+const DMG_PROFILE={"aalto":{"basic":35.7,"skill":31.0,"lib":14.8,"intro":6.6,"echo":11.9},"aemeath":{"basic":8.3,"lib":67.6,"echo":2.6,"other":21.4},"augusta":{"heavy":88.1,"skill":9.5,"intro":1.1,"echo":1.3},"brant":{"basic":83.5,"lib":13.0,"intro":3.6},"calcharo":{"basic":25.2,"skill":2.3,"lib":54.5,"intro":5.1,"outro":7.6,"echo":5.2},"camellya":{"basic":67.9,"lib":15.6,"intro":1.9,"outro":6.0,"echo":8.5},"cantarella":{"basic":69.1,"heavy":2.3,"skill":7.2,"intro":3.2,"outro":9.8,"echo":8.3},"carlotta":{"basic":1.0,"skill":84.8,"intro":2.6,"outro":7.6,"echo":3.9},"cartethyia":{"basic":42.9,"skill":8.2,"lib":27.8,"intro":2.0,"echo":1.3,"other":17.7},"changli":{"basic":1.8,"heavy":1.8,"skill":68.7,"lib":19.7,"intro":2.0,"echo":5.9},"chisa":{"basic":2.7,"heavy":4.3,"skill":4.1,"lib":84.5,"intro":2.6,"echo":1.8},"chixia":{"skill":47.8,"lib":32.5,"intro":2.8,"outro":9.6,"echo":7.3},"ciaccona":{"basic":20.1,"heavy":17.0,"skill":3.9,"lib":28.6,"intro":4.4,"echo":10.6,"other":15.3},"danjin":{"basic":4.7,"heavy":24.4,"skill":25.5,"lib":29.7,"intro":5.6,"echo":10.1},"denia":{"basic":2.1,"skill":1.7,"lib":60.8,"intro":1.7,"echo":4.4,"other":29.2},"encore":{"basic":47.0,"skill":15.0,"lib":14.6,"intro":3.5,"outro":12.9,"echo":7.1},"galbrena":{"heavy":36.8,"intro":0.9,"outro":9.7,"echo":52.6},"hiyuki":{"basic":1.2,"skill":6.7,"lib":64.9,"echo":3.0,"other":24.3},"hsin":{"basic":7.6,"skill":85.9,"lib":2.1,"outro":1.7,"echo":2.6},"iuno":{"skill":3.9,"lib":90.6,"intro":1.3,"outro":1.0,"echo":3.1},"jianxin":{"basic":30.9,"heavy":12.1,"skill":7.9,"lib":36.1,"intro":5.0,"echo":8.0},"jingran":{"basic":0.7,"heavy":84.1,"skill":3.6,"intro":1.3,"outro":8.4,"echo":1.9},"jinhsi":{"skill":79.1,"lib":15.2,"intro":4.0,"echo":1.7},"jiyan":{"heavy":81.7,"skill":8.9,"intro":1.9,"outro":3.0,"echo":4.4},"lingyang":{"basic":33.8,"heavy":3.2,"skill":31.7,"lib":7.3,"intro":4.3,"outro":13.9,"echo":5.8},"lucilla":{"basic":31.3,"skill":7.7,"intro":1.3,"echo":3.7,"other":56.0},"lucy":{"basic":4.0,"heavy":77.3,"skill":2.3,"intro":1.4,"echo":3.4,"other":11.6},"lumi":{"basic":36.0,"skill":26.3,"lib":29.6,"intro":3.5,"echo":4.6},"lupa":{"basic":5.4,"heavy":1.3,"skill":12.1,"lib":76.0,"echo":5.3},"luuk":{"basic":88.9,"intro":2.9,"outro":6.6,"echo":1.6},"lynae":{"basic":42.4,"lib":14.5,"intro":3.6,"outro":1.6,"echo":4.4,"other":33.6},"mortefi":{"basic":12.1,"skill":20.8,"lib":61.3,"intro":3.6,"echo":2.2},"phoebe":{"basic":13.9,"heavy":42.8,"skill":1.2,"lib":16.8,"intro":1.9,"outro":17.6,"echo":3.5,"other":2.3},"phrolova":{"basic":1.3,"skill":31.9,"echo":66.7},"qingxiao":{"basic":22.8,"heavy":31.2,"skill":1.4,"lib":28.5,"intro":1.3,"outro":10.8,"echo":4.1},"qiuyuan":{"heavy":57.2,"echo":42.8},"rebecca":{"basic":56.4,"heavy":3.5,"skill":4.1,"intro":3.4,"echo":1.2,"other":31.3},"roccia":{"basic":4.9,"heavy":69.8,"skill":1.5,"intro":3.8,"outro":10.8,"echo":9.2},"rover_a":{"basic":5.0,"skill":67.3,"lib":18.9,"intro":6.6,"echo":2.2},"rover_e":{"basic":12.8,"skill":50.1,"lib":28.8,"intro":3.9,"echo":0.4,"other":3.9},"rover_h":{"basic":31.6,"heavy":3.4,"skill":18.5,"lib":26.2,"intro":2.2,"outro":7.2,"echo":10.9},"rover_s":{"basic":4.6,"heavy":9.2,"skill":31.8,"lib":35.5,"intro":5.5,"echo":5.5,"other":8.1},"sanhua":{"heavy":23.0,"skill":40.6,"lib":23.8,"intro":3.9,"echo":8.7},"sigrika":{"basic":4.0,"intro":0.7,"outro":4.2,"echo":91.0},"suoming":{"basic":74.9,"lib":22.5,"echo":2.6},"taoqi":{"basic":43.1,"skill":9.7,"lib":37.3,"intro":4.0,"echo":5.8},"xiangliyao":{"basic":8.2,"heavy":2.0,"skill":12.9,"lib":66.6,"intro":2.1,"outro":3.0,"echo":5.2},"yangyang":{"basic":31.8,"skill":13.5,"lib":42.1,"intro":3.1,"echo":9.5},"xuanling":{"basic":3.1,"heavy":90.6,"intro":0.8,"outro":2.9,"echo":2.6},"yinlin":{"basic":1.8,"heavy":6.8,"skill":68.0,"lib":14.3,"intro":2.4,"echo":6.8},"yuanwu":{"skill":48.5,"lib":39.6,"intro":4.9,"echo":7.0},"zani":{"basic":1.1,"heavy":68.9,"skill":6.6,"lib":13.4,"intro":1.3,"outro":7.3,"echo":1.4},"zhezhi":{"basic":79.4,"heavy":4.9,"skill":5.8,"intro":4.8,"echo":5.1}};
+const DT_KEYS=["basic","heavy","skill","lib","echo"];
+function dmgShare(id,types){const p=DMG_PROFILE[id];if(!p)return null;return types.reduce((a,k)=>a+(p[k]||0),0)/100;}
+// 효과 하나가 공명자 id에게 걸리는 비율(0~1). 피해 유형 조건(일반 공격 피해 +20% 등)은 그 공명자 피해 중 해당 유형 비중만큼만 적용한다.
+function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||!c)return 0;
+  if(d.scope==="team")return teamMeets(k,t)?1:0;
+  if((d.el||[]).includes(c.el))return 1;
+  const S=synOf(id);
+  if(d.w&&d.w.length){const sh=dmgShare(id,d.w);if(sh!=null)return sh;
+    const w=(S.w||[]);const n=d.w.filter(x=>w.includes(x)).length;if(n)return n/Math.max(1,w.length);}
+  if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&DMG_PROFILE[id]))return 1;
+  return 0;}
 function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
   return (d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
 function teamMeets(k,t){return t.slots.some(id=>id&&charMeets(k,id))}
@@ -765,7 +780,7 @@ function normalize(s){
 function derive(){
   chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
   charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
-  for(const k in _dpsAvg)delete _dpsAvg[k];
+  for(const k in _dpsAvg)delete _dpsAvg[k];if(typeof _syn!=="undefined")for(const k in _syn)delete _syn[k];
   chars.forEach(c=>{ if(!(c.id in state.owned)) state.owned[c.id]=true; });
   cycle=(IS_ADMIN&&state.cycle)||DEFAULT_CYCLE; // 주기 수정값은 관리자 모드에서만 사용
 }
@@ -865,7 +880,7 @@ function ampOf(id){const c=charMap[id];if(!c)return 0;const a=c.amp!=null?+c.amp
 function circuitMul(t,id){
   const buff=selBuff(t);if(!buff)return {mul:1,hits:[]};
   let add=0;const hits=[];
-  (buff.effects||[]).forEach(e=>{const v=+e.dmg||0;if(v&&condApplies(e.cond,t,id)){add+=v;hits.push(e.text)}});
+  (buff.effects||[]).forEach(e=>{const v=+e.dmg||0;const w=v?condWeight(e.cond,t,id):0;if(w>0){add+=v*w;hits.push(e.text+(w<1?` (${Math.round(w*100)}% 적용)`:""))}});
   return {mul:1+add/100,hits};
 }
 function teamCalc(t){
@@ -1045,7 +1060,11 @@ function bestOrder_(){
 }
 
 /* ---------- synergy ---------- */
-function synOf(id){const c=charMap[id];return (c&&c.syn)||SYN[id]||{o:"",ob:[],w:[],m:[]}}
+const _syn={};
+// 메인 딜러의 주력 피해 유형은 피해 비중 20% 이상인 유형으로 정한다 (Prydwen 피해 비중이 있을 때)
+function synOf(id){if(_syn[id])return _syn[id];const c=charMap[id];const base=(c&&c.syn)||SYN[id]||{o:"",ob:[],w:[],m:[]};
+  const p=DMG_PROFILE[id];if(!c||c.syn||c.role!=="dps"||!p)return _syn[id]=base;
+  const w=DT_KEYS.filter(k=>(p[k]||0)>=20).sort((a,b)=>p[b]-p[a]);return _syn[id]=w.length?{...base,w}:base;}
 // pairwise links between two characters in the same party
 function pairLinks(a,b){
   const out=[],A=synOf(a),B=synOf(b),ca=charMap[a],cb=charMap[b];if(!ca||!cb)return out;
@@ -1117,7 +1136,7 @@ function bestBuffs(t){if(!t.slots.some(Boolean))return new Set();
   const base=teamScore({...t,buff:null});if(!(mx>base+1e-9))return new Set();
   return new Set(sc.filter(x=>x[1]>=mx-1e-9).map(x=>x[0]));}
 function buffOptions(sel,t){const best=t?bestBuffs(t):new Set();
-  return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}>${esc(b.name)}${best.has(b.id)?" ★ 추천":""}</option>`).join("")}
+  return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}${best.has(b.id)?' class="rec" style="color:#e6c36a;font-weight:700"':""}>${esc(b.name)}${best.has(b.id)?" · 추천":""}</option>`).join("")}
 function teamWarnings(t){
   const out=[];const ids=t.slots.filter(Boolean);
   const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
@@ -1126,9 +1145,16 @@ function teamWarnings(t){
     const last=hits[hits.length-1];
     const fmt=h=>`${h.round}R ${h.name}${h.resisted?"(저항)":""} HP ${Math.round(h.from)}%→${h.left>0?Math.round(h.left)+"%":"처치"}`;
     out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 진행 · 예측치 (앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}):\n${esc(hits.map(fmt).join("\n"))}">vs ${first.round}R ${esc(first.name)}${first.resisted?"·저항":""}${more?` → ${esc(last.name)}`:""} · ${last.left>0?`${Math.round(last.left)}% 남김`:"처치"}</span>`);}
-  const buff=selBuff(t);
-  if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean));
-    (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
+  // 보스별 유리/불리: 보스 특성 태그(실드·합일·전자 효과 등)를 이 파티가 만족하면 유리, 메인 딜러 속성을 보스가 저항하면 불리
+  const buff=selBuff(t);const btags=new Set(buff?(buff.effects||[]).map(e=>e.cond).filter(Boolean):[]);
+  const md=mainDps(t),mel=md&&charMap[md].el;
+  if(ids.length)(cycle.bosses||[]).forEach(b=>{
+    const tags=(b.effects||[]).flatMap(f=>f.tags||[]).filter(x=>COND[x]);
+    const good=tags.filter(x=>teamMeets(x,t));
+    const bad=b.res&&b.res===mel;
+    if(bad)out.push(`<span class="chip bad" title="메인 딜러(${esc(charMap[md].name)}) 속성 ${EL[mel]}을 이 보스가 저항합니다">${esc(b.name)} 불리</span>`);
+    else if(good.length)out.push(`<span class="chip g" title="보스 특성과 맞는 요소: ${esc([...new Set(good)].map(x=>COND[x].label).join(", "))}">${esc(b.name)} 유리</span>`);
+  });
   return out.join("");
 }
 function ptsHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return "";
