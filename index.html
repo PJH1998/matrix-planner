@@ -429,6 +429,8 @@ th{font-family:var(--f-num);background:var(--strip)}
 .sdiv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;color:#9ba7b3;font-size:12.5px;letter-spacing:.04em}
 .sdiv::before,.sdiv::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,195,106,.55),transparent)}
 .sclear{align-self:flex-end;margin-top:6px;padding:4px 12px;font-size:13px}
+.skill{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.skill select{width:auto;padding:4px 6px}
 </style>
 
 </head>
@@ -462,6 +464,7 @@ th{font-family:var(--f-num);background:var(--strip)}
     <div>
       <div class="teams-h">
         <h2>파티 편성</h2>
+        <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도. 최상위 = 실측 기준(매우 잘하는 유저)">숙련도 <select id="skillSel"><option value="top">최상위</option><option value="good">숙련</option><option value="normal">보통</option></select></label>
         <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">추천 순서로 정렬</button>
         <button class="btn" id="btnAdd">+ 파티 추가</button>
         <button class="btn ghost danger" id="btnClear">전체 비우기</button>
@@ -747,7 +750,7 @@ function normalize(s){
   if(!s||typeof s!=="object") return d;
   const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
     teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null};
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top"};
   return o;
 }
 function derive(){
@@ -984,20 +987,27 @@ const RES_MUL=0.6, ROUND_HP=1.5, MAX_ROUNDS=8;
 function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
   const pool=ids.filter(id=>charMap[id]&&charMap[id].role==="dps");
   return (pool.length?pool:ids).slice().sort((a,b)=>charScore(b)-charScore(a))[0];}
+/* 피해 보정 (실측): 강도 38.7 파티가 1R 지옥불 기사 HP 74.0%, 다음 57.9 파티가 남은 26.0% + 봉정계유 100% + 크라운리스 41.8%
+   → 파티 피해(보스 HP 단위) = (강도 / 44.85)^2. 강도는 더하기로 쌓지만 실제 피해는 곱으로 커지기 때문에 제곱에 가깝다.
+   실측은 매우 잘하는 유저 기준이라 숙련도 설정으로 낮출 수 있다. */
+const S_REF=44.85, DMG_EXP=2;
+const SKILL_LV={top:{label:"최상위",mul:1},good:{label:"숙련",mul:0.8},normal:{label:"보통",mul:0.65}};
+const skillMul=()=>(SKILL_LV[state.skill]||SKILL_LV.top).mul;
+const partyDamage=score=>Math.pow(Math.max(0,score)/S_REF,DMG_EXP)*skillMul();
 function simulate(teams){
   const bosses=(cycle.bosses||[]);const live=teams.filter(t=>t.slots.some(Boolean));
   const res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
-  const base=live.reduce((a,t)=>a+teamScore(t),0)/live.length;
-  let bi=0,round=1,hp=base,progress=0,bad=0;
+  const full=r=>Math.pow(ROUND_HP,r-1);
+  let bi=0,round=1,hp=1,progress=0,bad=0;
   teams.forEach((t,ti)=>{
     if(!t.slots.some(Boolean))return;
-    const d=mainDps(t),el=d&&charMap[d].el;let D=teamScore(t);
+    const d=mainDps(t),el=d&&charMap[d].el;let D=partyDamage(teamScore(t));
     while(D>1e-9&&round<=MAX_ROUNDS){
       const b=bosses[bi],f=b.res&&b.res===el?RES_MUL:1;
       if(!res[ti].hits.length&&f<1)bad++;
-      res[ti].hits.push({name:b.name,round,resisted:f<1});
-      if(D*f>=hp){D-=hp/f;progress+=hp/(base*Math.pow(ROUND_HP,round-1));bi++;if(bi>=bosses.length){bi=0;round++}hp=base*Math.pow(ROUND_HP,round-1);}
-      else{hp-=D*f;progress+=D*f/(base*Math.pow(ROUND_HP,round-1));D=0;}
+      const hit={name:b.name,round,resisted:f<1,from:hp/full(round)*100,left:0};res[ti].hits.push(hit);
+      if(D*f>=hp){D-=hp/f;progress+=hp/full(round);bi++;if(bi>=bosses.length){bi=0;round++}hp=full(round);}
+      else{hp-=D*f;progress+=D*f/full(round);hit.left=hp/full(round)*100;D=0;}
     }
   });
   return {progress,res,bad};
@@ -1090,7 +1100,9 @@ function teamWarnings(t){
   const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
   const ti=state.teams.indexOf(t),hits=(simCache&&simCache.res[ti]||{hits:[]}).hits;
   if(hits.length){const first=hits[0],more=hits.length-1;
-    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 상대 (앞 파티가 남긴 HP를 이어받는다고 가정): ${esc(hits.map(h=>`${h.round}R ${h.name}${h.resisted?" (저항)":""}`).join(" → "))}">vs ${first.round}R ${esc(first.name)}${first.resisted?" · 저항":""}${more?` 외 ${more}`:""}</span>`);}
+    const last=hits[hits.length-1];
+    const fmt=h=>`${h.round}R ${h.name}${h.resisted?"(저항)":""} HP ${Math.round(h.from)}%→${h.left>0?Math.round(h.left)+"%":"처치"}`;
+    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 진행 (앞 파티가 남긴 HP를 이어받음, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}):\n${esc(hits.map(fmt).join("\n"))}">vs ${first.round}R ${esc(first.name)}${first.resisted?"·저항":""}${more?` → ${esc(last.name)}`:""} · ${last.left>0?`${Math.round(last.left)}% 남김`:"처치"}</span>`);}
   const buff=selBuff(t);
   if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean));
     (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
@@ -1100,6 +1112,7 @@ function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
   return `메인 딜러: ${charMap[r.main].name}\n서포터 딜증 +${Math.round(r.amp)}% · 시너지 +${Math.round(r.syn)}%\n${t.buff?`파워 서킷 반영 +${r.circuit.toFixed(1)}`:"강화 효과를 고르면 파워 서킷이 반영됩니다"}`;}
 let simCache=null;
 function renderTeams(){
+  const ss=$("#skillSel");if(ss)ss.value=state.skill||"top";
   simCache=simulate(state.teams);
   const order=state.teams.map((t,i)=>({t,i,s:teamScore(t)}));
   const box=$("#teams");
@@ -1343,6 +1356,7 @@ document.getElementById("teams").addEventListener("click",e=>{
 document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-buff]");if(!sel)return;state.teams[+sel.dataset.buff].buff=sel.value||null;persist();renderTeams()});
 $("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
 $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});
+$("#skillSel").addEventListener("change",e=>{state.skill=e.target.value;persist();renderTeams()});
 $("#btnAdd").addEventListener("click",()=>{state.teams.push({slots:[null,null,null],buff:null});persist();renderTeams()});
 let clearArm=false;
 $("#btnClear").addEventListener("click",e=>{
