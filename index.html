@@ -1099,7 +1099,7 @@ function renderRoster(){
   $("#rgrid").innerHTML=list.map(c=>{
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
     const extra=`<span class="rlv"><small>Lv.</small>${g.lv??90}</span><span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
-      (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" loading="lazy" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
+      (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
       (on?"":`<span class="roff">미보유</span>`);
     return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
   }).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;
@@ -1130,7 +1130,7 @@ function renderProfile(){
     <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · 성능 ${wp.pct.toFixed(1)}%`:""}</b></div>
     <div class="wgrid" id="pfW">${ws.map(w=>{const e=pmap[w.id];const sel=wp.w&&wp.w.id===w.id;
       return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음(추정)"}">
-        <span class="wi"><img src="${weaponIcon(w)}" alt="" loading="lazy" onerror="this.remove()"></span>
+        <span class="wi"><img src="${weaponIcon(w)}" alt="" onerror="this.remove()"></span>
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
     <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
     <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
