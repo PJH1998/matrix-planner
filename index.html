@@ -458,6 +458,10 @@ select option.rec{color:#e6c36a;font-weight:700}
 #tip .elx{display:inline-flex;align-items:center;gap:5px;padding:1px 9px 1px 2px;border-radius:999px;font-size:13.5px;font-weight:700;color:var(--ec);
   background:color-mix(in srgb,var(--ec) 18%,rgba(0,0,0,.5));border:1px solid color-mix(in srgb,var(--ec) 60%,transparent)}
 #tip .elx img{width:22px;height:22px}
+.sortl{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--fg)}
+.sortsel{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);font-weight:600}
+.tok .nm.r4{border-top-color:#a77bdb}
+.tok .face .r.r4{color:#c5a3f0}
 </style>
 
 </head>
@@ -484,6 +488,7 @@ select option.rec{color:#e6c36a;font-weight:700}
       <div class="tools">
         <input type="search" id="q" placeholder="이름으로 검색" autocomplete="off">
         <div class="elf" id="elFilter"></div>
+        <label class="sortl">정렬 <select id="poolSort" class="sortsel"><option value="rar">5성 먼저</option><option value="desc">강함순 (높은 순)</option><option value="asc">강함순 (낮은 순)</option><option value="name">이름순</option></select></label>
       </div>
       <div class="grid" id="pool"></div>
     </aside>
@@ -510,6 +515,7 @@ select option.rec{color:#e6c36a;font-weight:700}
     <h2>보유 캐릭터</h2>
     <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
     <div class="elf" id="rElFilter" aria-label="속성 필터"></div>
+    <label class="sortl">정렬 <select id="rosterSort" class="sortsel"><option value="rar">5성 먼저</option><option value="desc">강함순 (높은 순)</option><option value="asc">강함순 (낮은 순)</option><option value="name">이름순</option></select></label>
     <span class="lbl" id="ownCount"></span>
     <button class="btn" id="ownAll">전체 보유</button>
     <button class="btn ghost" id="ownNone">전체 해제</button>
@@ -790,7 +796,7 @@ function normalize(s){
   if(!s||typeof s!=="object") return d;
   const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
     teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top"};
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:typeof s.rosterSort==="string"?s.rosterSort:"rar"};
   return o;
 }
 function derive(){
@@ -998,17 +1004,22 @@ const $=s=>document.querySelector(s);
 function tokenHTML(c,extra=""){
   const bonus=(cycle.dmgBonus||{})[c.id];
   const pic=hasPic(c.id),sq=gameImg.char.has(c.id);
-  return `<div class="face${pic?" pic":""}${sq?" sq":""}" style="--ec:var(--${c.el})${pic?`;--pic:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
+  return `<div class="face${pic?" pic":""}${sq?" sq":""}" style="--ec:var(--${c.el})${pic?`;--pic:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r${c.rar===4?" r4":""}">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm${c.rar===4?" r4":""}">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderFilter(){
   const box=$("#elFilter");
   box.innerHTML=`<button data-el="" aria-pressed="${!ui.el}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.el===e}"><img class="eli" src="icons/el-${e}.png" alt=""></button>`).join("");
 }
+// 공명자 정렬: rar 5성 먼저(같으면 속성 순) / desc·asc 강함순(캐릭터 점수) / name 이름순. ownedFirst면 보유 공명자를 앞에
+function sortChars(list,mode,ownedFirst){const sc={};const S=id=>sc[id]??(sc[id]=charScore(id));
+  const cmp={rar:(a,b)=>b.rar-a.rar||EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||a.name.localeCompare(b.name,"ko"),
+    desc:(a,b)=>S(b.id)-S(a.id),asc:(a,b)=>S(a.id)-S(b.id),name:(a,b)=>a.name.localeCompare(b.name,"ko")}[mode||"rar"]||((a,b)=>0);
+  return list.sort((a,b)=>(ownedFirst?(+!!state.owned[b.id])-(+!!state.owned[a.id]):0)||cmp(a,b));}
 function renderPool(){
   const q=ui.q.trim();
   const list=chars.filter(c=>state.owned[c.id]).filter(c=>!ui.el||c.el===ui.el).filter(c=>!q||c.name.includes(q)||c.id.includes(q.toLowerCase()));
-  list.sort((a,b)=>EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||b.rar-a.rar);
+  sortChars(list,state.poolSort);$("#poolSort").value=state.poolSort||"rar";
   $("#poolCount").textContent=`${list.length}명`;
   const pool=$("#pool");
   if(!list.length){pool.innerHTML=`<p class="hint" style="grid-column:1/-1">${chars.some(c=>state.owned[c.id])?"검색 결과가 없습니다.":"보유 캐릭터 탭에서 가진 공명자를 체크하세요."}</p>`;return}
@@ -1229,7 +1240,7 @@ function renderRoster(){
   const q=ui.rq.trim();
   $("#rElFilter").innerHTML=`<button data-el="" aria-pressed="${!ui.rel}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.rel===e}"><img class="eli" src="icons/el-${e}.png" alt=""></button>`).join("");
   const list=chars.filter(c=>(!q||c.name.includes(q))&&(!ui.rel||c.el===ui.rel));
-  list.sort((a,b)=>(+!!state.owned[b.id])-(+!!state.owned[a.id])||b.rar-a.rar||EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el));
+  sortChars(list,state.rosterSort,true);$("#rosterSort").value=state.rosterSort||"rar";
   $("#ownCount").textContent=`보유 ${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}`;
   $("#rgrid").innerHTML=list.map(c=>{
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
@@ -1424,6 +1435,8 @@ document.getElementById("teams").addEventListener("click",e=>{
 document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-buff]");if(!sel)return;state.teams[+sel.dataset.buff].buff=sel.value||null;persist();renderTeams()});
 $("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
 $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});
+$("#poolSort").addEventListener("change",e=>{state.poolSort=e.target.value;persist();renderPool()});
+$("#rosterSort").addEventListener("change",e=>{state.rosterSort=e.target.value;persist();renderRoster()});
 $("#skillSel").addEventListener("change",e=>{state.skill=e.target.value;persist();renderTeams()});
 $("#btnAdd").addEventListener("click",()=>{state.teams.push({slots:[null,null,null],buff:null});persist();renderTeams()});
 let clearArm=false;
