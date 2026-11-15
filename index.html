@@ -476,6 +476,9 @@ table.inv td,table.rt td{vertical-align:middle}
 table.rt{min-width:0}
 .rt .rmem{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .rt .ract{width:120px;text-align:right;font-family:var(--f-num)}
+.thsort{background:none;border:0;padding:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer}
+.thsort:hover,.thsort.on{color:var(--gold)}
+.thsort i{font-style:normal;font-size:11px;margin-left:2px;opacity:.85}
 </style>
 
 </head>
@@ -571,7 +574,7 @@ table.rt{min-width:0}
   </div>
   <div class="disc" role="note"><b>참고용 추천입니다.</b> 이 화면의 수치는 이 사이트가 Prydwen 계산과 몇 가지 가정으로 만든 <b>추정치</b>이며, 실제 게임 성능·확률과 다를 수 있습니다. 뽑기나 재화 사용은 반드시 본인 판단으로 결정하세요.</div>
   <p class="hint">지금 편성과 성장도를 기준으로, 공명 체인 +1 · 더 좋은 무기 · 무기 재련 +1을 했을 때 <b>예상 총점</b>이 얼마나 오르는지와 <b>10연차당 효율</b>을 보여 줍니다. 편성에 없는 공명자는 캐릭터 점수 변화만 보여 줍니다.</p>
-  <div class="rtable-wrap"><table class="inv"><thead><tr><th>#</th><th>공명자</th><th>투자</th><th>예상 총점 변화</th><th>캐릭터 점수</th><th>예상 비용</th><th>10연차당</th></tr></thead><tbody id="invBody"></tbody></table></div>
+  <div class="rtable-wrap"><table class="inv"><thead><tr><th>#</th><th>공명자</th><th>투자</th><th><button type="button" class="thsort" data-k="dT">예상 총점 변화<i></i></button></th><th><button type="button" class="thsort" data-k="dC">캐릭터 점수<i></i></button></th><th>예상 비용</th><th><button type="button" class="thsort" data-k="eff">10연차당<i></i></button></th></tr></thead><tbody id="invBody"></tbody></table></div>
   <div class="disc foot" role="note">⚠ 위 결과는 <b>추천일 뿐</b>입니다. 예상 비용은 한정 캐릭터 1명 ≈ 95연차, 전용 무기 1개 ≈ 70연차로 잡은 평균값이며, 실제 뽑기 결과는 운에 따라 크게 달라집니다. 이 사이트는 비영리 팬 도구이며 결과에 대해 책임지지 않습니다.</div>
 </section>
 
@@ -1418,7 +1421,14 @@ function renderInvest(){const body=$("#invBody");if(!body)return;
   ids.forEach(id=>{const cs=charScore(id);investCandidates(id).forEach(k=>{
     const r=withGrowth(id,k.patch,()=>({tot:inTeam.has(id)?totalNow():base,cs:charScore(id)}));
     const dT=r.tot-base,dC=cs?(r.cs/cs-1)*100:0;rows.push({id,k,dT,dC,eff:inTeam.has(id)?dT/k.cost*10:null,effC:dC/k.cost*10,inTeam:inTeam.has(id)});});});
-  rows.sort((a,b)=>(b.eff??-1e9)-(a.eff??-1e9)||b.effC-a.effC);
+  invRows=rows;drawInvest();}
+// 정렬: 예상 총점 변화(dT) · 캐릭터 점수(dC) · 10연차당(eff). 편성 밖 공명자는 총점 기준 정렬에서 항상 뒤로
+let invRows=[];const invSort={k:"eff",dir:-1};
+function drawInvest(){const body=$("#invBody");const base=totalNow();const rows=invRows.slice();const {k,dir}=invSort;
+  const val=r=>k==="dT"?(r.inTeam?r.dT:null):k==="dC"?r.dC:(r.eff!=null?r.eff:null);
+  rows.sort((a,b)=>{const va=val(a),vb=val(b);if(va==null&&vb==null)return b.effC-a.effC;if(va==null)return 1;if(vb==null)return -1;return dir<0?vb-va:va-vb;});
+  document.querySelectorAll(".thsort").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.querySelector("i").textContent=on?(dir<0?" ▼":" ▲"):" ↕";b.setAttribute("aria-sort",on?(dir<0?"descending":"ascending"):"none")});
+  const scope=$("#invScope").value;
   body.innerHTML=rows.map((r,i)=>{const c=charMap[r.id];const w=r.k.wid&&WMAP[r.k.wid];
     return `<tr><td class="score">${i+1}</td><td><span class="nmc"><span class="pt"><span class="th" ${hasPic(r.id)?`style="background-image:url('${picUrl(r.id)}')"`:""}></span></span>${esc(c.name)}</span></td>
     <td>${w?`<img class="wmini" src="${weaponIcon(w)}" alt="" onerror="this.remove()">`:""}${esc(r.k.label)}</td>
@@ -1529,6 +1539,8 @@ $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");i
 $("#poolSort").addEventListener("change",e=>{state.poolSort=e.target.value;persist();renderPool()});
 $("#rosterSort").addEventListener("change",e=>{state.rosterSort=e.target.value;persist();renderRoster()});
 $("#invScope").addEventListener("change",renderInvest);
+document.querySelector("table.inv thead").addEventListener("click",e=>{const b=e.target.closest(".thsort");if(!b)return;
+  if(invSort.k===b.dataset.k)invSort.dir*=-1;else{invSort.k=b.dataset.k;invSort.dir=-1}drawInvest();});
 window.addEventListener("hashchange",()=>{const h=location.hash;if(h==="#invest")renderInvest();if(h==="#records")renderRecords();});
 $("#recSave").addEventListener("click",()=>{state.records.unshift(snapRecord());persist();renderRecords();flash("지금 편성을 기록했습니다.")});
 $("#recList").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;state.records.splice(+b.dataset.del,1);persist();renderRecords()});
