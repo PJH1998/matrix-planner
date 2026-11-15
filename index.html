@@ -273,11 +273,11 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
     <div class="panel">
       <div class="ph">주기 데이터 편집 (JSON) <span class="sp"></span></div>
       <div class="card-b">
-        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 이 브라우저에만 적용됩니다. 모두에게 반영하려면 이 JSON을 <code>index.html</code>의 <code>DEFAULT_CYCLE</code>에 넣고 커밋하세요.</p>
+        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 이 브라우저에만 적용됩니다. 모두에게 반영하려면 이 JSON을 <code>cycle.js</code>의 <code>window.MATRIX_CYCLE=</code> 뒤에 붙여 넣고 커밋하세요.</p>
         <textarea id="cycleJson" spellcheck="false" aria-label="주기 데이터 JSON"></textarea>
         <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn pri" id="cycleSave">적용</button>
-          <button class="btn" id="cycleReset">기본값(3.7)으로 되돌리기</button>
+          <button class="btn" id="cycleReset">기본값(cycle.js)으로 되돌리기</button>
         </div>
         <div class="msg" id="cycleMsg"></div>
       </div>
@@ -325,6 +325,7 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
 </main>
 
 <script src="firebase-config.js"></script>
+<script src="cycle.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -453,48 +454,45 @@ const DT={basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공
 const MT={frost:"서리 효과",burn:"불꽃 효과",erosion:"풍식 효과",flare:"전자 효과",frazzle:"광학 효과",bane:"암흑 효과",anom:"이상 효과",tuneD:"조화 밀집",tuneW:"조화 파동",hack:"해킹",unison:"합일",shield:"실드",echo:"에코"};
 const ANOM=["frost","burn","erosion","flare","frazzle","bane"];
 
-const DEFAULT_CYCLE={
- name:"S2 적대의 선봉 · 3페이즈 (3.7)",
- period:"2026-10-07 ~ 2026-11-12",
- bosses:[
-  {name:"지옥불 기사",en:"Inferno Rider",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["shield"],text:"공명자가 보호막을 가지고 있으면 받는 피해가 줄어듭니다. (보스의 화상 지속 피해가 HP 50% 초과 또는 보호막 보유 시 90% 감소)"},
-    {kind:"threat",round:"2R+",text:"공중에 있지 않은 주변 공명자에게 용융 지속 피해"}]},
-  {name:"봉정계유",en:"Forbidden Bastion",res:"glacio",note:"응결 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["shield"],text:"공명자가 실드를 얻으면 보스가 받는 피해 증가 (최대 40%)"},
-    {kind:"benefit",tags:["dodge"],text:"회피 반격마다 공명 에너지 10 회복, 진동 강도 20% 감소 (2초 쿨타임)"},
-    {kind:"threat",round:"2R+",text:"공격력 30% 증가"}]},
-  {name:"크라운리스",en:"Crownless",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["unison"],text:"합일 대응을 발동한 공명자에게 받는 모든 피해 40% 증가 (30초)"},
-    {kind:"threat",round:"2R+",text:"진동 강도 감소 효율 20% 감소"}]},
-  {name:"하늘의 기관 인형 - 겁살",en:"Calamity Effigy",res:"aero",note:"전도 이상 효과를 걸 수 있는 파티가 유리합니다.",effects:[
-    {kind:"benefit",tags:["dodge"],text:"회피 반격 명중 시 불굴 2중첩 (경직·제어 무효, 피격마다 1중첩 소모, 1초에 최대 1회)"},
-    {kind:"threat",round:"2R+",tags:["electro","negative"],text:"공격력 40% 증가. 전도 이상(Electro Flare) 상태에서는 해제"}]},
-  {name:"매트릭스 미믹",en:"Matrix Mimic",res:null,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
-    {kind:"benefit",tags:["any"],text:"준 피해가 1.1배 점수로 계산, 처치 시 1,000점 (S2 한정)"},
-    {kind:"benefit",text:"처치 후 15초간 파티 전체 피해·경직 무효"}]}
- ],
- buffs:[
-  {id:"general",name:"일반 강화",type:"일반 공격",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 일반 공격 피해 +20%",dmg:20,cond:"basic"}]},
-  {id:"negative",name:"강화: 이상 효과",type:"이상효과",effects:[{text:"이상 효과에 걸린 대상이 받는 모든 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"추가로 전도 피해 +30%",dmg:30,cond:"electro"}]},
-  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"합일 대응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
-  {id:"tune",name:"강화: 조화도 파괴",type:"조화 밀집",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"해킹 이탈 부여 시 해당 공명자 피해 +30% (30초)",dmg:30,cond:"hack"}]}
- ],
- vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling"],
- emergency:{id:"lynae",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
- dmgBonus:{roccia:20,brant:25,cantarella:25,camellya:25,phoebe:20,carlotta:25,zhezhi:20,yinlin:20,jinhsi:25,changli:25,jiyan:25,xiangliyao:25}
+/* ---------- 파워 서킷 조건 표 ----------
+   cycle.js의 buffs[].effects[].cond 와 bosses[].effects[].tags 가 이 키를 쓴다.
+   scope "char": 조건을 만족하는 공명자에게만 적용 / "team": 파티원 중 한 명이라도 만족하면 파티 전원에게 적용
+   판정: w(주력 피해 유형) · el(속성) · m(메커니즘) 중 하나라도 겹치면 만족. 새 조건은 여기에 한 줄 추가한다. */
+const COND={
+  basic:{label:"일반 공격",scope:"char",w:["basic"]},
+  heavy:{label:"강공격",scope:"char",w:["heavy"]},
+  skill:{label:"공명 스킬",scope:"char",w:["skill"]},
+  lib:{label:"공명 해방",scope:"char",w:["lib"]},
+  echo:{label:"에코 어빌리티",scope:"char",w:["echo"],m:["echo"]},
+  coord:{label:"협동 공격",scope:"char",w:["coord"]},
+  glacio:{label:"응결",scope:"char",el:["glacio"]}, fusion:{label:"용융",scope:"char",el:["fusion"]},
+  electro:{label:"전도",scope:"char",el:["electro"]}, aero:{label:"기류",scope:"char",el:["aero"]},
+  spectro:{label:"회절",scope:"char",el:["spectro"]}, havoc:{label:"인멸",scope:"char",el:["havoc"]},
+  negative:{label:"이상 효과",scope:"team",m:ANOM.concat("anom")},
+  frost:{label:"서리 효과",scope:"team",m:["frost"]}, burn:{label:"불꽃 효과",scope:"team",m:["burn"]},
+  erosion:{label:"풍식 효과",scope:"team",m:["erosion"]}, flare:{label:"전자 효과",scope:"team",m:["flare"]},
+  frazzle:{label:"광학 효과",scope:"team",m:["frazzle"]}, bane:{label:"암흑 효과",scope:"team",m:["bane"]},
+  tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW"]},
+  tuneD:{label:"조화 밀집",scope:"team",m:["tuneD"]}, tuneW:{label:"조화 파동",scope:"team",m:["tuneW"]},
+  hack:{label:"해킹",scope:"char",m:["hack"]},
+  unison:{label:"합일",scope:"team",m:["unison"]},
+  shield:{label:"실드",scope:"team",m:["shield"]}
 };
+function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
+  return (d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
+function teamMeets(k,t){return t.slots.some(id=>id&&charMeets(k,id))}
+// 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
+function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return false;return d.scope==="team"?teamMeets(k,t):charMeets(k,id)}
+const selBuff=t=>(cycle.buffs||[]).find(b=>b.id===t.buff);
 
-const EXAMPLE_TEAMS=[
- {slots:["camellya","sanhua","verina"],buff:"general",example:true},
- {slots:["qingxiao","denia","mornye"],buff:"tune",example:true},
- {slots:["jingran","iuno","shorekeeper"],buff:"basic",example:true},
- {slots:["hsin","suoming","shorekeeper"],buff:"negative",example:true}
-];
+// 주기 데이터는 cycle.js(window.MATRIX_CYCLE)에서 읽는다. 주기가 바뀌면 cycle.js만 고친다.
+const DEFAULT_CYCLE=window.MATRIX_CYCLE||{name:"",period:"",bosses:[],buffs:[],vigor2:[],emergency:null,dmgBonus:{},examples:[]};
+
+const EXAMPLE_TEAMS=(DEFAULT_CYCLE.examples||[]).map(t=>({slots:[0,1,2].map(i=>(t.slots||[])[i]||null),buff:t.buff||null,example:true}));
 
 /* ---------- admin mode ----------
    주기 설정 탭은 관리자 모드에서만 보인다. 주소 뒤에 ?admin=1 을 붙여 한 번 열면 이 브라우저에 기억되고, ?admin=0 으로 끈다.
-   (정적 사이트라 진짜 잠금은 아님. 다른 사람이 켜도 자기 브라우저에만 적용되고, 모두에게 보이는 값은 DEFAULT_CYCLE뿐이다.) */
+   (정적 사이트라 진짜 잠금은 아님. 다른 사람이 켜도 자기 브라우저에만 적용되고, 모두에게 보이는 값은 cycle.js뿐이다.) */
 const IS_ADMIN=(()=>{try{const q=new URLSearchParams(location.search).get("admin");
   if(q==="1")localStorage.setItem("mp-admin","1");else if(q==="0")localStorage.removeItem("mp-admin");
   return localStorage.getItem("mp-admin")==="1";}catch(e){return false}})();
@@ -577,20 +575,9 @@ function ampOf(id){const c=charMap[id];if(!c)return 0;const a=c.amp!=null?+c.amp
   const ch=clamp(Math.round(+((state.growth[id]||{}).chain)||0),0,6);return a*(CHAIN_MUL.support[ch]);}
 // 파워 서킷(강화 효과) 반영: 조건을 만족하는 공명자 점수에 효과 수치(%)를 곱한다
 function circuitMul(t,id){
-  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);if(!buff)return {mul:1,hits:[]};
-  const c=charMap[id],S=synOf(id),ids=t.slots.filter(Boolean);
-  const teamM=new Set(ids.flatMap(x=>synOf(x).m||[]));
-  const anom=ANOM.concat("anom").some(x=>teamM.has(x));
-  const ok={
-    "":true,
-    basic:(S.w||[]).includes("basic"), echo:(S.w||[]).includes("echo")||(S.m||[]).includes("echo"),
-    electro:c.el==="electro", negative:anom,
-    tunability:teamM.has("tuneD")||teamM.has("tuneW"), hack:(S.m||[]).includes("hack"),
-    unison:teamM.has("unison"), shield:teamM.has("shield")
-  };
+  const buff=selBuff(t);if(!buff)return {mul:1,hits:[]};
   let add=0;const hits=[];
-  (buff.effects||[]).forEach(e=>{const k=e.cond||"";const v=+e.dmg||0;
-    if(!v)return; if(k in ok?ok[k]:false){add+=v;hits.push(e.text)}});
+  (buff.effects||[]).forEach(e=>{const v=+e.dmg||0;if(v&&condApplies(e.cond,t,id)){add+=v;hits.push(e.text)}});
   return {mul:1+add/100,hits};
 }
 function teamCalc(t){
@@ -784,12 +771,9 @@ function synChips(t){
   Object.entries(mech).forEach(([tag,s])=>h+=`<span class="chip syn" title="${esc([...s].map(id=>charMap[id].name).join(" · "))}">⛓ ${esc(MT[tag])}</span>`);
   links.filter(l=>l.k==="outro").forEach(l=>h+=`<span class="chip syn" title="반주 스킬: ${esc(l.txt)}">${esc(l.txt)}</span>`);
   // cycle power circuit ↔ party mechanics
-  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
-  if(buff){const CM={tunability:["tuneD","tuneW"],hack:["hack"],unison:["unison"],shield:["shield"],echo:["echo"],negative:ANOM.concat("anom"),basic:[]};
-    const want=new Set((buff.effects||[]).flatMap(e=>CM[e.cond]||[]));
-    const have=[...new Set(t.slots.filter(Boolean).flatMap(id=>synOf(id).m||[]))].filter(x=>want.has(x));
-    if(buff.id==="general"&&t.slots.some(id=>id&&(synOf(id).w||[]).includes("basic"))) have.push("basic");
-    if(have.length) h+=`<span class="chip g" title="선택한 파워 서킷과 파티 메커니즘이 맞습니다">서킷 맞춤: ${esc(have.map(x=>MT[x]||DT[x]).join(", "))}</span>`;}
+  const buff=selBuff(t);
+  if(buff){const have=[...new Set((buff.effects||[]).map(e=>e.cond).filter(k=>k&&teamMeets(k,t)))];
+    if(have.length) h+=`<span class="chip g" title="선택한 파워 서킷의 조건을 이 파티가 만족합니다">서킷 맞춤: ${esc(have.map(k=>COND[k].label).join(", "))}</span>`;}
   return h;
 }
 
@@ -825,11 +809,9 @@ function teamWarnings(t){
   const ti=state.teams.indexOf(t),hits=(simCache&&simCache.res[ti]||{hits:[]}).hits;
   if(hits.length){const first=hits[0],more=hits.length-1;
     out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 상대 (앞 파티가 남긴 HP를 이어받는다고 가정): ${esc(hits.map(h=>`${h.round}R ${h.name}${h.resisted?" (저항)":""}`).join(" → "))}">vs ${first.round}R ${esc(first.name)}${first.resisted?" · 저항":""}${more?` 외 ${more}`:""}</span>`);}
-  const buff=(cycle.buffs||[]).find(b=>b.id===t.buff);
-  const BT={general:["basic"],negative:["negative","electro"],basic:["echo","unison","shield"],tune:["tunability","hack"]};
-  if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean).concat(BT[buff.id]||[]));
+  const buff=selBuff(t);
+  if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean));
     (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
-  if(buff&&buff.id==="negative"&&ids.some(id=>charMap[id]&&charMap[id].el==="electro")) out.push(`<span class="chip g">전도 추가 피해 적용</span>`);
   return out.join("");
 }
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
@@ -900,10 +882,12 @@ function renderRoster(){
 }
 
 /* ---------- render: cycle/data ---------- */
+function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
 function renderCycleView(){
-  $("#cycleView").innerHTML=`<dl class="kv"><dt>주기</dt><dd>${esc(cycle.name||"")}</dd><dt>기간</dt><dd>${esc(cycle.period||"")}</dd><dt>보스</dt><dd>${(cycle.bosses||[]).length}종</dd><dt>강화 효과</dt><dd>${(cycle.buffs||[]).map(b=>esc(b.name)).join(", ")}</dd><dt>상태</dt><dd>${state.cycle?"내가 수정한 값 사용 중":"기본값(3.7) 사용 중"}</dd></dl>
-  <p class="prose">필드 설명: <b>bosses[].name</b>은 표시 이름, <b>effects[]</b>는 보스 특성(kind: benefit=유리, threat=주의 / round: 적용 라운드 / tags: shield, unison, dodge, electro, negative 등 상성 판정용), <b>en</b>은 영어판 이름, <b>tentative</b>는 가칭 여부, <b>bosses[].res</b>는 보스의 속성 저항(없으면 null), <b>buffs[].effects[].dmg</b>는 피해 증가 수치(%), <b>cond</b>는 적용 조건(basic, negative, electro, echo, unison, shield, tunability, hack). <b>vigor2</b>는 배치 2회 공명자 id 목록, <b>emergency</b>는 이번 페이즈 긴급 공명자, <b>dmgBonus</b>는 공명자별 피해 증가(%)입니다. 이 값들은 이후 추천 로직이 그대로 읽어 쓰도록 남겨 둡니다.</p>
-  <p class="prose">출처: Game8, TOPUPlive의 3.7 종말 매트릭스 공략(2026년 10월 기준). 보스 이름은 한국어판 표기이고, "가칭"이 붙은 이름은 공식 표기를 확인하지 못한 임시 이름입니다(en에 영어판 이름).</p>`;
+  $("#cycleView").innerHTML=`<dl class="kv"><dt>주기</dt><dd>${esc(cycle.name||"")}</dd><dt>기간</dt><dd>${esc(cycle.period||"")}</dd><dt>보스</dt><dd>${(cycle.bosses||[]).length}종</dd><dt>강화 효과</dt><dd>${(cycle.buffs||[]).map(b=>esc(b.name)).join(", ")}</dd><dt>상태</dt><dd>${IS_ADMIN&&state.cycle?"이 브라우저에서 수정한 값 사용 중":"cycle.js 기본값 사용 중"}</dd></dl>
+  <p class="prose">필드 설명은 <code>cycle.js</code> 맨 위 주석에 있습니다. 강화 효과의 <b>cond</b>와 보스 효과의 <b>tags</b>에 쓸 수 있는 조건 키: ${Object.entries(COND).map(([k,d])=>`<code>${k}</code>(${esc(d.label)})`).join(", ")}</p>
+  ${unknownConds().length?`<p class="prose" style="color:var(--bad)">알 수 없는 조건 키: ${unknownConds().map(esc).join(", ")} — COND 표에 추가하거나 키를 고치세요. 이 효과는 강도 계산에서 빠집니다.</p>`:""}
+  ${cycle.source?`<p class="prose">출처: ${esc(cycle.source)}</p>`:""}`;
   $("#cycleJson").value=JSON.stringify(cycle,null,2);
 }
 function renderCharJson(){ $("#charJson").value="[\n"+chars.map(c=>"  "+JSON.stringify(c)).join(",\n")+"\n]"; }
@@ -1027,7 +1011,7 @@ $("#cycleSave").addEventListener("click",()=>{
     state.cycle=o;derive();persist();renderAll();m.className="msg okm";m.textContent="주기 데이터를 적용했습니다.";
   }catch(err){m.className="msg err";m.textContent="적용하지 못했습니다: "+err.message}
 });
-$("#cycleReset").addEventListener("click",()=>{state.cycle=null;derive();persist();renderAll();$("#cycleMsg").className="msg okm";$("#cycleMsg").textContent="기본값(3.7)으로 되돌렸습니다."});
+$("#cycleReset").addEventListener("click",()=>{state.cycle=null;derive();persist();renderAll();$("#cycleMsg").className="msg okm";$("#cycleMsg").textContent="cycle.js 기본값으로 되돌렸습니다."});
 // chars
 $("#charSave").addEventListener("click",()=>{
   const m=$("#charMsg");
