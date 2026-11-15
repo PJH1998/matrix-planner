@@ -4,6 +4,7 @@
    name, period      주기 이름과 기간 (화면 상단·주기 패널에 표시)
    bosses[]          등장 순서대로
      name            보스 이름
+     scoreMul, killBonus  (선택) 준 피해 점수 배율, 처치 보너스 점수
      res             저항 속성 id (glacio/fusion/electro/aero/spectro/havoc), 없으면 null
                      → 메인 딜러 속성이 같으면 정렬 시뮬레이션에서 피해 ×0.6
      note            한 줄 설명
@@ -39,7 +40,7 @@ window.MATRIX_CYCLE={
   {name:"하늘의 기관 인형 - 겁살",res:"aero",note:"전도 이상 효과를 걸 수 있는 파티가 유리합니다.",effects:[
     {kind:"benefit",tags:["dodge"],text:"회피 반격 명중 시 불굴 2중첩 (경직·제어 무효, 피격마다 1중첩 소모, 1초에 최대 1회)"},
     {kind:"threat",round:"2R+",tags:["electro","negative"],text:"공격력 40% 증가. 전도 이상(Electro Flare) 상태에서는 해제"}]},
-  {name:"매트릭스 미믹",res:null,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
+  {name:"매트릭스 미믹",res:null,scoreMul:1.1,killBonus:1000,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
     {kind:"benefit",tags:["any"],text:"준 피해가 1.1배 점수로 계산, 처치 시 1,000점 (S2 한정)"},
     {kind:"benefit",text:"처치 후 15초간 파티 전체 피해·경직 무효"}]}
  ],

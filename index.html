@@ -432,6 +432,14 @@ th{font-family:var(--f-num);background:var(--strip)}
 .skill{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .skill select{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);border-color:color-mix(in srgb,var(--gold) 45%,var(--line));font-weight:600}
 select option{background:var(--bg);color:var(--fg)}
+.pts{flex-basis:100%;font-family:var(--f-num);font-size:14px;color:var(--muted)}
+.pts b{font-size:18px;font-weight:500;color:var(--gold)}
+.teams-h .total{margin-right:auto;margin-left:14px;font-family:var(--f-num);font-size:14px;color:var(--muted);letter-spacing:.02em}
+.teams-h .total b{font-size:22px;font-weight:500;color:var(--gold);margin-left:4px}
+.teams-h h2{margin-right:0}
+.meta{position:relative}
+.meta .row:first-child{padding-right:84px}
+.meta .mini{position:absolute;right:0;top:0;margin:0}
 </style>
 
 </head>
@@ -464,7 +472,7 @@ select option{background:var(--bg);color:var(--fg)}
 
     <div>
       <div class="teams-h">
-        <h2>파티 편성</h2>
+        <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
         <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도. 최상위 = 실측 기준(매우 잘하는 유저)">숙련도 <select id="skillSel"><option value="top">최상위</option><option value="good">숙련</option><option value="normal">보통</option></select></label>
         <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">추천 순서로 정렬</button>
         <button class="btn" id="btnAdd">+ 파티 추가</button>
@@ -987,6 +995,9 @@ function renderPool(){
 const RES_MUL=0.6, MAX_ROUNDS=8;
 // 라운드별 보스 HP 배율 (예측치, 커뮤니티 측정): 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25, 그 뒤는 라운드마다 +0.75로 가정
 const ROUND_HP_TABLE=[1,2,3.5,4.25];
+// 예상 점수: 1R 보스 1마리 HP = 4,800점 (실측 보정: 74.0% → 3,465점, 167.8% → 8,120점),
+// 라운드 점수 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25 (커뮤니티 예측치)
+const PTS_PER_BOSS=4800, ROUND_PTS=r=>r<=1?1:r===2?1.15:1.25;
 const roundHp=r=>r<=ROUND_HP_TABLE.length?ROUND_HP_TABLE[r-1]:ROUND_HP_TABLE[ROUND_HP_TABLE.length-1]+0.75*(r-ROUND_HP_TABLE.length);
 function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
   const pool=ids.filter(id=>charMap[id]&&charMap[id].role==="dps");
@@ -1009,12 +1020,14 @@ function simulate(teams){
     while(D>1e-9&&round<=MAX_ROUNDS){
       const b=bosses[bi],f=b.res&&b.res===el?RES_MUL:1;
       if(!res[ti].hits.length&&f<1)bad++;
-      const hit={name:b.name,round,resisted:f<1,from:hp/full(round)*100,left:0};res[ti].hits.push(hit);
-      if(D*f>=hp){D-=hp/f;progress+=hp/full(round);bi++;if(bi>=bosses.length){bi=0;round++}hp=full(round);}
-      else{hp-=D*f;progress+=D*f/full(round);hit.left=hp/full(round)*100;D=0;}
+      const hit={name:b.name,round,resisted:f<1,from:hp/full(round)*100,left:0,pts:0};res[ti].hits.push(hit);
+      const ptsOf=dealt=>dealt/full(round)*PTS_PER_BOSS*ROUND_PTS(round)*(b.scoreMul||1);
+      if(D*f>=hp){D-=hp/f;progress+=hp/full(round);hit.pts=ptsOf(hp)+(b.killBonus||0);bi++;if(bi>=bosses.length){bi=0;round++}hp=full(round);}
+      else{hp-=D*f;progress+=D*f/full(round);hit.pts=ptsOf(D*f);hit.left=hp/full(round)*100;D=0;}
     }
   });
-  return {progress,res,bad};
+  res.forEach(r=>r.pts=r.hits.reduce((a,h)=>a+h.pts,0));
+  return {progress,res,bad,total:res.reduce((a,r)=>a+r.pts,0)};
 }
 function permutations(a){if(a.length<=1)return [a];const out=[];a.forEach((x,i)=>permutations(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>out.push([x].concat(p))));return out}
 function bestOrder(){
@@ -1112,10 +1125,14 @@ function teamWarnings(t){
     (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
   return out.join("");
 }
+function ptsHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return "";
+  const tip="예상 점수 · 예측치 (1R 보스 1마리 = 4,800점 실측 보정, 라운드 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25)\n"+r.hits.map(h=>`${h.round}R ${h.name}: ${Math.round(h.from-h.left)}% → ${Math.round(h.pts).toLocaleString()}점`).join("\n");
+  return `<span class="pts" title="${esc(tip)}">예상 <b>${Math.round(r.pts).toLocaleString()}</b>점</span>`;}
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
   return `메인 딜러: ${charMap[r.main].name}\n서포터 딜증 +${Math.round(r.amp)}% · 시너지 +${Math.round(r.syn)}%\n${t.buff?`파워 서킷 반영 +${r.circuit.toFixed(1)}`:"강화 효과를 고르면 파워 서킷이 반영됩니다"}`;}
 let simCache=null;
 function renderTeams(){
+  queueMicrotask(()=>{const el=$("#ptsTotal");if(el)el.innerHTML=simCache&&simCache.total?`예상 총점 <b>${Math.round(simCache.total).toLocaleString()}</b>`:""});
   const ss=$("#skillSel");if(ss)ss.value=state.skill||"top";
   simCache=simulate(state.teams);
   const order=state.teams.map((t,i)=>({t,i,s:teamScore(t)}));
@@ -1132,9 +1149,10 @@ function renderTeams(){
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
       ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
-        <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}
+        <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${ptsHTML(i)}
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
-        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${teamWarnings(t)}</div>
+        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}</div>
+        <div class="row">${teamWarnings(t)}</div>
 
       </div>
       <div class="synbox">${chips||`<span class="none">시너지 없음</span>`}</div>
