@@ -275,7 +275,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
   box-shadow:0 2px 8px rgba(0,0,0,.35);transition:border-color .12s}
 .grid .tok:hover:not(.used),.slot .tok:hover{border-color:#e6c36a}
 .tok .face{border-radius:0;background-color:var(--card);box-shadow:none}
-/* 초상화 뒤 배경: 별이 뜬 밤하늘에서 아래로 갈수록 푸른 안개 (편성 화면 느낌) */
+/* 초상화 뒤 배경: 별이 뜬 밤하늘에서 아래로 갈수록 그 공명자 속성 색으로 물든다 (속성을 한눈에 구분) */
 .tok .face,.pf-l .face{--sky:
   radial-gradient(1px 1px at 18% 22%,rgba(255,255,255,.9),transparent 70%),
   radial-gradient(1px 1px at 72% 14%,rgba(255,255,255,.8),transparent 70%),
@@ -284,8 +284,8 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
   radial-gradient(1px 1px at 9% 52%,rgba(255,255,255,.6),transparent 70%),
   radial-gradient(1px 1px at 58% 32%,rgba(255,255,255,.55),transparent 70%),
   linear-gradient(158deg,transparent 38%,rgba(175,205,235,.16) 50%,transparent 62%),
-  radial-gradient(130% 55% at 50% 108%,rgba(205,228,245,.85),transparent 62%),
-  linear-gradient(to bottom,#060a13 0%,#101c2e 45%,#2c4663 78%,#7f9fbb 100%)}
+  radial-gradient(130% 55% at 50% 108%,color-mix(in srgb,var(--ec,#9fbcd2) 45%,rgba(215,232,245,.8)),transparent 62%),
+  linear-gradient(to bottom,#060a13 0%,color-mix(in srgb,var(--ec,#2c4663) 28%,#0e1828) 48%,color-mix(in srgb,var(--ec,#2c4663) 55%,#2a3a50) 80%,color-mix(in srgb,var(--ec,#7f9fbb) 70%,#cfe0ee) 100%)}
 .tok .face{background:var(--sky)}
 .tok .face.pic{background:var(--pic) center 12%/cover no-repeat,var(--sky)}
 .pf-l .face{background:var(--sky)}
