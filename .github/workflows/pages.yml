@@ -30,8 +30,16 @@ jobs:
       - name: Collect site files
         run: |
           mkdir -p _site
-          cp index.html firebase-config.js cycle.js weapons.js _site/
+          cp index.html firebase-config.js cycle.js weapons.js assets.js _site/
           cp -r portraits icons _site/
+      - name: Restore game image cache
+        uses: actions/cache@v4
+        with:
+          path: .asset-cache
+          key: assets-${{ hashFiles('assets.js', 'weapons.js') }}
+          restore-keys: assets-
+      - name: Fetch game images from encore.moe
+        run: node scripts/fetch-assets.mjs _site/img .asset-cache
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

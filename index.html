@@ -289,6 +289,8 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .tok .face.pic{background:var(--pic) center 12%/cover no-repeat,var(--sky)}
 .pf-l .face{background:var(--sky)}
 .pf-l .face.pic{background:var(--pic) center 8%/cover no-repeat,var(--sky)}
+.pf-l .face.pic.tall{background:var(--pic) center top/cover no-repeat,var(--sky)}
+.tok .face.pic.sq{background:var(--pic) center/cover no-repeat,var(--sky)}
 .tok .face.pic::after{border-radius:0;box-shadow:none;background:none}
 .tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
   background:#1e2226;border-top:2px solid #e6c36a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -708,7 +710,11 @@ let chars=[], charMap={}, cycle=null;
 let db=null, docRef=null, storeMode="local";
 let selected=null;         // tap-to-place selection
 let portraits={};          // charId -> file name in portraits/
-const picUrl=id=>"portraits/"+encodeURIComponent(portraits[id]);
+// 게임 이미지(img/, 배포 때 encore.moe에서 받음)가 있으면 그것을, 없으면 portraits/ 이미지를 쓴다.
+let gameImg={char:new Set(),card:new Set(),weapon:new Set()};
+const hasPic=id=>gameImg.char.has(id)||!!portraits[id];
+const picUrl=id=>gameImg.char.has(id)?`img/char/${id}.webp`:"portraits/"+encodeURIComponent(portraits[id]);
+const cardUrl=id=>gameImg.card.has(id)?`img/card/${id}.webp`:(portraits[id]?"portraits/"+encodeURIComponent(portraits[id]):null);
 let currentUser=null, fb=null;
 const ui={el:null,q:"",rq:"",rel:null};
 
@@ -769,7 +775,7 @@ const WMAP={};(window.WEAPONS||[]).forEach(([id,name,type,q,icon])=>WMAP[id]={id
 const WTYPE=window.WEAPON_TYPES||{};
 const REF_STEP={5:3,4:2,3:1.5}; // 재련 1단계당 성능 % (추정)
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
-const weaponIcon=w=>WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
+const weaponIcon=w=>gameImg.weapon.has(w.id)?`img/weapon/${w.id}.webp`:WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
 const _perf={};
 function perfList(cid){if(_perf[cid])return _perf[cid];const l=((window.WEAPON_PERF||{})[cid]||[]).filter(x=>WMAP[x[0]]);
   const mx=Math.max(0,...l.map(x=>x[2]));const seen=new Set();
@@ -895,13 +901,19 @@ async function loadPortraits(){
     portraits=m;rerenderPlan();renderRoster();
   }catch(e){}
 }
+async function loadGameImages(){
+  try{const r=await fetch("img/index.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();
+    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number))};
+    rerenderPlan();renderRoster();if(profId&&$("#prof").open)renderProfile();
+  }catch(e){}
+}
 
 /* ---------- render: pool ---------- */
 const $=s=>document.querySelector(s);
 function tokenHTML(c,extra=""){
   const bonus=(cycle.dmgBonus||{})[c.id];
-  const pic=portraits[c.id];
-  return `<div class="face${pic?" pic":""}" style="--ec:var(--${c.el})${pic?`;--pic:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
+  const pic=hasPic(c.id),sq=gameImg.char.has(c.id);
+  return `<div class="face${pic?" pic":""}${sq?" sq":""}" style="--ec:var(--${c.el})${pic?`;--pic:url('${picUrl(c.id)}')`:""}"><span class="elb" title="${EL[c.el]} 속성"><img src="icons/el-${c.el}.png" alt="" draggable="false"><b>${EL[c.el]}</b></span><span class="r">${c.rar}★</span><span class="g">${esc(c.name.replace(/^방랑자\((.).*/,"방$1").slice(0,2))}</span></div><div class="nm">${esc(c.name)}</div>${bonus?`<span class="bonus" title="이번 주기 피해 +${bonus}%">+${bonus}%</span>`:""}${extra}`;
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderFilter(){
@@ -1118,7 +1130,7 @@ function renderProfile(){
   const ws=Object.values(WMAP).filter(w=>w.type===t&&w.q>=3).sort((a,b)=>((pmap[b.id]||{}).p||0)-((pmap[a.id]||{}).p||0)||b.q-a.q||a.id-b.id);
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
   $("#prof").innerHTML=`<form method="dialog" class="pf">
-   <div class="pf-l"><div class="face${portraits[id]?" pic":""}" style="--ec:var(--${c.el})${portraits[id]?`;--pic:url('${picUrl(id)}')`:""}"><span class="elb"><img src="icons/el-${c.el}.png" alt=""></span></div></div>
+   <div class="pf-l"><div class="face${cardUrl(id)?" pic":""}${gameImg.card.has(id)?" tall":""}" style="--ec:var(--${c.el})${cardUrl(id)?`;--pic:url('${cardUrl(id)}')`:""}"><span class="elb"><img src="icons/el-${c.el}.png" alt=""></span></div></div>
    <div class="pf-r">
     <div class="pf-h"><h3>${esc(c.name)}</h3><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${c.rar}★</span><span class="chip">${ROLE[c.role]||""}</span><span class="chip">${WTYPE[t]||""}</span>
       <button class="x" value="close" aria-label="닫기">✕</button></div>
@@ -1331,7 +1343,7 @@ paintThemeBtn();
 state=normalize(loadLocal()||freshState());derive();renderAll();route();
 setSave("ok","이 브라우저에 저장됨");
 connect();
-loadPortraits();
+loadPortraits();loadGameImages();
 })();
 </script>
 
