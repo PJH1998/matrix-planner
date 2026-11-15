@@ -264,37 +264,41 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .chip{border-radius:2px;background:color-mix(in srgb,var(--panel-2) 80%,transparent)}
 .chip.el{background:color-mix(in srgb,var(--ec) 26%,transparent);color:var(--fg);border-color:color-mix(in srgb,var(--ec) 60%,transparent)}
 /* character card */
-.tok{gap:0}
-.tok .face{border-radius:6px;background-color:var(--card);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
-.tok .face.pic::after{border-radius:6px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);
+/* 카드 = 정사각형 초상화 + 아래 이름 띠, 전체를 두꺼운 테두리로 감쌈 */
+.tok{gap:0;width:calc(var(--face) + 4px);border:2px solid #59616b;border-radius:9px;background:#181b1f;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);transition:border-color .12s}
+.grid .tok:hover:not(.used),.slot .tok:hover{border-color:#e6c36a}
+.tok .face{border-radius:0;background-color:var(--card);box-shadow:none}
+.tok .face.pic{background-position:center 12%}
+.tok .face.pic::after{border-radius:0;box-shadow:none;
   background:linear-gradient(to top,color-mix(in srgb,#e6c36a 38%,transparent) 0,transparent 42%)}
-.tok .nm{position:absolute;left:0;right:0;bottom:0;z-index:2;max-width:none;padding:3px 6px 4px;font-size:14px;font-weight:500;color:#eef2f5;
-  background:rgba(14,16,19,.9);border-top:2px solid #e6c36a;border-radius:0 0 6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
+  background:#1e2226;border-top:2px solid #e6c36a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tok .face .elb{left:6px;top:6px;width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;
   background:rgba(12,14,17,.78);color:var(--ec);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ec) 70%,transparent)}
 .tok .face .elb svg{width:18px;height:18px}
 .tok .face .elb b{display:none}
 .tok .face .r{font-family:var(--f-num);font-size:12px;top:6px;right:7px;padding:0 5px;border-radius:2px;background:rgba(12,14,17,.7);color:#e6c36a}
-.tok .cnt{right:6px;bottom:32px;width:auto;min-width:0;padding:0 6px;background:rgba(12,14,17,.72);color:#e6c36a;font-family:var(--f-num);font-size:14px;border-radius:2px;line-height:1.5}
+.tok .cnt{right:6px;bottom:38px;width:auto;min-width:0;padding:0 6px;background:rgba(12,14,17,.72);color:#e6c36a;font-family:var(--f-num);font-size:14px;border-radius:2px;line-height:1.5}
 .tok .cnt::before{content:"⚡";margin-right:2px;font-size:12px}
 .tok .cnt.dbl{background:#2b6fb3;color:#fff;box-shadow:inset 0 0 0 1px rgba(160,210,255,.55)}
-.tok .bonus{right:6px;bottom:56px;width:auto;padding:0 6px;border-radius:2px;font-family:var(--f-num);background:#d1532d;line-height:1.5}
-.slot .tok .bonus{bottom:56px}
+.tok .bonus{right:6px;bottom:62px;width:auto;padding:0 6px;border-radius:2px;font-family:var(--f-num);background:#d1532d;line-height:1.5}
+.slot .tok .bonus{bottom:62px}
 .grid{gap:10px 8px}
 .grid .tok.used{opacity:.3;filter:grayscale(.6)}
-.grid .tok{width:var(--face);justify-self:center}
+.grid .tok{justify-self:center}
 /* party rows */
 .team{background:linear-gradient(90deg,color-mix(in srgb,var(--panel) 100%,transparent),color-mix(in srgb,var(--panel) 70%,transparent));border:1px solid var(--line);transition:border-color .15s,box-shadow .15s}
 .team:hover{border-color:color-mix(in srgb,var(--gold) 70%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 35%,transparent),0 0 18px color-mix(in srgb,var(--gold) 12%,transparent)}
 .team .no{font-family:var(--f-num);font-weight:300;font-size:38px;color:var(--fg);letter-spacing:-.02em}
 .team .no small{font-family:var(--f-num);font-weight:400;color:var(--muted);letter-spacing:.16em;font-size:10px}
-.slot{height:calc(var(--face) + 12px);border:1px dashed var(--line);border-radius:6px}
+.slot{height:calc(var(--face) + 44px);border:1px dashed var(--line);border-radius:6px}
 .slot.empty::after{content:"+";width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:var(--card);
   box-shadow:0 0 0 4px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.08);color:#d5dadf;font-size:34px;font-weight:200;line-height:1;font-family:var(--f-num)}
 .slot.over{border-color:var(--accent);border-style:solid;background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .slot.filled{border-color:transparent}
 .slot.syn.filled{border-color:transparent;background:none}
-.slot.syn.filled .face{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 0 0 2px color-mix(in srgb,var(--accent) 75%,transparent)}
+.slot.syn.filled .tok{border-color:#e6c36a;box-shadow:0 0 10px rgba(230,195,106,.3)}
 .slot .lnk{background:var(--line)}
 .slot .lnk.on{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 3px var(--bg),0 0 10px var(--accent)}
 .team.wrap .no::after{color:var(--accent)}
