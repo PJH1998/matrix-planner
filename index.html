@@ -408,6 +408,18 @@ th{font-family:var(--f-num);background:var(--strip)}
 .pf-foot{margin:6px 0 0;font-size:12.5px;color:#9ba7b3}
 .pf-foot b{color:#e6c36a;font-family:var(--f-num);font-size:15px}
 @media (max-width:760px){.pf{grid-template-columns:1fr;min-height:0}.pf-l{border-right:0}.pf-l .face{min-height:0;height:240px}}
+
+.paste{border:1px dashed rgba(255,255,255,.25);border-radius:3px;padding:10px 12px;font-size:13.5px;color:#cfd4d9;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.paste.over,.paste:focus{border-color:#e6c36a;background:rgba(230,195,106,.06);outline:none}
+.paste b{color:#e6c36a}
+.paste .btn{padding:3px 10px;font-size:13px}
+.paste .ocr{flex-basis:100%;color:#9fd8a8;font-size:13px}
+.paste .ocr:empty{display:none}
+.stg{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px 10px;align-items:end}
+.st{position:relative;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:#aeb7c0}
+.st span{white-space:nowrap}
+.st input{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);color:#eef2f5;padding:5px 22px 5px 8px;font-family:var(--f-num);font-size:15px;text-align:right}
+.st i{position:absolute;right:8px;bottom:7px;font-style:normal;color:#9ba7b3;font-size:13px}
 </style>
 
 </head>
@@ -791,17 +803,37 @@ function defaultWeapon(cid){const c=charMap[cid];const g=state.growth[cid]||{};c
   const t=charWType(cid);const w=Object.values(WMAP).find(w=>w.type===t&&w.q===want);return w?w.id:null;}
 function weaponOf(cid){const g=state.growth[cid]||{};const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
   const ref=clamp(+g.ref||(w&&w.q<5?5:1),1,5);return {w,ref,pct:w?weaponPct(cid,id,ref):null,custom:!!(g.wid&&WMAP[g.wid])};}
+/* ---------- 입력한 스탯 → 배율 ----------
+   기대 피해 ∝ 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 피해 보너스)
+   일반적인 완성 세팅(STAT_REF)과 비교한 비율을 점수에 곱한다(0.4~2배). 서포터는 점수에 쓰지 않는다. */
+const STAT_REF={atk:2100,hp:30000,def:2000,cr:70,cd:250,bonus:90};
+const STAT_SCALE={cartethyia:"hp"}; // 공격력이 아닌 HP/방어력에 비례하는 공명자
+const BONUS_KEYS={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
+function bonusKeysOf(id){const S=synOf(id);return ["el",...(S.w||[]).filter(k=>BONUS_KEYS[k])];}
+function statFactor(id){
+  const c=charMap[id];const st=(state.growth[id]||{}).stats;if(!c||!st||c.role==="support")return null;
+  const sc=(c.statScale)||STAT_SCALE[id]||"atk";const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
+  const crit=1+Math.min(cr,100)/100*(cd/100-1),critRef=1+STAT_REF.cr/100*(STAT_REF.cd/100-1);
+  const b=st.b||{};const types=bonusKeysOf(id).filter(k=>k!=="el"&&b[k]!=null&&b[k]!=="");
+  const typeB=types.length?types.reduce((a,k)=>a+(+b[k]||0),0)/types.length:null;
+  const hasB=(b.el!=null&&b.el!=="")||typeB!=null;
+  const bonus=hasB?(+b.el||0)+(typeB||0):STAT_REF.bonus;
+  const f=clamp((main/STAT_REF[sc])*(crit/critRef)*((1+bonus/100)/(1+STAT_REF.bonus/100)),0.4,2);
+  return {f,sc,crit,bonus};
+}
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
   const lv=clamp(+g.lv||90,1,90);
   const hasDps=c.baseDps!=null||BASE_DPS[id]!=null; // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
   const wp=weaponOf(id);
+  const sf=statFactor(id);
   let s=(hasDps?10:(c.rar===5?10:6));
-  if(wp.pct!=null) s=(s+4)*wp.pct/100; // 무기: 공명자별 최고 무기(재련 기준값) = 100%
+  // 무기: 공명자별 최고 무기(재련 기준값) = 100%. 스탯을 입력했으면 무기 기본 스탯은 스탯에 이미 들어 있으므로 차이를 절반만 반영(패시브 몫, 추정)
+  if(wp.pct!=null) s=(s+4)*(sf?Math.sqrt(wp.pct/100):wp.pct/100);
   else s+=4;
   s*=dpsFactor(id);
-  s*=0.5+0.5*(lv/90);
+  if(sf) s*=sf.f; else s*=0.5+0.5*(lv/90); // 스탯을 입력했으면 레벨 대신 스탯으로 계산
   s*=c.role==='support'&&!CHAIN_DATA[id]?1:chainMul(id);
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
   return s;
@@ -1121,6 +1153,48 @@ function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
   if(!on) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
   persist();renderRoster();rerenderPlan();flash(`${charMap[id].name}: ${on?"보유":"미보유"}`);}
 
+/* ---------- profile: stats ---------- */
+const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
+function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
+function statsHTML(id){
+  const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};const sf=statFactor(id);
+  const inp=(k,label,unit,val,grp)=>`<label class="st"><span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="–">${unit?`<i>${unit}</i>`:""}</label>`;
+  const bk=bonusKeysOf(id);
+  return `<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>`+`
+   <div class="paste" id="pfPaste" tabindex="0">캐릭터 스탯 화면을 캡처한 뒤 <b>Ctrl+V</b>로 붙여넣거나, 이미지를 여기로 끌어다 놓으세요. <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
+   <div class="stg">${BASE_STATS.map(([k,l,u])=>inp(k,l,u,st[k])).join("")}</div>
+   <div class="stg">${bk.map(k=>inp(k,k==="el"?`${EL[c.el]} 피해 보너스`:`${BONUS_KEYS[k]} 피해 보너스`,"%",b[k],true)).join("")}
+     <button type="button" class="btn ghost" id="pfStClear">스탯 지우기</button></div>`;
+}
+let _tess=null;
+function loadTesseract(){return _tess||(_tess=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=()=>res(window.Tesseract);sc.onerror=()=>{_tess=null;rej(new Error("글자 인식 도구를 불러오지 못했습니다"))};document.head.appendChild(sc);}))}
+async function prepImage(blob){ // 2배 확대 + 흑백 반전(어두운 배경의 흰 글씨 → 흰 바탕 검은 글씨)
+  const bm=await createImageBitmap(blob);const k=Math.max(1,Math.min(3,1400/bm.width));
+  const cv=document.createElement("canvas");cv.width=Math.round(bm.width*k);cv.height=Math.round(bm.height*k);
+  const x=cv.getContext("2d");x.drawImage(bm,0,0,cv.width,cv.height);const im=x.getImageData(0,0,cv.width,cv.height),d=im.data;
+  for(let i=0;i<d.length;i+=4){const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];const o=v>150?0:255;d[i]=d[i+1]=d[i+2]=o;d[i+3]=255}
+  x.putImageData(im,0,0);return cv;}
+function parseStats(text){
+  const out={b:{}};const num=l=>{const m=l.replace(/[Oo]/g,"0").replace(/[lI|]/g,"1").replace(/\s+(?=[\d.,%])/g,"").match(/(\d[\d,]*(?:\.\d+)?)%?\s*$/);return m?parseFloat(m[1].replace(/,/g,"")):null};
+  const RULES=[[/크리티컬\s*피해/,"cd"],[/크리티컬|크리티칼/,"cr"],[/공명\s*효율/,"er"],[/공격력/,"atk"],[/방어력/,"def"],[/\bHP\b|H\s*P|체력/i,"hp"],
+    [/(응결|용융|전도|기류|회절|인멸)\s*피해/,"b.el"],[/일반\s*공격/,"b.basic"],[/강\s*공격/,"b.heavy"],[/공명\s*스킬/,"b.skill"],[/공명\s*해방/,"b.lib"],[/에코\s*어빌리티/,"b.echo"]];
+  for(const raw of text.split(/\n/)){const l=raw.trim();if(!l)continue;
+    for(const [re,k] of RULES){if(re.test(l)){const v=num(l);if(v!=null){if(k.startsWith("b."))out.b[k.slice(2)]=v;else if(out[k]==null)out[k]=v}break}}}
+  return out;}
+async function ocrStats(blob){
+  const m=$("#pfOcr");if(m)m.textContent="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";
+  try{const T=await loadTesseract();const cv=await prepImage(blob);
+    const {data}=await T.recognize(cv,"kor+eng");const got=parseStats(data.text);
+    const keys=Object.keys(got).filter(k=>k!=="b");const bkeys=Object.keys(got.b);
+    if(!keys.length&&!bkeys.length)throw new Error("스탯을 찾지 못했습니다. 항목 이름과 숫자가 함께 보이게 캡처해 주세요.");
+    const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({},g.stats||{});st.b=Object.assign({},st.b||{},got.b);keys.forEach(k=>st[k]=got[k]);
+    persist();renderProfile();renderRoster();rerenderPlan();
+    const mm=$("#pfOcr");if(mm)mm.textContent=`인식 완료: ${[...keys.map(k=>(BASE_STATS.find(x=>x[0]===k)||[,k])[1]),...bkeys.map(k=>BONUS_KEYS[k]+" 보너스")].join(", ")}. 숫자가 맞는지 확인해 주세요.`;
+    return got;
+  }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
+}
+window.mpOcrTest=async url=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text)}};
+
 /* ---------- profile dialog ---------- */
 let profId=null;
 function openProfile(id){profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
@@ -1147,7 +1221,8 @@ function renderProfile(){
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
     <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
     <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
-    <p class="pf-foot">캐릭터 점수 <b>${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
+    ${statsHTML(id)}
+    <p class="pf-foot">캐릭터 점수 <b id="pfScore">${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
    </div></form>`;
 }
 /* ---------- render: cycle/data ---------- */
@@ -1270,6 +1345,8 @@ $("#rgrid").addEventListener("touchstart",e=>{const tk=e.target.closest(".rcard"
 ["touchend","touchmove","touchcancel"].forEach(ev=>$("#rgrid").addEventListener(ev,e=>{clearTimeout(rlp);if(ev==="touchend"&&rlpFired){e.preventDefault();rlpFired=false}}));
 $("#prof").addEventListener("click",e=>{
   const d=$("#prof");if(e.target===d){d.close();return}
+  if(e.target.id==="pfPick"){$("#pfFile").click();return}
+  if(e.target.id==="pfStClear"){const g=state.growth[profId]||{};delete g.stats;return setGrowth(profId,{})}
   const ch=e.target.closest("#pfCh button");if(ch)return setGrowth(profId,{chain:+ch.dataset.v});
   const r=e.target.closest("#pfR button");if(r)return setGrowth(profId,{ref:+r.dataset.v});
   const w=e.target.closest("#pfW button");if(w){const W=WMAP[+w.dataset.w];const g=state.growth[profId]||{};
@@ -1279,7 +1356,16 @@ $("#prof").addEventListener("input",e=>{
   if(e.target.id==="pfLv"){$("#pfLvN").value=e.target.value;}
   if(e.target.id==="pfLvN"&&e.target.value===""){return}
 });
+document.addEventListener("paste",e=>{const d=$("#prof");if(!d||!d.open||!profId)return;
+  const it=[...(e.clipboardData||{}).items||[]].find(i=>i.type.startsWith("image/"));if(!it)return;e.preventDefault();ocrStats(it.getAsFile());});
+$("#prof").addEventListener("dragover",e=>{if(e.target.closest("#pfPaste")){e.preventDefault();e.target.closest("#pfPaste").classList.add("over")}});
+$("#prof").addEventListener("dragleave",e=>{const z=e.target.closest("#pfPaste");if(z)z.classList.remove("over")});
+$("#prof").addEventListener("drop",e=>{const z=e.target.closest("#pfPaste");if(!z)return;e.preventDefault();z.classList.remove("over");const f=[...e.dataTransfer.files].find(f=>f.type.startsWith("image/"));if(f)ocrStats(f)});
 $("#prof").addEventListener("change",e=>{
+  if(e.target.id==="pfFile"){const f=e.target.files[0];if(f)ocrStats(f);return}
+  if(e.target.dataset.st){const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({b:{}},g.stats||{});const v=e.target.value===""?null:+e.target.value;
+    if(e.target.dataset.grp==="b"){st.b=Object.assign({},st.b);if(v==null)delete st.b[e.target.dataset.st];else st.b[e.target.dataset.st]=v}else{if(v==null)delete st[e.target.dataset.st];else st[e.target.dataset.st]=v}
+    persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);renderRoster();rerenderPlan();return}
   if(e.target.id==="pfLv"||e.target.id==="pfLvN")return setGrowth(profId,{lv:clamp(+e.target.value||90,1,90)});
   if(e.target.id==="pfOwn"){if(!!state.owned[profId]!==e.target.checked)toggleOwned(profId);renderProfile();}
 });
