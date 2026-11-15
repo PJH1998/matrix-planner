@@ -372,9 +372,10 @@ th{font-family:var(--f-num);background:var(--strip)}
 .rwep.q3,.wt.q3 .wi{background:linear-gradient(160deg,#2f5f88,#16283a)}
 .rcard .rwep img{width:100%;height:100%;display:block}
 .rcard .rwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:10.5px;font-weight:600;background:#14181c;color:#e6c36a;border-radius:2px;padding:0 3px;line-height:1.35}
-.prof{padding:0;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:#10151a;color:#eef2f5;width:min(1320px,96vw);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.prof{padding:0;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:#10151a;color:#eef2f5;width:min(1480px,97vw);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .prof::backdrop{background:rgba(4,7,10,.66);backdrop-filter:blur(3px)}
-.pf{display:grid;grid-template-columns:minmax(260px,560px) minmax(0,1fr);min-height:min(820px,90vh)}
+.pf{display:grid;grid-template-columns:minmax(240px,480px) minmax(0,1fr) minmax(260px,320px);min-height:min(820px,90vh)}
+@media (max-width:1200px){.pf{grid-template-columns:minmax(220px,360px) minmax(0,1fr)}.pf-s{grid-column:2;border-left:0;border-top:1px solid rgba(255,255,255,.1)}.pf-l{grid-row:span 2}}
 .pf-l{position:relative;border-right:1px solid rgba(255,255,255,.1)}
 .pf-l .face{position:relative;width:100%;height:100%}
 .pf-l .elb{position:absolute;left:12px;top:12px;width:44px;height:44px}
@@ -407,19 +408,27 @@ th{font-family:var(--f-num);background:var(--strip)}
 .wt .wbest{position:absolute;left:4px;top:4px;font-size:10.5px;background:#e6c36a;color:#1c1606;padding:0 4px;border-radius:2px;font-weight:700}
 .pf-foot{margin:6px 0 0;font-size:12.5px;color:#9ba7b3}
 .pf-foot b{color:#e6c36a;font-family:var(--f-num);font-size:15px}
-@media (max-width:760px){.pf{grid-template-columns:1fr;min-height:0}.pf-l{border-right:0}.pf-l .face{min-height:0;height:240px}}
+@media (max-width:760px){.pf{grid-template-columns:1fr;min-height:0}.pf-s{grid-column:auto}.pf-l{grid-row:auto}.pf-l{border-right:0}.pf-l .face{min-height:0;height:240px}}
 
-.paste{border:1px dashed rgba(255,255,255,.25);border-radius:3px;padding:10px 12px;font-size:13.5px;color:#cfd4d9;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.paste{border:1px dashed rgba(255,255,255,.25);border-radius:3px;padding:8px 10px;font-size:13px;color:#cfd4d9;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .paste.over,.paste:focus{border-color:#e6c36a;background:rgba(230,195,106,.06);outline:none}
 .paste b{color:#e6c36a}
 .paste .btn{padding:3px 10px;font-size:13px}
 .paste .ocr{flex-basis:100%;color:#9fd8a8;font-size:13px}
 .paste .ocr:empty{display:none}
-.stg{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px 10px;align-items:end}
-.st{position:relative;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:#aeb7c0}
-.st span{white-space:nowrap}
-.st input{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);color:#eef2f5;padding:5px 22px 5px 8px;font-family:var(--f-num);font-size:15px;text-align:right}
-.st i{position:absolute;right:8px;bottom:7px;font-style:normal;color:#9ba7b3;font-size:13px}
+.pf-s{padding:16px 16px 18px;border-left:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
+.pf-s .pf-sec{margin-top:0}
+.srs{display:flex;flex-direction:column;gap:2px}
+.sr{display:grid;grid-template-columns:28px minmax(0,1fr) 92px 14px;align-items:center;gap:8px;padding:4px 2px;font-size:14.5px;color:#e9edf0;border-bottom:1px solid rgba(255,255,255,.05)}
+.sr img{width:26px;height:26px;display:block;opacity:.92}
+.sr .noi{width:26px;height:26px;display:block}
+.sr span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr input{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);color:#fff;padding:4px 7px;font-family:var(--f-num);font-size:16px;text-align:right}
+.sr input:focus{border-color:#e6c36a;outline:none}
+.sr em{font-style:normal;color:#9ba7b3;font-size:13px}
+.sdiv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;color:#9ba7b3;font-size:12.5px;letter-spacing:.04em}
+.sdiv::before,.sdiv::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,195,106,.55),transparent)}
+.sclear{align-self:flex-end;margin-top:6px;padding:4px 12px;font-size:13px}
 </style>
 
 </head>
@@ -1157,14 +1166,15 @@ function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
 function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
 function statsHTML(id){
-  const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};const sf=statFactor(id);
-  const inp=(k,label,unit,val,grp)=>`<label class="st"><span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="–">${unit?`<i>${unit}</i>`:""}</label>`;
+  const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
+  const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="–"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);
-  return `<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>`+`
-   <div class="paste" id="pfPaste" tabindex="0">캐릭터 스탯 화면을 캡처한 뒤 <b>Ctrl+V</b>로 붙여넣거나, 이미지를 여기로 끌어다 놓으세요. <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
-   <div class="stg">${BASE_STATS.map(([k,l,u])=>inp(k,l,u,st[k])).join("")}</div>
-   <div class="stg">${bk.map(k=>inp(k,k==="el"?`${EL[c.el]} 피해 보너스`:`${BONUS_KEYS[k]} 피해 보너스`,"%",b[k],true)).join("")}
-     <button type="button" class="btn ghost" id="pfStClear">스탯 지우기</button></div>`;
+  return `<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
+   <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
+   <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
+   <div class="sdiv"><span>피해 보너스</span></div>
+   <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/el-${c.el}.png`:null)).join("")}</div>
+   <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`;
 }
 let _tess=null;
 function loadTesseract(){return _tess||(_tess=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=()=>res(window.Tesseract);sc.onerror=()=>{_tess=null;rej(new Error("글자 인식 도구를 불러오지 못했습니다"))};document.head.appendChild(sc);}))}
@@ -1232,9 +1242,9 @@ function renderProfile(){
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
     <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
     <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
-    ${statsHTML(id)}
     <p class="pf-foot">캐릭터 점수 <b id="pfScore">${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
-   </div></form>`;
+   </div>
+   <div class="pf-s">${statsHTML(id)}</div></form>`;
 }
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
