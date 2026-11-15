@@ -462,16 +462,32 @@ select option.rec{color:#e6c36a;font-weight:700}
 .sortsel{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);font-weight:600}
 .tok .nm.r4{border-top-color:#a77bdb}
 .tok .face .r.r4{color:#c5a3f0}
+.brand .left{font-family:var(--f-num);font-size:13px;color:var(--fg);border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);border-radius:999px;padding:1px 10px;margin-left:4px;white-space:nowrap}
+.brand .left.soon{color:#ff8a65;border-color:rgba(255,138,101,.6)}
+.brand .left.end{color:var(--muted);border-color:var(--line)}
+.disc{border:1px solid color-mix(in srgb,var(--warn) 60%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--fg);padding:10px 14px;border-radius:3px;font-size:14px;line-height:1.6;margin:0 0 12px}
+.disc b{color:var(--warn)}
+.disc.foot{margin-top:12px}
+table.inv td,table.rt td{vertical-align:middle}
+.inv .wmini{width:26px;height:26px;vertical-align:middle;margin-right:6px;border-radius:3px;background:rgba(255,255,255,.06)}
+.inv b.up,.rt .up{color:var(--ok)} .rt .down{color:#ff8a65}
+.mut{color:var(--muted);font-size:13px}
+.rec{margin-bottom:14px}.rec .ph .rdel{margin-left:8px;padding:2px 10px;font-size:13px}
+table.rt{min-width:0}
+.rt .rmem{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rt .ract{width:120px;text-align:right;font-family:var(--f-num)}
 </style>
 
 </head>
 <body>
 <header class="top">
-  <div class="brand"><svg class="hex" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28 9.5v13L16 29.5 4 22.5v-13Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9 22 12.5v7L16 23l-6-3.5v-7Z" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".7"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg><h1>매트릭스 플래너</h1><small id="cycleTag">ENDSTATE MATRIX</small></div>
+  <div class="brand"><svg class="hex" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28 9.5v13L16 29.5 4 22.5v-13Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9 22 12.5v7L16 23l-6-3.5v-7Z" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".7"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg><h1>매트릭스 플래너</h1><small id="cycleTag">ENDSTATE MATRIX</small><span class="left" id="cycleLeft"></span></div>
   <nav class="tabs" aria-label="페이지">
     <a href="#plan" data-v="plan">배치</a>
     <a href="#roster" data-v="roster">보유 캐릭터</a>
     <a href="#cycle" data-v="cycle" id="cycleTab" hidden>주기 설정</a>
+    <a href="#invest" data-v="invest">투자 효율</a>
+    <a href="#records" data-v="records">기록</a>
     <a href="#data" data-v="data">데이터</a>
   </nav>
   <div class="save" id="save"><i></i><span>불러오는 중</span></div>
@@ -545,6 +561,28 @@ select option.rec{color:#e6c36a;font-weight:700}
       </div>
     </div>
   </div>
+</section>
+
+<!-- INVEST -->
+<section class="view" id="v-invest">
+  <div class="roster-h">
+    <h2>육성 투자 효율</h2>
+    <label class="sortl">대상 <select id="invScope" class="sortsel"><option value="team">편성된 공명자</option><option value="owned">보유 공명자 전체</option></select></label>
+  </div>
+  <div class="disc" role="note"><b>참고용 추천입니다.</b> 이 화면의 수치는 이 사이트가 Prydwen 계산과 몇 가지 가정으로 만든 <b>추정치</b>이며, 실제 게임 성능·확률과 다를 수 있습니다. 뽑기나 재화 사용은 반드시 본인 판단으로 결정하세요.</div>
+  <p class="hint">지금 편성과 성장도를 기준으로, 공명 체인 +1 · 더 좋은 무기 · 무기 재련 +1을 했을 때 <b>예상 총점</b>이 얼마나 오르는지와 <b>10연차당 효율</b>을 보여 줍니다. 편성에 없는 공명자는 캐릭터 점수 변화만 보여 줍니다.</p>
+  <div class="rtable-wrap"><table class="inv"><thead><tr><th>#</th><th>공명자</th><th>투자</th><th>예상 총점 변화</th><th>캐릭터 점수</th><th>예상 비용</th><th>10연차당</th></tr></thead><tbody id="invBody"></tbody></table></div>
+  <div class="disc foot" role="note">⚠ 위 결과는 <b>추천일 뿐</b>입니다. 예상 비용은 한정 캐릭터 1명 ≈ 95연차, 전용 무기 1개 ≈ 70연차로 잡은 평균값이며, 실제 뽑기 결과는 운에 따라 크게 달라집니다. 이 사이트는 비영리 팬 도구이며 결과에 대해 책임지지 않습니다.</div>
+</section>
+
+<!-- RECORDS -->
+<section class="view" id="v-records">
+  <div class="roster-h">
+    <h2>주기별 기록</h2>
+    <button class="btn" id="recSave">지금 편성을 기록으로 저장</button>
+  </div>
+  <p class="hint">주기가 바뀌면 지난 주기의 마지막 편성과 예상 점수가 자동으로 기록됩니다. 실제 점수를 입력해 두면 예상과 비교할 수 있습니다. 기록은 이 브라우저에만 저장됩니다.</p>
+  <div id="recList"></div>
 </section>
 
 <!-- DATA -->
@@ -796,7 +834,7 @@ function normalize(s){
   if(!s||typeof s!=="object") return d;
   const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
     teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:typeof s.rosterSort==="string"?s.rosterSort:"rar"};
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:typeof s.rosterSort==="string"?s.rosterSort:"rar"};
   return o;
 }
 function derive(){
@@ -927,6 +965,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 let saveTimer=null;
 function setSave(cls,text){const el=document.getElementById("save");el.className="save "+cls;el.lastElementChild.textContent=text}
 function persist(){
+  try{if(state.cur&&state.cur.cycle===cycle.name&&typeof simCache!=="undefined"&&simCache){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}}catch(e){}
   try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}
   if(!docRef){setSave("ok","이 브라우저에 저장됨");refreshExport();return}
   setSave("busy","저장 중");
@@ -989,13 +1028,13 @@ async function loadPortraits(){
     const r=await fetch("portraits/index.json",{cache:"no-cache"});if(!r.ok)return;
     const files=await r.json();if(!Array.isArray(files))return;
     const m={};files.forEach(f=>{if(typeof f!=="string")return;const c=matchChar(f);if(c)m[c.id]=f});
-    portraits=m;rerenderPlan();renderRoster();
+    portraits=m;rerenderPlan();renderRoster();renderInvest();renderRecords();
   }catch(e){}
 }
 async function loadGameImages(){
   try{const r=await fetch("img/index.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();
     gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number))};
-    rerenderPlan();renderRoster();if(profId&&$("#prof").open)renderProfile();
+    rerenderPlan();renderRoster();renderInvest();renderRecords();if(profId&&$("#prof").open)renderProfile();
   }catch(e){}
 }
 
@@ -1352,7 +1391,59 @@ function refreshExport(){ const b=$("#exportBox"); if(b) b.value=JSON.stringify(
 function renderStoreInfo(){
   $("#storeInfo").innerHTML=`<dt>저장 위치</dt><dd>${"이 브라우저"}</dd><dt>보유 공명자</dt><dd>${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}</dd><dt>파티 수</dt><dd>${state.teams.length}</dd>`;
 }
-function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport()}
+/* ---------- 매트릭스 남은 시간 ---------- */
+function cycleEnd(){if(cycle.endsAt){const d=new Date(cycle.endsAt);if(!isNaN(d))return d}
+  const m=String(cycle.period||"").match(/(\d{4}-\d{2}-\d{2})\s*$/);return m?new Date(m[1]+"T04:00:00+08:00"):null}
+function renderLeft(){const el=$("#cycleLeft");if(!el)return;const e=cycleEnd();if(!e){el.textContent="";return}
+  const ms=e-Date.now();if(ms<=0){el.textContent="종료됨 · 다음 주기 대기";el.className="left end";return}
+  const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),mi=Math.floor(ms%36e5/6e4);
+  el.textContent=`종료까지 ${d?d+"일 ":""}${h}시간${d?"":` ${mi}분`}`;el.className="left"+(ms<864e5?" soon":"");el.title=`종료: ${e.toLocaleString("ko-KR")}`}
+setInterval(renderLeft,60000);
+
+/* ---------- 육성 투자 효율 ---------- */
+const PULLS={char:95,weapon:70}; // 기대 연차 수 (추정): 한정 캐릭터 1명(50:50 포함), 픽업 무기 1개
+function totalNow(){return simulate(state.teams).total||0}
+function withGrowth(id,patch,fn){const had=Object.prototype.hasOwnProperty.call(state.growth,id);const old=state.growth[id];
+  state.growth[id]=Object.assign({},old||{},patch);try{return fn()}finally{if(had)state.growth[id]=old;else delete state.growth[id]}}
+function investCandidates(id){const c=charMap[id];if(!c)return [];const g=state.growth[id]||{};const out=[];const ch=+g.chain||0;
+  if(c.rar===5&&ch<6)out.push({label:`공명 체인 ${ch}돌파 → ${ch+1}돌파`,patch:{chain:ch+1},cost:PULLS.char});
+  const wp=weaponOf(id);const top=perfList(id)[0];
+  if(top&&WMAP[top.id].q===5&&(!wp.w||wp.w.id!==top.id))out.push({label:`무기 ${WMAP[top.id].name} (R1)`,patch:{wid:top.id,wr:5,ref:1},cost:PULLS.weapon,wid:top.id});
+  else if(wp.w&&wp.w.q===5&&wp.ref<5)out.push({label:`${wp.w.name} 재련 R${wp.ref} → R${wp.ref+1}`,patch:{ref:wp.ref+1},cost:PULLS.weapon,wid:wp.w.id});
+  return out;}
+function renderInvest(){const body=$("#invBody");if(!body)return;
+  const scope=$("#invScope").value;const inTeam=new Set(state.teams.flatMap(t=>t.slots.filter(Boolean)));
+  const ids=(scope==="team"?[...inTeam]:chars.filter(c=>state.owned[c.id]).map(c=>c.id)).filter(id=>charMap[id]);
+  const base=totalNow();const rows=[];
+  ids.forEach(id=>{const cs=charScore(id);investCandidates(id).forEach(k=>{
+    const r=withGrowth(id,k.patch,()=>({tot:inTeam.has(id)?totalNow():base,cs:charScore(id)}));
+    const dT=r.tot-base,dC=cs?(r.cs/cs-1)*100:0;rows.push({id,k,dT,dC,eff:inTeam.has(id)?dT/k.cost*10:null,effC:dC/k.cost*10,inTeam:inTeam.has(id)});});});
+  rows.sort((a,b)=>(b.eff??-1e9)-(a.eff??-1e9)||b.effC-a.effC);
+  body.innerHTML=rows.map((r,i)=>{const c=charMap[r.id];const w=r.k.wid&&WMAP[r.k.wid];
+    return `<tr><td class="score">${i+1}</td><td><span class="nmc"><span class="pt"><span class="th" ${hasPic(r.id)?`style="background-image:url('${picUrl(r.id)}')"`:""}></span></span>${esc(c.name)}</span></td>
+    <td>${w?`<img class="wmini" src="${weaponIcon(w)}" alt="" onerror="this.remove()">`:""}${esc(r.k.label)}</td>
+    <td class="score">${r.inTeam?`<b class="${r.dT>0?"up":""}">${r.dT>=0?"+":""}${Math.round(r.dT).toLocaleString()}점</b> <small>(${base?((r.dT/base)*100).toFixed(1):0}%)</small>`:`<span class="mut">편성 밖</span>`}</td>
+    <td class="score">+${r.dC.toFixed(1)}%</td><td class="score">≈ ${r.k.cost}연차</td>
+    <td class="score">${r.eff!=null?`<b>+${Math.round(r.eff).toLocaleString()}점</b>`:`+${r.effC.toFixed(1)}%`}</td></tr>`}).join("")||`<tr><td colspan="7" class="mut">${scope==="team"?"편성된 공명자가 없습니다. 배치 화면에서 파티를 먼저 짜 주세요.":"보유 공명자가 없습니다."}</td></tr>`;}
+
+/* ---------- 주기별 기록 ---------- */
+function snapRecord(){const sim=simCache||simulate(state.teams);
+  return {cycle:cycle.name||"",period:cycle.period||"",savedAt:new Date().toISOString(),
+    teams:state.teams.map((t,i)=>({slots:t.slots.slice(),buff:t.buff,pred:Math.round((sim.res[i]||{}).pts||0)})).filter(t=>t.slots.some(Boolean)),
+    total:Math.round(sim.total||0),actual:{}};}
+function archiveIfCycleChanged(){if(state.cur&&state.cur.cycle&&state.cur.cycle!==cycle.name&&state.cur.teams&&state.cur.teams.length){
+  state.records.unshift(Object.assign({},state.cur,{auto:true}));}
+  const keep=state.cur&&state.cur.cycle===cycle.name?state.cur.actual:{};state.cur=Object.assign(snapRecord(),{actual:keep||{}});}
+function recCard(r,idx){const ks=Object.keys(r.actual||{});const sum=ks.reduce((a,k)=>a+(+r.actual[k]||0),0);const has=ks.length;const predIn=ks.reduce((a,k)=>a+((r.teams[k]||{}).pred||0),0);
+  return `<div class="panel rec"><div class="ph">${esc(r.cycle)}${idx==null?` <span class="chip g">진행 중</span>`:r.auto?` <span class="chip">자동 기록</span>`:` <span class="chip">직접 저장</span>`}<span class="sp period">${esc(r.period||"")} · ${new Date(r.savedAt).toLocaleDateString("ko-KR")}</span>${idx!=null?`<button class="btn ghost danger rdel" data-del="${idx}">삭제</button>`:""}</div>
+   <table class="rt"><thead><tr><th>파티</th><th>공명자</th><th>예상</th><th>실제 점수</th></tr></thead><tbody>
+   ${r.teams.map((t,i)=>`<tr><td class="score">${String(i+1).padStart(2,"0")}</td><td><span class="rmem">${t.slots.map(id=>id&&charMap[id]?`<span class="pt"><span class="th" title="${esc(charMap[id].name)}" ${hasPic(id)?`style="background-image:url('${picUrl(id)}')"`:""}></span></span>`:"").join("")}<span class="mut">${t.slots.filter(Boolean).map(id=>charMap[id]?esc(charMap[id].name):"").join(" · ")}</span></span></td>
+     <td class="score">${t.pred.toLocaleString()}</td><td><input type="number" min="0" step="1" class="ract" data-rec="${idx==null?"cur":idx}" data-i="${i}" value="${(r.actual||{})[i]??""}" placeholder="–"></td></tr>`).join("")}
+   </tbody><tfoot><tr><td colspan="2"><b>합계</b></td><td class="score"><b>${(r.total||0).toLocaleString()}</b></td><td class="score"><b>${has?sum.toLocaleString():"–"}</b>${has&&predIn?` <small class="${sum>=predIn?"up":"down"}" title="실제 점수를 입력한 파티의 예상 합(${predIn.toLocaleString()}) 대비">(예상 대비 ${sum>=predIn?"+":""}${((sum/predIn-1)*100).toFixed(1)}%)</small>`:""}</td></tr></tfoot></table></div>`;}
+function renderRecords(){const el=$("#recList");if(!el)return;if(state.cur&&state.cur.cycle===cycle.name){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}
+  el.innerHTML=(state.cur?recCard(state.cur,null):"")+state.records.map((r,i)=>recCard(r,i)).join("")||`<p class="hint">기록이 없습니다.</p>`;}
+
+function renderAll(){renderFilter();renderPool();renderTeams();renderIntel();renderRoster();renderCycleView();renderCharJson();renderStoreInfo();refreshExport();renderLeft();renderInvest();renderRecords()}
 function rerenderPlan(){renderPool();renderTeams();renderStoreInfo()}
 
 /* ---------- placement logic ---------- */
@@ -1437,6 +1528,12 @@ $("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
 $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});
 $("#poolSort").addEventListener("change",e=>{state.poolSort=e.target.value;persist();renderPool()});
 $("#rosterSort").addEventListener("change",e=>{state.rosterSort=e.target.value;persist();renderRoster()});
+$("#invScope").addEventListener("change",renderInvest);
+window.addEventListener("hashchange",()=>{const h=location.hash;if(h==="#invest")renderInvest();if(h==="#records")renderRecords();});
+$("#recSave").addEventListener("click",()=>{state.records.unshift(snapRecord());persist();renderRecords();flash("지금 편성을 기록했습니다.")});
+$("#recList").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;state.records.splice(+b.dataset.del,1);persist();renderRecords()});
+$("#recList").addEventListener("change",e=>{const x=e.target.closest(".ract");if(!x)return;const r=x.dataset.rec==="cur"?state.cur:state.records[+x.dataset.rec];if(!r)return;r.actual=r.actual||{};
+  if(x.value==="")delete r.actual[x.dataset.i];else r.actual[x.dataset.i]=Math.max(0,Math.round(+x.value));persist();setTimeout(renderRecords,0)});
 $("#skillSel").addEventListener("change",e=>{state.skill=e.target.value;persist();renderTeams()});
 $("#btnAdd").addEventListener("click",()=>{state.teams.push({slots:[null,null,null],buff:null});persist();renderTeams()});
 let clearArm=false;
@@ -1525,7 +1622,7 @@ $("#btnDownload").addEventListener("click",()=>{
 });
 
 /* ---------- routing ---------- */
-const VIEWS=["plan","roster","cycle","data"];
+const VIEWS=["plan","roster","invest","records","cycle","data"];
 document.getElementById("cycleTab").hidden=!IS_ADMIN;
 function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
@@ -1543,7 +1640,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeB
 paintThemeBtn();
 
 /* ---------- boot ---------- */
-state=normalize(loadLocal()||freshState());derive();renderAll();route();
+state=normalize(loadLocal()||freshState());derive();simCache=simulate(state.teams);archiveIfCycleChanged();renderAll();route();
 setSave("ok","이 브라우저에 저장됨");
 connect();
 loadPortraits();loadGameImages();
