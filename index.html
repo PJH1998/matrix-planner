@@ -1111,7 +1111,13 @@ document.addEventListener("dragstart",()=>{tip.classList.remove("on");tipFor=nul
 addEventListener("scroll",()=>{tip.classList.remove("on");tipFor=null},true);
 
 /* ---------- render: teams ---------- */
-function buffOptions(sel){return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}
+// 파티마다 강화 효과별 강도를 계산해 가장 높은 것을 추천한다 (동률이면 모두 추천)
+function bestBuffs(t){if(!t.slots.some(Boolean))return new Set();
+  const sc=(cycle.buffs||[]).map(b=>[b.id,teamScore({...t,buff:b.id})]);const mx=Math.max(...sc.map(x=>x[1]));
+  const base=teamScore({...t,buff:null});if(!(mx>base+1e-9))return new Set();
+  return new Set(sc.filter(x=>x[1]>=mx-1e-9).map(x=>x[0]));}
+function buffOptions(sel,t){const best=t?bestBuffs(t):new Set();
+  return `<option value="">강화 효과 선택</option>`+(cycle.buffs||[]).map(b=>`<option value="${esc(b.id)}" ${sel===b.id?"selected":""}>${esc(b.name)}${best.has(b.id)?" ★ 추천":""}</option>`).join("")}
 function teamWarnings(t){
   const out=[];const ids=t.slots.filter(Boolean);
   const dps=ids.map(id=>charMap[id]).filter(c=>c&&c.role==="dps");
@@ -1151,7 +1157,7 @@ function renderTeams(){
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>${ptsHTML(i)}
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
-        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff)}</select>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}</div>
+        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select>${els.map(e=>`<span class="chip el" style="--ec:var(--${e})">${EL[e]}</span>`).join("")}</div>
         <div class="row">${teamWarnings(t)}</div>
 
       </div>
