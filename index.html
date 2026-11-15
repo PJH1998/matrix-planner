@@ -983,7 +983,10 @@ function renderPool(){
 /* ---------- boss-run simulation ----------
    파티는 순서대로 보스를 상대하고, 남은 HP는 다음 파티가 이어받는다고 가정한다.
    보스 HP = 편성된 파티 평균 강도 × ROUND_HP^(라운드-1). 메인 딜러 속성을 보스가 저항하면 피해 × RES_MUL. */
-const RES_MUL=0.6, ROUND_HP=1.5, MAX_ROUNDS=8;
+const RES_MUL=0.6, MAX_ROUNDS=8;
+// 라운드별 보스 HP 배율 (예측치, 커뮤니티 측정): 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25, 그 뒤는 라운드마다 +0.75로 가정
+const ROUND_HP_TABLE=[1,2,3.5,4.25];
+const roundHp=r=>r<=ROUND_HP_TABLE.length?ROUND_HP_TABLE[r-1]:ROUND_HP_TABLE[ROUND_HP_TABLE.length-1]+0.75*(r-ROUND_HP_TABLE.length);
 function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
   const pool=ids.filter(id=>charMap[id]&&charMap[id].role==="dps");
   return (pool.length?pool:ids).slice().sort((a,b)=>charScore(b)-charScore(a))[0];}
@@ -997,7 +1000,7 @@ const partyDamage=score=>Math.pow(Math.max(0,score)/S_REF,DMG_EXP)*skillMul();
 function simulate(teams){
   const bosses=(cycle.bosses||[]);const live=teams.filter(t=>t.slots.some(Boolean));
   const res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
-  const full=r=>Math.pow(ROUND_HP,r-1);
+  const full=roundHp;
   let bi=0,round=1,hp=1,progress=0,bad=0;
   teams.forEach((t,ti)=>{
     if(!t.slots.some(Boolean))return;
@@ -1102,7 +1105,7 @@ function teamWarnings(t){
   if(hits.length){const first=hits[0],more=hits.length-1;
     const last=hits[hits.length-1];
     const fmt=h=>`${h.round}R ${h.name}${h.resisted?"(저항)":""} HP ${Math.round(h.from)}%→${h.left>0?Math.round(h.left)+"%":"처치"}`;
-    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 진행 (앞 파티가 남긴 HP를 이어받음, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}):\n${esc(hits.map(fmt).join("\n"))}">vs ${first.round}R ${esc(first.name)}${first.resisted?"·저항":""}${more?` → ${esc(last.name)}`:""} · ${last.left>0?`${Math.round(last.left)}% 남김`:"처치"}</span>`);}
+    out.push(`<span class="chip ${hits.some(h=>h.resisted)?"w":"enc"}" title="예상 진행 · 예측치 (앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}):\n${esc(hits.map(fmt).join("\n"))}">vs ${first.round}R ${esc(first.name)}${first.resisted?"·저항":""}${more?` → ${esc(last.name)}`:""} · ${last.left>0?`${Math.round(last.left)}% 남김`:"처치"}</span>`);}
   const buff=selBuff(t);
   if(buff){const tags=new Set((buff.effects||[]).map(e=>e.cond).filter(Boolean));
     (cycle.bosses||[]).forEach(b=>{if((b.effects||[]).some(f=>(f.tags||[]).some(x=>tags.has(x))))out.push(`<span class="chip g" title="강화 효과와 보스 특성이 맞물립니다">${esc(b.name)} 상성</span>`)});}
