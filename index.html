@@ -1173,7 +1173,7 @@ function statsHTML(id){
    <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
-   <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/el-${c.el}.png`:null)).join("")}</div>
+   <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/st-${c.el}.png`:`icons/st-${k}.png`)).join("")}</div>
    <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`;
 }
 let _tess=null;
