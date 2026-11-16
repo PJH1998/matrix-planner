@@ -455,6 +455,30 @@ th{font-family:var(--f-num);background:var(--strip)}
 .sdiv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;color:#9ba7b3;font-size:12.5px;letter-spacing:.04em}
 .sdiv::before,.sdiv::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,195,106,.55),transparent)}
 .sclear{align-self:flex-end;margin-top:6px;padding:4px 12px;font-size:13px}
+/* 에코 세팅 */
+.ptabs{display:flex;gap:4px}
+.ptabs button{flex:1;padding:6px 8px;font-size:13.5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:#cfd4d9;cursor:pointer}
+.ptabs button[aria-pressed="true"]{background:rgba(230,195,106,.16);border-color:#e6c36a;color:#fff;font-weight:600}
+.esum{border:1px solid rgba(230,195,106,.35);background:rgba(230,195,106,.06);padding:8px 10px;font-size:13px;color:#dfe4e8;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.esum b{font-family:var(--f-num);font-weight:600;color:#fff;text-align:right}
+.esum .eh{grid-column:1/-1;display:flex;justify-content:space-between;font-weight:600;color:#e6c36a;margin-bottom:2px}
+.esum .en{grid-column:1/-1;color:#9fd8a8;font-size:12px;line-height:1.5;margin-top:4px}
+.esum .en.off{color:#9ba7b3}
+.eslots{display:flex;flex-direction:column;gap:6px}
+.eslot{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);padding:6px 8px;font-size:12.5px;color:#dfe4e8}
+.eslot.empty{border-style:dashed;color:#9ba7b3;cursor:pointer;text-align:center;padding:10px 8px}
+.eslot.empty:hover,.eslot.over,.eslot.sel{border-color:#e6c36a;color:#fff}
+.eslot .eh1{display:flex;align-items:center;gap:6px}
+.eslot .ec{font-family:var(--f-num);font-size:11.5px;padding:0 5px;border:1px solid rgba(230,195,106,.6);color:#e6c36a}
+.eslot .em{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eslot .eb{border:0;background:none;color:#9ba7b3;cursor:pointer;padding:0 3px;font-size:13px}
+.eslot .eb:hover{color:#fff}
+.eslot .esubs{color:#b9c2ca;margin:3px 0 4px;line-height:1.45}
+.eslot select,.eslot input{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:12.5px;padding:2px 4px}
+.eslot .eset{width:100%}
+.eslot .emsg{color:#e6c36a;font-size:11.5px;margin-top:3px}
+.eedit{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:3px 4px;margin:4px 0}
+.eedit input{text-align:right;font-family:var(--f-num)}
 .skill{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .skill select{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);border-color:color-mix(in srgb,var(--gold) 45%,var(--line));font-weight:600}
 select option{background:var(--bg);color:var(--fg)}
@@ -883,8 +907,24 @@ const expDmg=(main,cr,cd,bonus)=>main*(1+Math.min(Math.max(cr,0),100)/100*(cd/10
 function refDmg(cid){const I=ijkOf(cid);return expDmg(I.main[1],I.cr,I.cd,elRefOf(cid)+TYPE_REF)}
 // 무기 스탯만으로 본 배율(기준 = 최고 무기). 패시브 몫 = 무기 성능 % ÷ 이 값
 function weaponStatRatio(cid,wid){const r=statsWithWeapon(cid,wid);return expDmg(r.main,r.cr,r.cd,elRefOf(cid)+TYPE_REF)/refDmg(cid)}
+/* ---------- 에코 세팅 → 스탯 (EchoDB) ----------
+   에코를 입력했으면 기본 스탯 + 무기 + 고유 노드 + 에코 + 세트(2세트 고정·조건부 효과)로 최종 스탯을 만들고,
+   기준(이잘키 스탯 + 기준 세트의 조건부 효과)과 기대 피해를 비교한다. 피해 유형별 비중(profile)으로 크리티컬·보너스를 나눠 계산. */
+const echoesOf=id=>((state.growth[id]||{}).echoes||[]).filter(e=>e&&e.main);
+function dmgWeights(id){const p=CharDB.profile(id);const w={};if(p)EchoDB.DMG_TYPES.forEach(k=>{if(p[k])w[k]=p[k]});
+  if(!Object.keys(w).length)(synOf(id).w||[]).forEach(k=>{if(EchoDB.DMG_TYPES.includes(k))w[k]=1});if(!Object.keys(w).length)w.basic=1;return w}
+const echoCtx=id=>({el:(charMap[id]||{}).el,has:ms=>CharDB.has(id,ms),share:k=>CharDB.share(id,k)});
+function echoBuild(id,list){const E=list||echoesOf(id);if(!E.length)return null;const wp=weaponOf(id);
+  return EchoDB.build(Object.assign(echoCtx(id),{base:CharDB.base(id)||[11000,400,1150],nodes:CharDB.nodes(id),weapon:wp.w?_wst(wp.w.id):null,echoes:E}))}
+function echoRef(id){const I=ijkOf(id);const W=_wst(bestWeaponId(id));
+  return EchoDB.refBuild(Object.assign(echoCtx(id),{ijk:I,elRef:elRefOf(id),typeRef:TYPE_REF,typeKeys:bonusKeysOf(id).filter(k=>k!=="el"),base:CharDB.base(id)||[11000,400,1150],weaponAtk:W?W[0]:0,counts:EchoDB.refCounts(id)}))}
+function echoFactor(id){const eb=echoBuild(id);if(!eb)return null;const sc=scaleOf(id),w=dmgWeights(id);
+  const f=clamp(EchoDB.dmg(eb,sc,w)/EchoDB.dmg(echoRef(id),sc,w),0.4,2);
+  return {f,sc,crit:1+Math.min(eb.cr,100)/100*(eb.cd/100-1),bonus:eb.el,echo:eb}}
 function statFactor(id){
-  const c=charMap[id];const st=(state.growth[id]||{}).stats;if(!c||!st||c.role==="support")return null;
+  const c=charMap[id];if(!c||c.role==="support")return null;
+  const ef=echoFactor(id);if(ef)return ef; // 에코 입력이 스탯 직접 입력보다 우선
+  const st=(state.growth[id]||{}).stats;if(!st)return null;
   const sc=scaleOf(id);const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
   const b=st.b||{};const has=k=>b[k]!=null&&b[k]!=="";
   const el=has("el")?+b.el:elRefOf(id);
@@ -947,12 +987,23 @@ function outroMap(ids,main,wOf){
     return {gain,from,links,val};};
   const A=run(ids),B=ids.length>2?run([ids[0],ids[2],ids[1]]):A;return A.val>=B.val?A:B;
 }
+// 세트 효과 하나가 공명자 x에게 주는 피해 증가 비율. 공격력%는 평소 공격력 보너스 합(≈100%)을 감안해 ÷2
+const ATK_BASE=2;
+function setFxGain(f,x){const cx=charMap[x];if(!cx)return 0;const v=f.v/100;
+  if(f.k==="atk%")return v/ATK_BASE;if(f.k==="el")return f.elem&&f.elem!==cx.el?0:v/BONUS_BASE;if(f.k==="all")return v/BONUS_BASE;
+  if(EchoDB.DMG_TYPES.includes(f.k))return v*typeShare(x,f.k)/BONUS_BASE;return 0}
 function teamCalc(t){
-  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[]};if(!ids.length)return r;
+  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[],setx:[]};if(!ids.length)return r;
   const main=mainDps(t);r.main=main;
   const wOf=id=>id===main?ROLE_W.main:(ROLE_W[charMap[id].role]||0.5);
   const om=outroMap(ids,main,wOf);r.gain=om.gain;r.links=om.links;
   ids.forEach(g=>{const f=CharDB.supCond(g);if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids,main,SUP_CTX);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
+  // 에코 세트가 파티원에게 주는 효과: 기준 세트 대비 차이만 반영(기준 세트 효과는 보정값에 이미 들어 있다). 에코를 입력한 공명자만.
+  ids.forEach(g=>{const E=echoesOf(g);if(!E.length)return;const C=echoCtx(g);
+    const recv=to=>to==="party"?ids.filter(x=>x!==g):[g===main?ids[(ids.indexOf(g)+1)%ids.length]:main].filter(x=>x&&x!==g);
+    const add=(list,sign)=>list.forEach(f=>recv(f.to).forEach(x=>{const e=sign*setFxGain(f,x);if(!e)return;om.gain[x]+=e;
+      const l=r.setx.find(y=>y.from===g&&y.to===x);if(l){l.e+=e;if(sign>0&&!l.t.includes(f.set))l.t.push(f.set)}else r.setx.push({from:g,to:x,e,t:sign>0?[f.set]:[]})}));
+    add(EchoDB.teamFx(E,C),1);add(EchoDB.refTeamFx(EchoDB.refCounts(g),C),-1)});
   const noSup=!ids.some(id=>charMap[id].role==="support");
   let dmg=0,dmgC=0;
   ids.forEach(id=>{let w=wOf(id);
@@ -1182,6 +1233,7 @@ function synChips(t){
   r.links.filter(l=>!l.party&&l.e>=0.01).forEach(l=>h+=`<span class="chip syn" title="반주 스킬: ${esc((synOf(l.from).o)||"")}">${esc(nm(l.from))} → ${esc(nm(l.to))} +${Math.round(l.e*100)}%</span>`);
   const pb={};r.links.filter(l=>l.party).forEach(l=>{(pb[l.from]=pb[l.from]||[]).push(l)});
   Object.entries(pb).forEach(([g,ls])=>h+=`<span class="chip syn" title="파티 버프: ${esc(synOf(g).o||"")}">${esc(nm(g))} 파티 버프 +${Math.round(Math.max(...ls.map(l=>l.e))*100)}%</span>`);
+  r.setx.filter(l=>Math.abs(l.e)>=0.01).forEach(l=>h+=`<span class="chip syn" title="에코 세트 효과(기준 세트 대비)${l.t.length?": "+esc(l.t.join(", ")):""}">${esc(nm(l.from))} 세트 → ${esc(nm(l.to))} ${l.e>0?"+":""}${Math.round(l.e*100)}%</span>`);
   r.supx.filter(l=>l.e>=0.01).forEach(l=>h+=`<span class="chip syn" title="서포터 조건부 효과(추정): ${esc(l.t.join(", "))}">${esc(nm(l.from))} → ${esc(nm(l.to))} +${Math.round(l.e*100)}%</span>`);
   r.needs.forEach(id=>{const nd=CharDB.needs(id);h+=`<span class="chip" title="이 메커니즘을 가진 파티원이 없어 피해를 ×${nd.mul}로 계산합니다(추정)">${esc(nm(id))}: ${esc(nd.txt)}</span>`});
   if(r.weak.length)h+=`<span class="chip" title="서포터 없는 파티에서 다른 둘에게 반주 이득을 거의 못 받는 공명자는 피해 비중을 ×${NOSYN_W}로 낮춰 계산합니다">반주 시너지 없음: ${esc(r.weak.map(nm).join(", "))}</span>`;
@@ -1318,29 +1370,97 @@ function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
 
 /* ---------- profile: stats ---------- */
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
-function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
+function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
+
+/* ---------- profile: 에코 세팅 ---------- */
+let pfTabSel=null,echoSel=null,echoEdit=null;const echoMsg={};
+function pfTab(id){if(pfTabSel)return pfTabSel;const g=state.growth[id]||{};return g.stats&&!echoesOf(id).length?"stat":"echo"}
+function echoSlots(id){const a=((state.growth[id]||{}).echoes||[]).slice(0,5);while(a.length<5)a.push(null);return a}
+// 기준 세트 구성(예: 3세트 + 2세트)대로 칸마다 기본 세트를 고른다
+function defaultSet(id,i){const r=(CharDB.sets(id)||[])[0];if(!r)return EchoDB.setNames()[0];let acc=0;
+  for(let j=0;j<r.length;j+=2){if(typeof r[j]!=="string")break;acc+=+r[j+1]||0;if(i<acc)return r[j].split("|")[0]}return r[0].split("|")[0]}
+const fmtV=(k,v)=>`${+(+v).toFixed(1)}${EchoDB.PCT_KEYS.has(k)?"%":""}`;
+const echoLab=(k,elem)=>k==="el"&&elem?`${EL[elem]} 피해`:k==="atk%"?"공격력%":k==="hp%"?"HP%":k==="def%"?"방어력%":EchoDB.LABEL[k]||k;
+function echoHTML(id){
+  const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const sf=n?statFactor(id):null;const eb=n?echoBuild(id):null;const sc=scaleOf(id);
+  const ref=echoRef(id);
+  const sum=eb?`<div class="esum"><div class="eh"><span>에코 반영 스탯</span><span>스탯 배율 ${sf?(sf.f*100).toFixed(0)+"%":"–"}</span></div>
+     <span>${sc==="hp"?"HP":"공격력"}</span><b>${Math.round(sc==="hp"?eb.hp:eb.atk).toLocaleString()}</b>
+     <span>크리티컬 / 크리티컬 피해</span><b>${eb.cr.toFixed(1)}% / ${eb.cd.toFixed(1)}%</b>
+     <span>${EL[c.el]} 피해</span><b>${eb.el.toFixed(1)}%</b>
+     ${Object.entries(eb.types).filter(([k,v])=>v>0).map(([k,v])=>`<span>${EchoDB.LABEL[k]}</span><b>${v.toFixed(1)}%</b>`).join("")}
+     <span>공명 효율</span><b>${eb.er.toFixed(1)}%</b>
+     <div class="en">세트: ${eb.sets.map(x=>`${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")} 적용)`:""}`).join(", ")||"없음"}</div>
+     ${eb.fx.length?`<div class="en">조건부 효과(평균 유지율 반영): ${eb.fx.map(f=>`${echoLab(f.k,f.elem)} ${f.to==="next"?"→ 다음 캐릭터 ":f.to==="party"?"(파티) ":""}+${+f.eff.toFixed(1)}${f.eff<=0?" (조건 안 맞음)":""}`).join(", ")}</div>`:""}
+     ${n<5?`<div class="en off">에코 ${n}/5 — 5개를 모두 넣어야 정확합니다. 빈 칸은 스탯 0으로 계산합니다.</div>`:""}
+     ${c.role==="support"?`<div class="en off">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.</div>`:""}
+     <div class="en off">기준(이잘키·기준 세트): ${sc==="hp"?"HP":"공격력"} ${Math.round(sc==="hp"?ref.hp:ref.atk).toLocaleString()} · 크리 ${ref.cr.toFixed(1)}% · 크피 ${ref.cd.toFixed(1)}% · 속성 ${ref.el.toFixed(1)}%. 위 수치는 스탯 화면과 달리 조건부 효과까지 더한 값입니다.</div></div>`
+    :`${c.role==="support"?`<p class="sbnote">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과(예: 떠오르는 구름)만 반영합니다.</p>`:""}<p class="sbnote">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 칸마다 고르세요(기본: 이 공명자의 주력 세트). 2세트 고정 효과와 5세트 조건부 효과까지 반영합니다.</p>`;
+  const slot=(e,i)=>{const msg=echoMsg[id+":"+i]?`<div class="emsg">${esc(echoMsg[id+":"+i])}</div>`:"";
+    if(!e)return `<div class="eslot empty${echoSel===i?" sel":""}" data-eslot="${i}">에코 ${i+1} — 캡처 붙여넣기(Ctrl+V) · 끌어다 놓기 · 눌러서 선택${msg}</div>`;
+    const ed=echoEdit===i;const sets=EchoDB.setNames();
+    return `<div class="eslot${echoSel===i?" sel":""}" data-eslot="${i}"><div class="eh1"><span class="ec">${e.cost}코</span><span class="em">${esc(echoLab(e.main.k,e.main.elem))} ${fmtV(e.main.k,e.main.v)}</span>
+      <button type="button" class="eb" data-eedit="${i}" title="숫자 고치기">${ed?"완료":"수정"}</button><button type="button" class="eb" data-edel="${i}" title="이 에코 지우기">✕</button></div>
+      ${ed?echoEditHTML(e,i):`<div class="esubs">${(e.subs||[]).map(x=>`${esc(echoLab(x.k))} ${fmtV(x.k,x.v)}`).join(" · ")||"부옵 없음"}</div>`}
+      <select class="eset" data-eset="${i}" aria-label="세트">${sets.map(n=>`<option${n===e.set?" selected":""}>${esc(n)}</option>`).join("")}</select>${msg}</div>`};
+  return `<div class="pf-sec"><span>에코 ${n}/5</span><b id="pfStSum">${statSum(id)}</b></div>${sum}
+   <div class="paste" id="pfEPaste" tabindex="0"><span>에코 캡처를 <b>Ctrl+V</b>로 붙여넣거나 여러 장을 한 번에 끌어다 놓으세요. 빈 칸부터 차례로 채웁니다.</span><input type="file" accept="image/*" id="pfEFile" multiple hidden><span id="pfEOcr" class="ocr"></span></div>
+   <div class="eslots">${E.map(slot).join("")}</div>
+   ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
+function echoEditHTML(e,i){const M=(EchoDB.mainStats(e.cost)||{}).main||{};
+  const mainOpts=Object.keys(M).map(k=>`<option value="${k}"${k===e.main.k?" selected":""}>${esc(echoLab(k))}</option>`).join("");
+  const subKeys=EchoDB.subKeys();
+  const row=(j,x)=>`<select data-esk="${i}:${j}"><option value="">(없음)</option>${subKeys.map(k=>`<option value="${k}"${x&&x.k===k?" selected":""}>${esc(echoLab(k))}${["atk","hp","def"].includes(k)?" (고정)":""}</option>`).join("")}</select><input type="number" step="any" data-esv="${i}:${j}" value="${x?x.v:""}">`;
+  return `<div class="eedit"><select data-ecost="${i}">${[4,3,1].map(c=>`<option value="${c}"${c===e.cost?" selected":""}>${c}코스트</option>`).join("")}</select><span></span>
+    <select data-emk="${i}">${mainOpts}</select><input type="number" step="any" data-emv="${i}" value="${e.main.v}">
+    ${e.main.k==="el"?`<select data-eme="${i}">${EL_ORDER.map(x=>`<option value="${x}"${x===e.main.elem?" selected":""}>${EL[x]} 피해</option>`).join("")}</select><span></span>`:""}
+    ${[0,1,2,3,4].map(j=>row(j,(e.subs||[])[j])).join("")}</div>`}
+function saveEchoes(id,arr){const g=state.growth[id]=state.growth[id]||{};g.echoes=arr.some(Boolean)?arr:undefined;if(!g.echoes)delete g.echoes;
+  persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})} // 입력칸 change·blur 처리 중에 다시 그리지 않도록 다음 프레임에
+function echoQueue(id,files){const E=echoSlots(id);const free=[];if(echoSel!=null&&files.length===1)free.push(echoSel);
+  E.forEach((e,i)=>{if(!e&&!free.includes(i))free.push(i)});if(!free.length&&files.length===1&&echoSel==null)free.push(0);
+  files.slice(0,free.length).forEach((f,k)=>ocrEcho(id,f,free[k]));
+  if(files.length>free.length)$("#pfEOcr")&&($("#pfEOcr").textContent=`빈 칸이 ${free.length}개라 ${files.length-free.length}장은 넣지 못했습니다. 칸을 지우거나 고른 뒤 다시 넣으세요.`)}
+/* 에코 캡처 인식: 줄마다 배경 밝기가 달라(강조 줄) 한 가지 흑백 기준으로는 글자가 깨질 때가 있다.
+   기준을 바꿔 가며 몇 번 읽고, 부옵 5줄이 숫자 수정 없이 읽히면 바로 멈춘다. 가장 잘 읽힌 결과를 쓴다. */
+const ECHO_PASSES=[[130,0],[150,2],[115,0],[150,0]];
+let _ew=null;
+function echoWorker(){return _ew||(_ew=loadTesseract().then(async T=>{const w=await T.createWorker("kor+eng");await w.setParameters({tessedit_pageseg_mode:"6"});return w}).catch(e=>{_ew=null;throw e}))}
+let _eq=Promise.resolve();
+async function readEcho(blob){const w=await echoWorker();const got=[];
+  for(const [th,sc] of ECHO_PASSES){const cv=await prepImage(blob,th,sc||0);const {data}=await w.recognize(cv);const e=EchoDB.parse(data.text);
+    if(e&&e.main)got.push(e);if(got.length===1&&e&&e.subs.length>=5&&!e.subFix)break} // 첫 번째에 깨끗이 읽히면 바로 끝
+  return EchoDB.merge(got)}
+async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";if(profId===id)renderProfile();
+  const job=_eq.then(()=>readEcho(blob));_eq=job.catch(()=>{});
+  try{const e=await job;if(!e||!e.main)throw new Error("에코 옵션을 찾지 못했습니다. 주옵부터 부옵까지 보이게 캡처해 주세요.");
+    const arr=echoSlots(id);const old=arr[i];arr[i]={cost:e.cost,main:e.main,subs:e.subs,set:(old&&old.set)||defaultSet(id,i)};
+    echoMsg[key]=`인식 완료${e.fixes.length?` · 고친 숫자: ${e.fixes.join(", ")}`:""}. 숫자가 맞는지 확인해 주세요.`;echoSel=null;saveEchoes(id,arr);
+  }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
   const I=ijkOf(id),sc=scaleOf(id);
   const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:k===sc?`${I.main[1]}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
   const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);
-  return `<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
+  const tab=pfTab(id);
+  return `<div class="ptabs" role="tablist"><button type="button" data-ptab="echo" aria-pressed="${tab==="echo"}">에코 세팅</button><button type="button" data-ptab="stat" aria-pressed="${tab==="stat"}">스탯 직접 입력</button></div>
+   ${tab==="echo"?echoHTML(id):`<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
    <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
    <p class="sbnote">기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${I.main[1].toLocaleString()} · 크리티컬 ${I.cr}% · 크리티컬 피해 ${I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 주 스탯·크리티컬·크리티컬 피해를 넣으면 이 기준과 비교해 강도에 반영합니다.</p>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
    <p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>
    <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/st-${c.el}.png`:`icons/st-${k}.png`)).join("")}</div>
-   <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`;
+   <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`}`;
 }
 let _tess=null;
 function loadTesseract(){return _tess||(_tess=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=()=>res(window.Tesseract);sc.onerror=()=>{_tess=null;rej(new Error("글자 인식 도구를 불러오지 못했습니다"))};document.head.appendChild(sc);}))}
-async function prepImage(blob){ // 2배 확대 + 흑백 반전(어두운 배경의 흰 글씨 → 흰 바탕 검은 글씨)
-  const bm=await createImageBitmap(blob);const k=Math.max(1,Math.min(3,1400/bm.width));
+async function prepImage(blob,th,scale){ // 확대 + 흑백 반전(어두운 배경의 흰 글씨 → 흰 바탕 검은 글씨). th: 밝기 기준(기본 150)
+  th=th||150;const bm=await createImageBitmap(blob);const k=scale||Math.max(1,Math.min(3,1400/bm.width));
   const cv=document.createElement("canvas");cv.width=Math.round(bm.width*k);cv.height=Math.round(bm.height*k);
   const x=cv.getContext("2d");x.drawImage(bm,0,0,cv.width,cv.height);const im=x.getImageData(0,0,cv.width,cv.height),d=im.data;
-  for(let i=0;i<d.length;i+=4){const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];const o=v>150?0:255;d[i]=d[i+1]=d[i+2]=o;d[i+3]=255}
+  for(let i=0;i<d.length;i+=4){const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];const o=v>th?0:255;d[i]=d[i+1]=d[i+2]=o;d[i+3]=255}
   x.putImageData(im,0,0);return cv;}
 function parseStats(text,bk){
   // 1) 항목 이름으로 찾고, 2) 못 찾은 기본 스탯은 스탯 화면의 고정 순서(HP·공격력·방어력·공명 효율·크리티컬·크리티컬 피해)로 채운다.
@@ -1377,7 +1497,7 @@ window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charS
 
 /* ---------- profile dialog ---------- */
 let profId=null;
-function openProfile(id){profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
+function openProfile(id){if(profId!==id){pfTabSel=null;echoSel=null;echoEdit=null}profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
 function setGrowth(id,patch){const g=state.growth[id]=state.growth[id]||{};Object.assign(g,patch);persist();renderProfile();renderRoster();rerenderPlan();}
 function renderProfile(){
   const id=profId,c=charMap[id];if(!c)return;const g=state.growth[id]||{};const wp=weaponOf(id);const lv=g.lv??90,ch=+g.chain||0;
@@ -1747,6 +1867,14 @@ $("#prof").addEventListener("click",e=>{
   const d=$("#prof");if(e.target===d){d.close();return}
   if(e.target.id==="pfPick"){$("#pfFile").click();return}
   if(e.target.id==="pfStClear"){const g=state.growth[profId]||{};delete g.stats;return setGrowth(profId,{})}
+  const pt=e.target.closest("[data-ptab]");if(pt){pfTabSel=pt.dataset.ptab;return renderProfile()}
+  if(e.target.id==="pfEClear"){Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
+  const ee=e.target.closest("[data-eedit]");if(ee){const i=+ee.dataset.eedit;echoEdit=echoEdit===i?null:i;return renderProfile()}
+  const ed=e.target.closest("[data-edel]");if(ed){const i=+ed.dataset.edel;const a=echoSlots(profId);a[i]=null;delete echoMsg[profId+":"+i];if(echoEdit===i)echoEdit=null;return saveEchoes(profId,a)}
+  const es=e.target.closest(".eslot");if(es&&!e.target.closest("select,input,button")){const i=+es.dataset.eslot;
+    if(es.classList.contains("empty")){echoSel=i;renderProfile();$("#pfEFile").click();return}
+    echoSel=echoSel===i?null:i;return renderProfile()}
+  if(e.target.closest("#pfEPaste")&&!e.target.closest("input")){$("#pfEFile").click();return}
   const ch=e.target.closest("#pfCh button");if(ch)return setGrowth(profId,{chain:+ch.dataset.v});
   const r=e.target.closest("#pfR button");if(r)return setGrowth(profId,{ref:+r.dataset.v});
   const w=e.target.closest("#pfW button");if(w){const W=WMAP[+w.dataset.w];const g=state.growth[profId]||{};
@@ -1757,12 +1885,31 @@ $("#prof").addEventListener("input",e=>{
   if(e.target.id==="pfLvN"&&e.target.value===""){return}
 });
 document.addEventListener("paste",e=>{const d=$("#prof");if(!d||!d.open||!profId)return;
-  const it=[...(e.clipboardData||{}).items||[]].find(i=>i.type.startsWith("image/"));if(!it)return;e.preventDefault();ocrStats(it.getAsFile());});
-$("#prof").addEventListener("dragover",e=>{if(e.target.closest("#pfPaste")){e.preventDefault();e.target.closest("#pfPaste").classList.add("over")}});
-$("#prof").addEventListener("dragleave",e=>{const z=e.target.closest("#pfPaste");if(z)z.classList.remove("over")});
-$("#prof").addEventListener("drop",e=>{const z=e.target.closest("#pfPaste");if(!z)return;e.preventDefault();z.classList.remove("over");const f=[...e.dataTransfer.files].find(f=>f.type.startsWith("image/"));if(f)ocrStats(f)});
+  const its=[...(e.clipboardData||{}).items||[]].filter(i=>i.type.startsWith("image/"));if(!its.length)return;e.preventDefault();
+  if(pfTab(profId)==="echo")echoQueue(profId,its.map(i=>i.getAsFile()));else ocrStats(its[0].getAsFile());});
+const DROPZ="#pfPaste,#pfEPaste,.eslot";
+$("#prof").addEventListener("dragover",e=>{const z=e.target.closest(DROPZ);if(z){e.preventDefault();z.classList.add("over")}});
+$("#prof").addEventListener("dragleave",e=>{const z=e.target.closest(DROPZ);if(z)z.classList.remove("over")});
+$("#prof").addEventListener("drop",e=>{const z=e.target.closest(DROPZ);if(!z)return;e.preventDefault();z.classList.remove("over");const fs=[...e.dataTransfer.files].filter(f=>f.type.startsWith("image/"));if(!fs.length)return;
+  if(z.id==="pfPaste")return ocrStats(fs[0]);
+  if(z.classList.contains("eslot")&&fs.length===1){echoSel=+z.dataset.eslot}
+  echoQueue(profId,fs)});
 $("#prof").addEventListener("change",e=>{
   if(e.target.id==="pfFile"){const f=e.target.files[0];if(f)ocrStats(f);return}
+  if(e.target.id==="pfEFile"){const fs=[...e.target.files];e.target.value="";if(fs.length)echoQueue(profId,fs);return}
+  const T=e.target,ds=T.dataset;
+  if(ds.eset!=null||ds.ecost!=null||ds.emk!=null||ds.emv!=null||ds.eme!=null||ds.esk!=null||ds.esv!=null){
+    const a=echoSlots(profId);const i=+(ds.eset??ds.ecost??ds.emk??ds.emv??ds.eme??String(ds.esk??ds.esv).split(":")[0]);const x=a[i];if(!x)return;
+    const e2=JSON.parse(JSON.stringify(x));
+    if(ds.eset!=null)e2.set=T.value;
+    if(ds.ecost!=null){e2.cost=+T.value;const M=(EchoDB.mainStats(e2.cost)||{}).main||{};if(M[e2.main.k]==null){const k=Object.keys(M)[0];e2.main={k,v:M[k]}}}
+    if(ds.emk!=null){const M=(EchoDB.mainStats(e2.cost)||{}).main||{};e2.main={k:T.value,v:M[T.value]??e2.main.v};if(T.value==="el")e2.main.elem=charMap[profId].el}
+    if(ds.emv!=null)e2.main.v=+T.value||0;
+    if(ds.eme!=null)e2.main.elem=T.value;
+    if(ds.esk!=null||ds.esv!=null){const j=+String(ds.esk??ds.esv).split(":")[1];const subs=(e2.subs||[]).slice();while(subs.length<=j)subs.push(null);
+      const cur=subs[j]||{k:"",v:0};if(ds.esk!=null){cur.k=T.value;const t=EchoDB.subTiers(T.value);if(t&&!cur.v)cur.v=t[0]}else cur.v=+T.value||0;
+      subs[j]=cur.k?cur:null;e2.subs=subs.filter(Boolean)}
+    a[i]=e2;return saveEchoes(profId,a)}
   if(e.target.dataset.st){const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({b:{}},g.stats||{});const v=e.target.value===""?null:+e.target.value;
     if(e.target.dataset.grp==="b"){st.b=Object.assign({},st.b);if(v==null)delete st.b[e.target.dataset.st];else st.b[e.target.dataset.st]=v}else{if(v==null)delete st[e.target.dataset.st];else st[e.target.dataset.st]=v}
     persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);renderRoster();rerenderPlan();return}
