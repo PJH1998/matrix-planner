@@ -337,6 +337,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .score b{font-size:19px;font-weight:500}
 .synbox{border-left:1px solid var(--line)}
 .chip.syn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.recbar{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 10px;border:1px dashed var(--gold,#e6c36a);border-radius:8px}.recbar[hidden]{display:none}.rec-note{font-size:12px;color:var(--gold,#e6c36a);font-weight:700}
 .chip.syn.star{color:var(--accent-ink);background:var(--gold);border-color:var(--gold);font-weight:700}
 /* intel */
 .boss .ix{font-family:var(--f-num);font-size:16px;color:var(--accent)}
@@ -540,7 +541,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
         <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
         <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도&#10;숙련: 퀵스왑 + 4해방 (실측 기준, ×1)&#10;보통: 평범한 321 사이클 (×0.8)&#10;뉴비: 321 사이클도 잘 못 굴림 (×0.65)&#10;보통·뉴비 배율은 추정치">숙련도 <select id="skillSel"><option value="top" title="퀵스왑 + 4해방">숙련</option><option value="good" title="평범한 321 사이클">보통</option><option value="normal" title="321 사이클도 잘 못 굴림">뉴비</option></select></label>
         <button class="btn pri" id="btnAuto" title="보유 공명자로 파티를 자동으로 짭니다. 센 딜러 조합부터 만들고, 5성 서포터를 센 파티에 먼저 넣습니다.">자동 추천</button>
-        <button class="btn ghost" id="btnUndo" hidden>되돌리기</button>
+        <span id="recBar" class="recbar" hidden><span class="rec-note" title="적용을 누르기 전까지는 저장되지 않습니다. 새로고침하면 추천 전 편성으로 돌아갑니다">추천 미리보기</span><button class="btn pri" id="btnApply">적용</button><button class="btn ghost" id="btnUndo">되돌리기</button></span>
         <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">순서 정렬</button>
         <button class="btn" id="btnAdd">+ 파티 추가</button>
         <button class="btn ghost danger" id="btnClear">전체 비우기</button>
@@ -1065,13 +1066,14 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 let saveTimer=null;
 function setSave(cls,text){const el=document.getElementById("save");el.className="save "+cls;el.lastElementChild.textContent=text}
 function persist(){
-  try{if(state.cur&&state.cur.cycle===cycle.name&&typeof simCache!=="undefined"&&simCache){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}}catch(e){}
-  try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}
+  try{if(!(typeof undoTeams!=="undefined"&&undoTeams)&&state.cur&&state.cur.cycle===cycle.name&&typeof simCache!=="undefined"&&simCache){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}}catch(e){}
+  const saved=(typeof undoTeams!=="undefined"&&undoTeams)?Object.assign({},state,{teams:undoTeams}):state; // 추천 미리보기 중엔 적용 전 편성을 저장
+  try{localStorage.setItem(LS_KEY,JSON.stringify(saved))}catch(e){}
   if(!docRef){setSave("ok","이 브라우저에 저장됨");refreshExport();return}
   setSave("busy","저장 중");
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
-    try{await fb.fsM.setDoc(docRef,{data:JSON.stringify(state),savedAt:Date.now()});setSave("ok","내 계정에 저장됨")}
+    try{await fb.fsM.setDoc(docRef,{data:JSON.stringify(saved),savedAt:Date.now()});setSave("ok","내 계정에 저장됨")}
     catch(e){setSave("busy","계정 저장 실패 · 브라우저에 보관됨")}
   },700);
   refreshExport();
@@ -1723,22 +1725,30 @@ function recommendTeams(){
     const sup=own.filter(x=>isSup(x)&&can(x)).sort((a,b)=>val([m,b])-val([m,a]))[0];if(!sup)return;
     const o=own.filter(x=>can(x)&&x!==m&&x!==sup&&key(x)!==key(m)&&role(x)!=="dps"&&!isSup(x)&&syn2(m,x)).sort((a,b)=>val([m,sup,b])-val([m,sup,a]))[0]; // 궁합·반주 이득 없는 서브는 넣지 않는다
     const ids=o?[m,o,sup]:[m,sup];if(okIds(ids)){ids.forEach(use);cores.push(ids)}});
-  return done.concat(cores).map(ids=>{const t={slots:[0,1,2].map(i=>ids[i]||null),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
+  // 서포터는 항상 3번 칸(2명 파티면 2번 칸 대신 3번 칸)
+  const arrange=ids=>{const d=ids.filter(x=>!isSup(x)),su=ids.filter(isSup);const sl=[d[0]||null,d[1]||null,su.length?null:(d[2]||null)];
+    su.forEach(x=>{if(!sl[2])sl[2]=x;else sl[sl.indexOf(null)]=x});return sl};
+  return done.concat(cores).map(ids=>{const t={slots:arrange(ids),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
 }
+/* 자동 추천 미리보기: 처음 누를 때의 편성을 스냅샷으로 저장하고, 적용을 누르기 전까지는 저장소에 스냅샷 편성을 그대로 둔다.
+   여러 번 눌러도 스냅샷은 첫 번째 그대로 → 되돌리기는 항상 자동 추천을 처음 누르기 전으로 돌아간다. */
 let undoTeams=null;
+const recPending=()=>undoTeams!=null;
+function setRecBar(){$("#recBar").hidden=!recPending()}
 $("#btnAuto").addEventListener("click",()=>{
   const ok=chars.filter(c=>state.owned[c.id]).length;if(ok<3){flash("보유 캐릭터 탭에서 가진 공명자를 먼저 체크하세요.");return}
   const t0=performance.now();const teams=recommendTeams();
   if(!teams.length){flash("추천할 수 있는 파티가 없습니다.");return}
-  undoTeams=JSON.parse(JSON.stringify(state.teams));
+  if(!recPending())undoTeams=JSON.parse(JSON.stringify(state.teams));
   state.teams=teams;state.teams=bestOrder();
   // 예상 점수가 MIN_POINTS 미만인 파티는 빼고 다시 정렬 (뺀 만큼 뒤 파티 점수가 달라지므로 두어 번 반복)
   let cut=0;for(let k=0;k<3;k++){const r=simulate(state.teams);const keep=state.teams.filter((t,i)=>r.res[i].pts>=MIN_POINTS);if(keep.length===state.teams.length)break;cut+=state.teams.length-keep.length;state.teams=keep;state.teams=bestOrder()}
-  persist();rerenderPlan();$("#btnUndo").hidden=false;
-  flash(`파티 ${state.teams.length}개를 자동으로 짰습니다${cut?` (예상 ${MIN_POINTS}점 미만 ${cut}개 제외)`:""}`);
+  rerenderPlan();setRecBar();
+  flash(`파티 ${state.teams.length}개를 추천했습니다${cut?` (예상 ${MIN_POINTS}점 미만 ${cut}개 제외)`:""} — 적용을 눌러야 저장됩니다`);
   console.log("recommend ms",Math.round(performance.now()-t0));
 });
-$("#btnUndo").addEventListener("click",()=>{if(!undoTeams)return;state.teams=undoTeams;undoTeams=null;$("#btnUndo").hidden=true;persist();rerenderPlan();flash("자동 추천 전으로 되돌렸습니다.")});
+$("#btnApply").addEventListener("click",()=>{if(!recPending())return;undoTeams=null;setRecBar();persist();rerenderPlan();flash("추천 편성을 적용했습니다.")});
+$("#btnUndo").addEventListener("click",()=>{if(!recPending())return;state.teams=undoTeams;undoTeams=null;setRecBar();persist();rerenderPlan();flash("자동 추천 전으로 되돌렸습니다.")});
 $("#btnSort").addEventListener("click",()=>{
   // 보스 진행을 시뮬레이션해 가장 멀리 가는 순서를 고른다 (메인 딜러 저항 보스는 피하고, 비슷하면 약한 파티를 앞으로). 빈 파티는 맨 뒤.
   state.teams=bestOrder();const r=simulate(state.teams);
