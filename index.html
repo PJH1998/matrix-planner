@@ -1007,7 +1007,7 @@ function weaponOf(cid){const g=state.growth[cid]||{};
 /* ---------- 입력한 스탯 → 배율 ----------
    기대 피해 ∝ 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 피해 보너스)
    일반적인 완성 세팅(STAT_REF)과 비교한 비율을 점수에 곱한다(0.4~2배). 서포터는 점수에 쓰지 않는다. */
-const STAT_REF={atk:2100,hp:30000,def:2000,cr:70,cd:250,bonus:90};
+const STAT_REF={atk:2100,hp:30000,def:2000,cr:70,cd:250,bonus:90,bonusEl:60,bonusType:30}; // 피해 보너스 기준 90% = 속성 60 + 주력 유형 30
 const STAT_SCALE={cartethyia:"hp"}; // 공격력이 아닌 HP/방어력에 비례하는 공명자
 const BONUS_KEYS={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
 function bonusKeysOf(id){const S=synOf(id);return ["el",...(S.w||[]).filter(k=>BONUS_KEYS[k])];}
@@ -1015,10 +1015,14 @@ function statFactor(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats;if(!c||!st||c.role==="support")return null;
   const sc=(c.statScale)||STAT_SCALE[id]||"atk";const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
   const crit=1+Math.min(cr,100)/100*(cd/100-1),critRef=1+STAT_REF.cr/100*(STAT_REF.cd/100-1);
-  const b=st.b||{};const types=bonusKeysOf(id).filter(k=>k!=="el"&&b[k]!=null&&b[k]!=="");
-  const typeB=types.length?types.reduce((a,k)=>a+(+b[k]||0),0)/types.length:null;
-  const hasB=(b.el!=null&&b.el!=="")||typeB!=null;
-  const bonus=hasB?(+b.el||0)+(typeB||0):STAT_REF.bonus;
+  // 피해 보너스 = 속성 + 주력 피해 유형(피해 비중 가중 평균). 비워 둔 칸은 0이 아니라 일반적인 완성 세팅 값으로 채운다.
+  // (예전엔 일반 공격 피해만 입력하면 속성 피해를 0%로 봐서 오히려 강도가 떨어졌다)
+  const b=st.b||{};const has=k=>b[k]!=null&&b[k]!=="";
+  const el=has("el")?+b.el:STAT_REF.bonusEl;
+  const ks=bonusKeysOf(id).filter(k=>k!=="el");const p=DMG_PROFILE[id]||{};
+  const wt=k=>(p[k]||0)>0?p[k]:1;const tw=ks.reduce((a,k)=>a+wt(k),0);
+  const typeB=ks.length?ks.reduce((a,k)=>a+(has(k)?+b[k]:STAT_REF.bonusType)*wt(k),0)/tw:STAT_REF.bonusType;
+  const bonus=el+typeB;
   const f=clamp((main/STAT_REF[sc])*(crit/critRef)*((1+bonus/100)/(1+STAT_REF.bonus/100)),0.4,2);
   return {f,sc,crit,bonus};
 }
