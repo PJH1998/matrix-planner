@@ -380,6 +380,27 @@ th{font-family:var(--f-num);background:var(--strip)}
 .rgrid{--face:150px;display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--face) + 4px),1fr));gap:16px 12px;justify-items:center;padding:4px 0 24px}
 @media (max-width:560px){.rgrid{--face:104px}}
 .rcard{cursor:pointer}
+.roster-h .rview{margin-left:4px}
+.rgrid.pmode{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;justify-items:stretch}
+.pcard{position:relative;height:340px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#1a2230,color-mix(in srgb,var(--ec) 45%,#0e1319));transition:transform .12s,border-color .12s}
+.pcard:hover{border-color:#e6c36a;transform:translateY(-2px)}
+.pcard .pimg{position:absolute;inset:0;background:center top/cover no-repeat}
+.pcard .pgrad{position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,rgba(7,10,14,.94))}
+.pcard .pel{position:absolute;left:10px;top:10px;width:34px;height:34px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.pcard .pstar{position:absolute;right:10px;top:10px;font-size:13px;color:#ffd76a;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.pcard.r4 .pstar{color:#c99bff}
+.pcard .pinfo{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:flex-end;gap:10px}
+.pcard .ptxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pcard .ptxt b{font-size:19px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.pcard .ptxt span{font-size:13.5px;color:#d5dbe0;font-family:var(--f-num),var(--f-body)}
+.pcard .ptxt em{font-style:normal;color:#e6c36a}
+.pcard .pwep{position:relative;flex:none;width:52px;height:52px;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.pcard .pwep.q5{background:linear-gradient(160deg,#8a6a2a,#3a2d14)}.pcard .pwep.q4{background:linear-gradient(160deg,#6b4a8c,#2a1d38)}.pcard .pwep.q3{background:linear-gradient(160deg,#2f5f88,#16283a)}
+.pcard .pwep img{width:100%;height:100%;display:block}
+.pcard .pwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:11px;background:#14181c;color:#e6c36a;border-radius:3px;padding:0 4px}
+.pcard.off{filter:grayscale(.85) brightness(.6)}
+.pcard .poff{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:14px;padding:3px 10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.3);border-radius:4px;color:#fff}
+@media (max-width:560px){.rgrid.pmode{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pcard{height:250px}.pcard .ptxt b{font-size:16px}.pcard .pwep{width:40px;height:40px}}
 .rlv.rtr{color:#8fd3ff;letter-spacing:.06em}
 .pf-toggles{display:flex;flex-wrap:wrap;gap:6px 18px}
 .pf-trial{margin:6px 0 4px;padding:8px 10px;border-left:3px solid #8fd3ff;background:rgba(143,211,255,.07);font-size:13px;line-height:1.6}
@@ -491,8 +512,10 @@ th{font-family:var(--f-num);background:var(--strip)}
 .ec-main span{flex:1;min-width:0;color:#f3e3b5;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ec-main b{color:#fff;font-size:17px;font-weight:500;font-family:var(--f-num)}
 .ec-fix{display:flex;justify-content:space-between;color:#7f8b97;font-size:12.5px;padding:2px 9px 5px}
-.ec-sub{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;font-size:13.5px}
-.ec-sub:nth-child(odd){background:rgba(255,255,255,.035)}
+.ec-subs{display:flex;flex-direction:column;gap:4px}
+.ec-sub{display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:7px;font-size:13.5px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+.ec-sub.good{border-color:rgba(230,195,106,.8);background:rgba(230,195,106,.07)}
+.ec-sub.none{border-style:dashed}
 .ec-sub span{flex:1;min-width:0;color:#d5dbe0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ec-sub b{font-weight:500;font-family:var(--f-num);color:#e9edf1}
 .ec-sub.none span{color:#56616d}
@@ -654,6 +677,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
     <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
     <div class="elf" id="rElFilter" aria-label="속성 필터"></div>
     <label class="sortl">정렬 <select id="rosterSort" class="sortsel"><option value="new">출시순 (신캐 먼저)</option><option value="rar">5성 먼저</option><option value="desc">강함순 (높은 순)</option><option value="asc">강함순 (낮은 순)</option><option value="name">이름순</option></select></label>
+    <div class="seg2 rview" role="group" aria-label="보기 방식"><button type="button" data-rview="icon">아이콘</button><button type="button" data-rview="profile">프로필</button></div>
     <span class="lbl" id="ownCount"></span>
     <button class="btn" id="ownAll">전체 보유</button>
     <button class="btn ghost" id="ownNone">전체 해제</button>
@@ -843,7 +867,7 @@ function normalize(s){
   if(!s||typeof s!=="object") return d;
   const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
     teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:(s.sortV>=2&&typeof s.rosterSort==="string")?s.rosterSort:"new",sortV:2}; // sortV 2: 보유 캐릭터 기본 정렬을 출시순으로 바꾸며 한 번 초기화
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:(s.sortV>=2&&typeof s.rosterSort==="string")?s.rosterSort:"new",rosterView:s.rosterView==="profile"?"profile":"icon",sortV:2}; // sortV 2: 보유 캐릭터 기본 정렬을 출시순으로 바꾸며 한 번 초기화
   return o;
 }
 function derive(){
@@ -1404,6 +1428,9 @@ function renderRoster(){
   const list=chars.filter(c=>(!q||c.name.includes(q))&&(!ui.rel||c.el===ui.rel));
   sortChars(list,state.rosterSort||"new",true);$("#rosterSort").value=state.rosterSort||"new";
   $("#ownCount").textContent=`보유 ${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}`;
+  const pm=state.rosterView==="profile";$("#rgrid").classList.toggle("pmode",pm);
+  document.querySelectorAll("[data-rview]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rview===(pm?"profile":"icon"))));
+  if(pm){$("#rgrid").innerHTML=list.map(profCardHTML).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;return}
   $("#rgrid").innerHTML=list.map(c=>{
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
     const extra=(g.trial?`<span class="rlv rtr" title="체험 세팅 (육성 안 함)">체험</span>`:`<span class="rlv"><small>Lv.</small>${g.lv??90}</span>`)+`<span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
@@ -1412,6 +1439,14 @@ function renderRoster(){
     return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
   }).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;
 }
+// 프로필 모드 카드: 전신 그림 + 속성·성급·레벨·돌파·무기
+function profCardHTML(c){const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);const pic=cardUrl(c.id);
+  return `<div class="rcard pcard ${on?"":"off"}${c.rar===4?" r4":""}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}" style="--ec:var(--${c.el})">
+    ${pic?`<div class="pimg" style="background-image:url('${pic}')"></div>`:""}<div class="pgrad"></div>
+    <img class="pel" src="icons/el-${c.el}.png" alt="${EL[c.el]}"><span class="pstar">${"★".repeat(c.rar)}</span>
+    ${on?"":`<span class="poff">미보유</span>`}
+    <div class="pinfo"><div class="ptxt"><b>${esc(c.name)}</b><span>${g.trial?"체험 세팅":`Lv.${g.lv??90}`} · <em>${+g.chain||0}돌파</em></span></div>
+      ${wp.w?`<span class="pwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:""}</div></div>`}
 function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
   if(!on) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
   persist();renderRoster();rerenderPlan();flash(`${charMap[id].name}: ${on?"보유":"미보유"}`);}
@@ -1454,12 +1489,12 @@ function echoHTML(id){
       <button type="button" class="ec-b" data-ecap="${i}" title="캡처로 다시 읽기">캡처</button><button type="button" class="ec-b" data-eedit="${i}">${ed?"완료":"수정"}</button><button type="button" class="ec-b" data-edel="${i}" title="지우기" aria-label="에코 ${i+1} 지우기">✕</button></div>`;
     if(ed)return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoEditHTML(e,i)}${msg}</div>`;
     const subs=[0,1,2,3,4].map(j=>{const x=(e.subs||[])[j];if(!x)return `<div class="ec-sub none"><i class="sti"></i><span>—</span></div>`;
-      return `<div class="ec-sub t${EchoDB.tier(x.k,x.v)}${subUseful(id,x.k)?"":" off"}">${statIcon(x.k)}<span>${esc(echoLab(x.k))}</span><b>${fmtV(x.k,x.v)}</b></div>`}).join("");
+      return `<div class="ec-sub t${EchoDB.tier(x.k,x.v)}${subUseful(id,x.k)?" good":" off"}">${statIcon(x.k)}<span>${esc(echoLab(x.k))}</span><b>${fmtV(x.k,x.v)}</b></div>`}).join("");
     return `<div class="ecard${sel}" data-eslot="${i}">${head}
       <div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
       ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
       <div class="ec-subs">${subs}</div>${msg}</div>`};
-  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 흐린 줄은 이 공명자에게 효과 없는 부옵</span></div>`;
+  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 5세트 / 3+2세트로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=eb.screen;
@@ -1830,6 +1865,7 @@ $("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
 $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});
 $("#poolSort").addEventListener("change",e=>{state.poolSort=e.target.value;persist();renderPool()});
 $("#rosterSort").addEventListener("change",e=>{state.rosterSort=e.target.value;persist();renderRoster()});
+document.querySelector(".rview").addEventListener("click",e=>{const b=e.target.closest("[data-rview]");if(!b)return;state.rosterView=b.dataset.rview;persist();renderRoster()});
 $("#invScope").addEventListener("change",renderInvest);
 document.querySelector("table.inv thead").addEventListener("click",e=>{const b=e.target.closest(".thsort");if(!b)return;
   if(invSort.k===b.dataset.k)invSort.dir*=-1;else{invSort.k=b.dataset.k;invSort.dir=-1}drawInvest();});
