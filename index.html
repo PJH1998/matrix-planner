@@ -1658,10 +1658,18 @@ document.addEventListener("dragstart",e=>{
 document.addEventListener("dragend",e=>{document.querySelectorAll(".dragging,.over").forEach(n=>n.classList.remove("dragging","over"));
   // dropped outside any slot while dragging from a slot → leave as is
   dragData=null});
-document.addEventListener("dragover",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s&&dragData){e.preventDefault();s.classList.add("over")}});
-document.addEventListener("dragleave",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s)s.classList.remove("over")});
+/* 놓을 칸 찾기: 칸 위가 아니어도(칸 사이 틈, 파티 카드 여백 등) 같은 파티 카드 안이면 가로 위치가 가장 가까운 칸으로 본다.
+   예전엔 칸 테두리 밖에 놓으면 아무 일도 안 일어나 '가끔 드래그가 안 된다'는 문제가 있었다. */
+function slotAt(e){const t=e.target;if(!t||!t.closest)return null;const s=t.closest(".slot");if(s)return s;
+  const card=t.closest(".team");if(!card)return null;const ss=[...card.querySelectorAll(".slot")];if(!ss.length)return null;
+  return ss.map(x=>{const r=x.getBoundingClientRect();return [x,Math.abs(e.clientX-(r.left+r.width/2))]}).sort((a,b)=>a[1]-b[1])[0][0]}
+let overSlot=null;
+document.addEventListener("dragover",e=>{if(!dragData)return;const s=slotAt(e);if(overSlot&&overSlot!==s){overSlot.classList.remove("over");overSlot=null}
+  if(s){e.preventDefault();s.classList.add("over");overSlot=s}});
+document.addEventListener("dragleave",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s&&s!==overSlot)s.classList.remove("over")});
 document.addEventListener("drop",e=>{
-  const s=e.target.closest&&e.target.closest(".slot");
+  if(overSlot){overSlot.classList.remove("over");overSlot=null}
+  const s=dragData&&slotAt(e);
   if(s&&dragData){e.preventDefault();const ti=+s.dataset.team,si=+s.dataset.slot;
     place(dragData.id,ti,si,dragData.src==="slot"?{team:dragData.team,slot:dragData.slot}:null);}
   else if(dragData&&dragData.src==="slot"&&e.target.closest&&e.target.closest("#pool")){e.preventDefault();unplace(dragData.team,dragData.slot)}
