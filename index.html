@@ -381,6 +381,9 @@ th{font-family:var(--f-num);background:var(--strip)}
 @media (max-width:560px){.rgrid{--face:104px}}
 .rcard{cursor:pointer}
 .roster-h .rview{margin-left:4px}
+:root[data-theme="light"] .roster-h .seg2{background:rgba(0,0,0,.07)}
+:root[data-theme="light"] .roster-h .seg2 button{color:#4f5964}
+:root[data-theme="light"] .roster-h .seg2 button[aria-pressed="true"]{background:#2a2a22;color:#f3e3b5}
 .rgrid.pmode{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;justify-items:stretch}
 .pcard{position:relative;height:340px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#1a2230,color-mix(in srgb,var(--ec) 45%,#0e1319));transition:transform .12s,border-color .12s}
 .pcard:hover{border-color:#e6c36a;transform:translateY(-2px)}
