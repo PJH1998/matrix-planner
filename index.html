@@ -507,7 +507,7 @@ table.rt{min-width:0}
 .upd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 @media (max-width:900px){.upd{grid-template-columns:1fr}}
 .upd-a{margin:0}
-.upd-next{margin-top:18px;border-style:dashed}
+.upd-next{margin:0 0 18px;border-style:dashed}
 .upd-next .upd-g{padding:0 18px 4px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px}
 @media (max-width:900px){.upd-next .upd-g{grid-template-columns:1fr}}
 .upd-next .upd-l{margin:6px 0 8px;padding:0 0 0 18px}
@@ -640,8 +640,8 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 <!-- UPDATES -->
 <section class="view" id="v-updates">
   <div class="roster-h"><h2>업데이트 노트</h2></div>
-  <div id="updList" class="upd"></div>
   <div id="updNext"></div>
+  <div id="updList" class="upd"></div>
 </section>
 
 <!-- DATA -->
