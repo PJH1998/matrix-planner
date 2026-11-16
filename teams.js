@@ -16,7 +16,8 @@ window.TEAM_PRESETS=[
  ["aemeath","lynae","mornye"],
  ["augusta","iuno","shorekeeper"],
  ["phrolova","cantarella","roccia"],
- ["cartethyia","ciaccona","rover_a"]
+ ["cartethyia","ciaccona","rover_a"],
+ ["changli","brant","lupa"]       // 거의 고정 조합
 ];
 window.PAIR_W={
  hiyuki:{lucilla:1,suisui:1,lynae:.6,chisa:.6},
@@ -38,6 +39,7 @@ window.PAIR_W={
  xuanling:{chisa:1},
  jiyan:{mortefi:1,verina:.8},
  luuk:{denia:.8,lynae:.8,mornye:.8},
- galbrena:{lupa:.8}
+ galbrena:{lupa:.8,qiuyuan:.8},
+ changli:{brant:1,lupa:1}
 };
 window.MIN_POINTS=1000;
