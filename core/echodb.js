@@ -151,6 +151,9 @@
     setNames:()=>Object.keys(MP.ECHO_SETS||{}),
     set:name=>(MP.ECHO_SETS||{})[name]||null,
     setFx:name=>(MP.SET_FX||{})[name]||null,
+    setIcon:name=>(MP.ECHO_SET_ICON||{})[name]||null,     // [번호, 아이콘 파일명]
+    // 부옵 수치 단계(1~8). 고정 공격력·방어력처럼 4단계인 옵션은 8단계 기준으로 늘린다
+    tier(k,v){const T=(MP.ECHO_SUB_TIERS||{})[k];if(!T)return 0;let i=T.indexOf(+v);if(i<0)i=T.reduce((b,x,j)=>Math.abs(x-v)<Math.abs(T[b]-v)?j:b,0);return T.length===8?i+1:Math.round((i+1)*8/T.length)},
     mainStats:cost=>(MP.ECHO_MAIN||{})[cost]||null,       // 코스트별 주옵 최대치·고정 부주옵
     subRange:key=>(MP.ECHO_SUB||{})[key]||null,           // 부옵 [최소, 최대]
     subTiers:key=>(MP.ECHO_SUB_TIERS||{})[key]||null,

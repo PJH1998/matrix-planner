@@ -306,7 +306,9 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .pf-l .face{background:var(--sky)}
 .pf-l .face.pic{background:var(--pic) center 8%/cover no-repeat,var(--sky)}
 .pf-l .face.pic.tall{background:var(--pic) center top/cover no-repeat,var(--sky)}
-.wgrid{max-height:min(380px,40vh)}
+.pf-r .wgrid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;max-height:none;padding:2px 2px 6px}
+.pf-r .wgrid .wt{flex:0 0 88px;padding:4px 4px 5px}
+.pf-r .wt .wi{width:48px;height:48px}
 .tok .face.pic.sq{background:var(--pic) center/cover no-repeat,var(--sky)}
 .tok .face.pic::after{border-radius:0;box-shadow:none;background:none}
 .tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
@@ -400,13 +402,16 @@ th{font-family:var(--f-num);background:var(--strip)}
 .rcard .rwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:10.5px;font-weight:600;background:#14181c;color:#e6c36a;border-radius:2px;padding:0 3px;line-height:1.35}
 .prof{padding:0;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:#10151a;color:#eef2f5;width:min(1480px,97vw);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .prof::backdrop{background:rgba(4,7,10,.66);backdrop-filter:blur(3px)}
-.pf{display:grid;grid-template-columns:minmax(240px,480px) minmax(0,1fr) minmax(260px,320px);min-height:min(820px,90vh)}
-@media (max-width:1200px){.pf{grid-template-columns:minmax(220px,360px) minmax(0,1fr)}.pf-s{grid-column:2;border-left:0;border-top:1px solid rgba(255,255,255,.1)}.pf-l{grid-row:span 2}}
+.pf{display:grid;grid-template-columns:minmax(200px,300px) minmax(0,1fr);min-height:min(820px,90vh)}
+.pf-main{display:flex;flex-direction:column;min-width:0}
+.pf-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.pf-row2{grid-template-columns:1fr}}
+@media (max-width:1200px){.pf{grid-template-columns:minmax(160px,220px) minmax(0,1fr)}}
 .pf-l{position:relative;border-right:1px solid rgba(255,255,255,.1)}
 .pf-l .face{position:relative;width:100%;height:100%}
 .pf-l .elb{position:absolute;left:12px;top:12px;width:44px;height:44px}
 .pf-l .elb img{width:100%;height:100%}
-.pf-r{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pf-r{padding:14px 18px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .pf-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .pf-h h3{margin:0 6px 0 0;font-size:24px;font-weight:700}
 .pf-h .chip{background:rgba(255,255,255,.06);color:#d9dee3;border-color:rgba(255,255,255,.18)}
@@ -434,7 +439,7 @@ th{font-family:var(--f-num);background:var(--strip)}
 .wt .wbest{position:absolute;left:4px;top:4px;font-size:10.5px;background:#e6c36a;color:#1c1606;padding:0 4px;border-radius:2px;font-weight:700}
 .pf-foot{margin:6px 0 0;font-size:12.5px;color:#9ba7b3}
 .pf-foot b{color:#e6c36a;font-family:var(--f-num);font-size:15px}
-@media (max-width:760px){.pf{grid-template-columns:1fr;min-height:0}.pf-s{grid-column:auto}.pf-l{grid-row:auto}.pf-l{border-right:0}.pf-l .face{min-height:0;height:240px}}
+@media (max-width:760px){.pf{grid-template-columns:1fr;min-height:0}.pf-l{border-right:0}.pf-l .face{min-height:0;height:200px}}
 
 .paste{border:1px dashed rgba(255,255,255,.25);border-radius:3px;padding:8px 10px;font-size:13px;color:#cfd4d9;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .paste.over,.paste:focus{border-color:#e6c36a;background:rgba(230,195,106,.06);outline:none}
@@ -442,7 +447,9 @@ th{font-family:var(--f-num);background:var(--strip)}
 .paste .btn{padding:3px 10px;font-size:13px}
 .paste .ocr{flex-basis:100%;color:#9fd8a8;font-size:13px}
 .paste .ocr:empty{display:none}
-.pf-s{padding:16px 16px 18px;border-left:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:8px;min-width:0}
+.pf-s{padding:14px 18px 18px;border-top:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.015);display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+.pf-s .srs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 24px}
+@media (max-width:760px){.pf-s .srs{grid-template-columns:1fr}}
 .pf-s .pf-sec{margin-top:0}
 .srs{display:flex;flex-direction:column;gap:2px}
 .sr{display:grid;grid-template-columns:28px minmax(0,1fr) 92px 14px;align-items:center;gap:8px;padding:4px 2px;font-size:14.5px;color:#e9edf0;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -455,36 +462,66 @@ th{font-family:var(--f-num);background:var(--strip)}
 .sdiv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;color:#9ba7b3;font-size:12.5px;letter-spacing:.04em}
 .sdiv::before,.sdiv::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,195,106,.55),transparent)}
 .sclear{align-self:flex-end;margin-top:6px;padding:4px 12px;font-size:13px}
-/* 에코 세팅 */
-.ptabs{display:flex;gap:4px}
-.ptabs button{flex:1;padding:6px 8px;font-size:13.5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:#cfd4d9;cursor:pointer}
-.ptabs button[aria-pressed="true"]{background:rgba(230,195,106,.16);border-color:#e6c36a;color:#fff;font-weight:600}
-.esum{border:1px solid rgba(230,195,106,.35);background:rgba(230,195,106,.06);padding:8px 10px;font-size:13px;color:#dfe4e8;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
-.esum b{font-family:var(--f-num);font-weight:600;color:#fff;text-align:right}
-.esum .eh{grid-column:1/-1;display:flex;justify-content:space-between;font-weight:600;color:#e6c36a;margin-bottom:2px}
-.esum .en{grid-column:1/-1;color:#9fd8a8;font-size:12px;line-height:1.5;margin-top:4px}
-.esum .en.off{color:#9ba7b3}
-.esum .ebad{color:#ff9b7a}
-.esum .en.ewarn{color:#ffb38a}
-.esum .en.gl{color:#cfd4d9;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-.gch{font-size:11.5px;padding:0 6px;border:1px solid}
-.gch.ok{color:#9fd8a8;border-color:rgba(159,216,168,.5)}
-.gch.no{color:#ffb38a;border-color:rgba(255,179,138,.5)}
-.eslots{display:flex;flex-direction:column;gap:6px}
-.eslot{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);padding:6px 8px;font-size:12.5px;color:#dfe4e8}
-.eslot.empty{border-style:dashed;color:#9ba7b3;cursor:pointer;text-align:center;padding:10px 8px}
-.eslot.empty:hover,.eslot.over,.eslot.sel{border-color:#e6c36a;color:#fff}
-.eslot .eh1{display:flex;align-items:center;gap:6px}
-.eslot .ec{font-family:var(--f-num);font-size:11.5px;padding:0 5px;border:1px solid rgba(230,195,106,.6);color:#e6c36a}
-.eslot .em{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.eslot .eb{border:0;background:none;color:#9ba7b3;cursor:pointer;padding:0 3px;font-size:13px}
-.eslot .eb:hover{color:#fff}
-.eslot .esubs{color:#b9c2ca;margin:3px 0 4px;line-height:1.45}
-.eslot select,.eslot input{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:12.5px;padding:2px 4px}
-.eslot .eset{width:100%}
-.eslot .emsg{color:#e6c36a;font-size:11.5px;margin-top:3px}
-.eedit{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:3px 4px;margin:4px 0}
+/* 에코 세팅 (2026-11 개편: 카드 5장 · 세트 줄 · 요약 줄) */
+.pf-s{font-family:"Noto Sans KR",var(--f-body);letter-spacing:-.01em}
+.ptabs{display:flex;gap:4px;background:rgba(0,0,0,.28);padding:4px;border-radius:12px;max-width:420px}
+.ptabs button{flex:1;padding:7px 10px;font-size:14px;background:none;border:0;border-radius:9px;color:#9aa6b1;cursor:pointer}
+.ptabs button[aria-pressed="true"]{background:#2a2a22;color:#f3e3b5;font-weight:500}
+.esetbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 10px;font-size:14px}
+.seg2{display:inline-flex;background:rgba(0,0,0,.28);border-radius:10px;padding:3px}
+.seg2 button{border:0;background:none;color:#9aa6b1;padding:5px 12px;border-radius:8px;font-size:13.5px;cursor:pointer}
+.seg2 button[aria-pressed="true"]{background:#2a2a22;color:#f3e3b5}
+.esel{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.28);border-radius:10px;padding:4px 10px 4px 5px}
+.esel img{width:28px;height:28px;border-radius:50%;background:#1b232d}
+.esel select{background:none;border:0;color:#e9edf1;font-size:14px;max-width:260px;font-family:inherit}
+.esel em{font-style:normal;color:#9aa6b1;font-size:13px}
+.ecostc{margin-left:auto;color:#9aa6b1;font-size:13px}.ecostc.bad{color:#f2a982}
+.ecards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:1150px){.ecards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.ecards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ecard{background:#161d26;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:3px;border:1.5px solid transparent;font-size:14px;min-width:0}
+.ecard.sel,.ecard.over{border-color:#d9bf7a}
+.ec-h{display:flex;align-items:center;gap:4px}
+.ec-cost{width:auto;flex:none;background:rgba(217,191,122,.15);color:#f3e3b5;border:0;border-radius:20px;padding:2px 4px;font-size:12.5px;font-family:inherit}
+.ec-sp{flex:1}
+.ec-b{flex:none;white-space:nowrap;background:rgba(0,0,0,.3);border:0;color:#9aa6b1;border-radius:7px;padding:2px 6px;font-size:12px;cursor:pointer;font-family:inherit}
+.ec-b:hover{color:#f3e3b5}
+.ec-main{display:flex;align-items:center;gap:6px;background:rgba(217,191,122,.13);border-radius:9px;padding:8px 9px;margin-top:5px}
+.ec-main span{flex:1;min-width:0;color:#f3e3b5;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ec-main b{color:#fff;font-size:17px;font-weight:500;font-family:var(--f-num)}
+.ec-fix{display:flex;justify-content:space-between;color:#7f8b97;font-size:12.5px;padding:2px 9px 5px}
+.ec-sub{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;font-size:13.5px}
+.ec-sub:nth-child(odd){background:rgba(255,255,255,.035)}
+.ec-sub span{flex:1;min-width:0;color:#d5dbe0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ec-sub b{font-weight:500;font-family:var(--f-num);color:#e9edf1}
+.ec-sub.none span{color:#56616d}
+.sti{width:18px;height:18px;flex:none;opacity:.85;display:inline-block}
+.ec-sub.off span,.ec-sub.off .sti{opacity:.4}
+.t1 b,.t2 b{color:#8f99a3!important}.t3 b,.t4 b{color:#e9edf1!important}.t5 b,.t6 b{color:#8fd19e!important}.t7 b{color:#8cb8ff!important}.t8 b{color:#f3c86b!important}
+.etier{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px;font-size:12px;color:#8d98a3}
+.etier i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.ecard.empty{border:1.5px dashed #34404c;background:transparent;align-items:center;justify-content:center;text-align:center;color:#8d98a3;min-height:250px;cursor:pointer;gap:6px}
+.ecard.empty:hover,.ecard.empty.sel,.ecard.empty.over{border-color:#d9bf7a;color:#e9edf1}
+.ec-plus{width:36px;height:36px;border-radius:50%;background:#1b232d;display:flex;align-items:center;justify-content:center;font-size:20px;color:#cdd4da}
+.ecard.empty small{font-size:12px;color:#7f8b97}
+.ec-msg{font-size:12px;color:#e3c983;line-height:1.4;margin-top:3px}
+.ec-msg.err{color:#f2a982}
+.eedit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:3px 4px;margin:5px 0}
+.eedit select,.eedit input{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12.5px;padding:3px 4px;border-radius:6px;font-family:inherit;min-width:0}
 .eedit input{text-align:right;font-family:var(--f-num)}
+.esum2{margin-top:12px;background:#161d26;border-radius:14px;padding:12px 16px;display:grid;grid-template-columns:auto repeat(5,minmax(0,1fr));gap:12px 18px;align-items:center}
+@media (max-width:900px){.esum2{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.es-score span{display:block;font-size:12.5px;color:#9aa6b1}.es-score b{font-size:24px;font-weight:500;color:#f3e3b5;font-family:var(--f-num)}
+.es-st>span{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13px;color:#cdd4da}
+.es-st>span b{font-weight:500;color:#fff;font-family:var(--f-num)}
+.es-st.warn>span b{color:#f2a982}
+.ebar{height:6px;background:#26313c;border-radius:6px;margin-top:6px;position:relative}
+.ebar i{position:absolute;left:0;top:0;bottom:0;background:#8fd19e;border-radius:6px}
+.es-st.warn .ebar i{background:#f2a982}
+.ebar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#d9bf7a;border-radius:2px}
+.es-note{grid-column:1/-1;font-size:12.5px;color:#9aa6b1;line-height:1.6}
+.es-note.warn{color:#f2a982}
+.estat-msg{font-size:12.5px;color:#e3c983}
 .skill{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .skill select{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);border-color:color-mix(in srgb,var(--gold) 45%,var(--line));font-weight:600}
 select option{background:var(--bg);color:var(--fg)}
@@ -789,7 +826,7 @@ let db=null, docRef=null, storeMode="local";
 let selected=null;         // tap-to-place selection
 let portraits={};          // charId -> file name in portraits/
 // 게임 이미지(img/, 배포 때 encore.moe에서 받음)가 있으면 그것을, 없으면 portraits/ 이미지를 쓴다.
-let gameImg={char:new Set(),card:new Set(),weapon:new Set()};
+let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set()};
 const hasPic=id=>gameImg.char.has(id)||!!portraits[id];
 const picUrl=id=>gameImg.char.has(id)?`img/char/${id}.webp`:"portraits/"+encodeURIComponent(portraits[id]);
 const cardUrl=id=>gameImg.card.has(id)?`img/card/${id}.webp`:(portraits[id]?"portraits/"+encodeURIComponent(portraits[id]):null);
@@ -916,7 +953,9 @@ function weaponStatRatio(cid,wid){const r=statsWithWeapon(cid,wid);return expDmg
 /* ---------- 에코 세팅 → 스탯 (EchoDB) ----------
    에코를 입력했으면 기본 스탯 + 무기 + 고유 노드 + 에코 + 세트(2세트 고정·조건부 효과)로 최종 스탯을 만들고,
    기준(이잘키 스탯 + 기준 세트의 조건부 효과)과 기대 피해를 비교한다. 피해 유형별 비중(profile)으로 크리티컬·보너스를 나눠 계산. */
-const echoesOf=id=>((state.growth[id]||{}).echoes||[]).filter(e=>e&&e.main);
+// 세트는 칸마다가 아니라 세트 구성(5세트 / 3+2세트)으로 정한다: 채워진 에코 순서대로 앞 3개(5세트면 전부) = a, 나머지 = b
+const echoesOf=id=>{const E=((state.growth[id]||{}).echoes||[]).filter(e=>e&&e.main);if(!E.length)return E;const S=echoSetOf(id);
+  return E.map((e,i)=>Object.assign({},e,{set:S.mode==="5"||i<3?S.a:(S.b||S.a)}))};
 function dmgWeights(id){const p=CharDB.profile(id);const w={};if(p)EchoDB.DMG_TYPES.forEach(k=>{if(p[k])w[k]=p[k]});
   if(!Object.keys(w).length)(synOf(id).w||[]).forEach(k=>{if(EchoDB.DMG_TYPES.includes(k))w[k]=1});if(!Object.keys(w).length)w.basic=1;return w}
 const echoCtx=id=>({el:(charMap[id]||{}).el,has:ms=>CharDB.has(id,ms),share:k=>CharDB.share(id,k)});
@@ -1102,7 +1141,7 @@ async function loadPortraits(){
 }
 async function loadGameImages(){
   try{const r=await fetch("img/index.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();
-    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number))};
+    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number)),set:new Set((j.set||[]).map(Number))};
     rerenderPlan();renderRoster();renderInvest();renderRecords();if(profId&&$("#prof").open)renderProfile();
   }catch(e){}
 }
@@ -1378,65 +1417,83 @@ function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
 function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
 
-/* ---------- profile: 에코 세팅 ---------- */
+/* ---------- profile: 에코 세팅 ----------
+   에코 5칸(카드) + 세트 구성(5세트 / 3+2세트) + 요약 줄. 저장: growth.echoes[5], growth.echoSet {mode:"5"|"32", a, b} */
 let pfTabSel=null,echoSel=null,echoEdit=null;const echoMsg={};
 function pfTab(id){if(pfTabSel)return pfTabSel;const g=state.growth[id]||{};return g.stats&&!echoesOf(id).length?"stat":"echo"}
 function echoSlots(id){const a=((state.growth[id]||{}).echoes||[]).slice(0,5);while(a.length<5)a.push(null);return a}
-// 기준 세트 구성(예: 3세트 + 2세트)대로 칸마다 기본 세트를 고른다
-function defaultSet(id,i){const r=(CharDB.sets(id)||[])[0];if(!r)return EchoDB.setNames()[0];let acc=0;
-  for(let j=0;j<r.length;j+=2){if(typeof r[j]!=="string")break;acc+=+r[j+1]||0;if(i<acc)return r[j].split("|")[0]}return r[0].split("|")[0]}
+// 세트 구성. 저장값이 없으면 공명자의 주력 세트(3+2 등)를 기본으로
+function echoSetOf(id){const g=state.growth[id]||{};if(g.echoSet&&g.echoSet.a)return g.echoSet;const r=(CharDB.sets(id)||[])[0];
+  if(!r)return {mode:"5",a:EchoDB.setNames()[0],b:null};const a=r[0].split("|")[0];const b=typeof r[2]==="string"?r[2].split("|")[0]:null;
+  return {mode:(+r[1]>=5||!b)?"5":"32",a,b:b||a}}
+const SLOT_COST=[4,3,3,1,1];
 const fmtV=(k,v)=>`${+(+v).toFixed(1)}${EchoDB.PCT_KEYS.has(k)?"%":""}`;
-const echoLab=(k,elem)=>k==="el"&&elem?`${EL[elem]} 피해`:k==="atk%"?"공격력%":k==="hp%"?"HP%":k==="def%"?"방어력%":EchoDB.LABEL[k]||k;
+const echoLab=(k,elem)=>k==="el"&&elem?`${EL[elem]} 피해`:k==="atk%"?"공격력":k==="hp%"?"HP":k==="def%"?"방어력":EchoDB.LABEL[k]||k;
+const ST_ICON=new Set(["atk","hp","def","er","cr","cd","basic","heavy","skill","lib","echo","glacio","fusion","electro","aero","spectro","havoc"]);
+const statIcon=(k,elem)=>{const n=({"atk%":"atk","hp%":"hp","def%":"def",el:elem})[k]||k;return ST_ICON.has(n)?`<img class="sti" src="icons/st-${n}.png" alt="">`:`<i class="sti"></i>`};
+const setIconUrl=name=>{const x=EchoDB.setIcon(name);if(!x)return "";return gameImg.set&&gameImg.set.has(x[0])?`img/set/${x[0]}.webp`:`https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconElementAttri/${x[1]}.webp`};
+// 이 공명자에게 쓸모 있는 부옵인지 (흐리게 표시할지 판단)
+function subUseful(id,k){const sc=scaleOf(id);if(k==="cr"||k==="cd"||k==="er")return true;
+  if(k==="atk%"||k==="atk")return sc==="atk";if(k==="hp%"||k==="hp")return sc==="hp";if(k==="def%"||k==="def")return sc==="def";
+  if(["basic","heavy","skill","lib"].includes(k))return CharDB.share(id,k)>=0.08;return false}
 function echoHTML(id){
-  const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const sf=n?statFactor(id):null;const eb=n?echoBuild(id):null;const sc=scaleOf(id);
-  const ref=echoRef(id);const erm=CharDB.erMin(id);
-  if(eb)(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
-  {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
-  const erLow=!!eb&&eb.screen.er+0.05<erm.min;
-  const gd=CharDB.guide(id);const GL={cr:"크리티컬",cd:"크리티컬 피해",er:"공명 효율",atk:"공격력",hp:"HP",def:"방어력",heal:"치료 효과",el:`${EL[c.el]} 피해`,skill:"공명 스킬 피해"};
-  const gv=k=>!eb?null:k==="skill"?(eb.screen.types.skill||0):eb.screen[k];
-  const gchips=gd&&eb?Object.keys(GL).filter(k=>gd[k]!=null&&k!=="er").map(k=>{const v=gv(k),gt=(gd.gt||[]).includes(k);const ok=v!=null&&(gt?v>gd[k]:v+0.05>=gd[k]);
-     const pct=!["atk","hp","def"].includes(k);return `<span class="gch ${ok?"ok":"no"}" title="공식 추천 ${gt?">":"≥"} ${gd[k]}${pct?"%":""} · 지금 ${pct?v.toFixed(1)+"%":Math.round(v).toLocaleString()}">${ok?"✓":"✗"} ${GL[k]} ${gt?">":"≥"}${gd[k]}${pct?"%":""}</span>`}).join(""):"";
-  const sum=eb?`<div class="esum"><div class="eh"><span>에코 반영 스탯 (스탯 화면 기준)</span><span>스탯 배율 ${sf?(sf.f*100).toFixed(0)+"%":"–"}</span></div>
-     <span>${sc==="hp"?"HP":"공격력"}</span><b>${Math.round(sc==="hp"?eb.screen.hp:eb.screen.atk).toLocaleString()}</b>
-     <span>크리티컬 / 크리티컬 피해</span><b>${eb.screen.cr.toFixed(1)}% / ${eb.screen.cd.toFixed(1)}%</b>
-     <span>${EL[c.el]} 피해</span><b>${eb.screen.el.toFixed(1)}%</b>
-     ${Object.entries(eb.screen.types).filter(([k,v])=>v>0).map(([k,v])=>`<span>${EchoDB.LABEL[k]}</span><b>${v.toFixed(1)}%</b>`).join("")}
-     <span>공명 효율 / 최소${erm.est?"(추정)":erm.src==="guide"?"(공식)":""}</span><b${erLow?' class="ebad"':''}>${eb.screen.er.toFixed(1)}% / ${erm.min}%</b>
-     ${erm.note||erm.adjText?`<div class="en off">공명 효율 최소치: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
-     ${gchips?`<div class="en gl">공식 가이드 추천 스탯(스탯 화면 기준): ${gchips}</div>`:""}
-     ${erLow?`<div class="en ewarn">공명 효율이 최소치보다 ${(erm.min-eb.screen.er).toFixed(1)}% 낮습니다. 사이클이 밀릴 수 있어요. 다른 칸의 부옵이나 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도 계산에는 반영하지 않습니다)</div>`:""}
-     <div class="en">세트: ${eb.sets.map(x=>`${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")} 적용)`:""}`).join(", ")||"없음"}</div>
-     ${eb.fx.length?`<div class="en">강도 계산에는 조건부 효과(평균 유지율 반영)도 더합니다: ${eb.fx.map(f=>`${echoLab(f.k,f.elem)} ${f.to==="next"?"→ 다음 캐릭터 ":f.to==="party"?"(파티) ":""}+${+f.eff.toFixed(1)}${f.eff<=0?" (조건 안 맞음)":""}`).join(", ")}</div>`:""}
-     ${n<5?`<div class="en off">에코 ${n}/5 — 5개를 모두 넣어야 정확합니다. 빈 칸은 스탯 0으로 계산합니다.</div>`:""}
-     ${c.role==="support"?`<div class="en off">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.</div>`:""}
-     <div class="en off">기준(이잘키·기준 세트): ${sc==="hp"?"HP":"공격력"} ${Math.round(sc==="hp"?ref.hp:ref.atk).toLocaleString()} · 크리 ${ref.cr.toFixed(1)}% · 크피 ${ref.cd.toFixed(1)}% · 속성 ${ref.el.toFixed(1)}%(조건부 효과 포함).</div></div>`
-    :`${c.role==="support"?`<p class="sbnote">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과(예: 떠오르는 구름)만 반영합니다.</p>`:""}<p class="sbnote">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 칸마다 고르세요(기본: 이 공명자의 주력 세트). 2세트 고정 효과와 5세트 조건부 효과까지 반영합니다.</p>`;
-  const slot=(e,i)=>{const msg=echoMsg[id+":"+i]?`<div class="emsg">${esc(echoMsg[id+":"+i])}</div>`:"";
-    if(!e)return `<div class="eslot empty${echoSel===i?" sel":""}" data-eslot="${i}">에코 ${i+1} — 캡처 붙여넣기(Ctrl+V) · 끌어다 놓기 · 눌러서 선택${msg}</div>`;
-    const ed=echoEdit===i;const sets=EchoDB.setNames();
-    return `<div class="eslot${echoSel===i?" sel":""}" data-eslot="${i}"><div class="eh1"><span class="ec">${e.cost}코</span><span class="em">${esc(echoLab(e.main.k,e.main.elem))} ${fmtV(e.main.k,e.main.v)}</span>
-      <button type="button" class="eb" data-eedit="${i}" title="숫자 고치기">${ed?"완료":"수정"}</button><button type="button" class="eb" data-edel="${i}" title="이 에코 지우기">✕</button></div>
-      ${ed?echoEditHTML(e,i):`<div class="esubs">${(e.subs||[]).map(x=>`${esc(echoLab(x.k))} ${fmtV(x.k,x.v)}`).join(" · ")||"부옵 없음"}</div>`}
-      <select class="eset" data-eset="${i}" aria-label="세트">${sets.map(n=>`<option${n===e.set?" selected":""}>${esc(n)}</option>`).join("")}</select>${msg}</div>`};
-  return `<div class="pf-sec"><span>에코 ${n}/5</span><b id="pfStSum">${statSum(id)}</b></div>${sum}
-   <div class="paste" id="pfEPaste" tabindex="0"><span>에코 캡처를 <b>Ctrl+V</b>로 붙여넣거나 여러 장을 한 번에 끌어다 놓으세요. 빈 칸부터 차례로 채웁니다.</span><input type="file" accept="image/*" id="pfEFile" multiple hidden><span id="pfEOcr" class="ocr"></span></div>
-   <div class="eslots">${E.map(slot).join("")}</div>
+  const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const S=echoSetOf(id);const sets=EchoDB.setNames();
+  const cost=E.reduce((a,e)=>a+(e?+e.cost:0),0);
+  const opt=v=>sets.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("");
+  const setbar=`<div class="esetbar"><div class="seg2" role="group" aria-label="세트 구성"><button type="button" data-esmode="5" aria-pressed="${S.mode==="5"}">5세트</button><button type="button" data-esmode="32" aria-pressed="${S.mode==="32"}">3+2세트</button></div>
+    <label class="esel"><img src="${setIconUrl(S.a)}" alt="" onerror="this.style.visibility='hidden'"><select data-eseta aria-label="세트">${opt(S.a)}</select><em>×${S.mode==="5"?5:3}</em></label>
+    ${S.mode==="32"?`<label class="esel"><img src="${setIconUrl(S.b)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetb aria-label="두 번째 세트">${opt(S.b)}</select><em>×2</em></label>`:""}
+    <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><span class="estat-msg" id="pfEOcr"></span></div>`;
+  const card=(e,i)=>{const m=echoMsg[id+":"+i];const msg=m?`<div class="ec-msg${/실패/.test(m)?" err":""}">${esc(m)}</div>`:"";const sel=echoSel===i?" sel":"";
+    if(!e)return `<div class="ecard empty${sel}" data-eslot="${i}"><div class="ec-plus">+</div><div>캡처 붙여넣기</div><small>Ctrl+V · 끌어다 놓기 · 눌러서 선택</small><button type="button" class="ec-b" data-enew="${i}">직접 입력</button>${msg}</div>`;
+    const ed=echoEdit===i;const F=EchoDB.FIXED[e.cost];
+    const head=`<div class="ec-h"><select class="ec-cost" data-ecost="${i}" aria-label="코스트">${[4,3,1].map(x=>`<option value="${x}"${x===+e.cost?" selected":""}>${x}코</option>`).join("")}</select><span class="ec-sp"></span>
+      <button type="button" class="ec-b" data-ecap="${i}" title="캡처로 다시 읽기">캡처</button><button type="button" class="ec-b" data-eedit="${i}">${ed?"완료":"수정"}</button><button type="button" class="ec-b" data-edel="${i}" title="지우기" aria-label="에코 ${i+1} 지우기">✕</button></div>`;
+    if(ed)return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoEditHTML(e,i)}${msg}</div>`;
+    const subs=[0,1,2,3,4].map(j=>{const x=(e.subs||[])[j];if(!x)return `<div class="ec-sub none"><i class="sti"></i><span>—</span></div>`;
+      return `<div class="ec-sub t${EchoDB.tier(x.k,x.v)}${subUseful(id,x.k)?"":" off"}">${statIcon(x.k)}<span>${esc(echoLab(x.k))}</span><b>${fmtV(x.k,x.v)}</b></div>`}).join("");
+    return `<div class="ecard${sel}" data-eslot="${i}">${head}
+      <div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
+      ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
+      <div class="ec-subs">${subs}</div>${msg}</div>`};
+  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#8f99a3"></i>1~2</span><span><i style="background:#e9edf1"></i>3~4</span><span><i style="background:#8fd19e"></i>5~6</span><span><i style="background:#8cb8ff"></i>7</span><span><i style="background:#f3c86b"></i>8 (최대)</span><span>· 흐린 줄은 이 공명자에게 효과 없는 부옵</span></div>`;
+  return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 5세트 / 3+2세트로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
+function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=eb.screen;
+  const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
+  {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
+  const erLow=X.er+0.05<erm.min;
+  // 막대: 금색 눈금 = 기준(공식 가이드 추천 → 이잘키). 눈금은 막대의 77% 위치
+  const bar=(label,v,ref,unit,warn,tip)=>{const w=ref?Math.min(100,v/ref*77):0;return `<div class="es-st${warn?" warn":""}" title="${esc(tip||"")}"><span>${label}<b>${unit==="%"?v.toFixed(1)+"%":Math.round(v).toLocaleString()}</b></span><div class="ebar"><i style="width:${w}%"></i>${ref?`<u style="left:77%"></u>`:""}</div></div>`};
+  const mainV=sc==="hp"?X.hp:X.atk,mainRef=sc==="hp"?(gd.hp||I.main[1]):(gd.atk||I.main[1]);
+  const crRef=gd.cr||I.cr,cdRef=gd.cd||I.cd;
+  const fx=eb.fx.filter(f=>f.to!=="next"&&f.eff>0).map(f=>`${echoLab(f.k,f.elem)} +${+f.eff.toFixed(1)}`);
+  return `<div class="esum2"><div class="es-score"><span>스탯 배율</span><b>${sf?(sf.f*100).toFixed(0)+"%":"–"}</b></div>
+    ${bar(sc==="hp"?"HP":"공격력",mainV,mainRef,"",false,`기준 ${Math.round(mainRef).toLocaleString()}`)}
+    ${bar("크리티컬",X.cr,crRef,"%",false,`기준 ${crRef}%${gd.cr?" (공식 가이드 추천)":""}`)}
+    ${bar("크리 피해",X.cd,cdRef,"%",false,`기준 ${cdRef}%${gd.cd?" (공식 가이드 추천)":""}`)}
+    ${bar(`${EL[c.el]} 피해`,X.el,elRefOf(id),"%",false,`기준 ${elRefOf(id)}%`)}
+    ${bar("공명 효율",X.er,erm.min,"%",erLow,`최소 ${erm.min}%${erm.src==="guide"?" (공식 가이드)":erm.est?" (추정)":" (이잘키)"}`)}
+    <div class="es-note">${eb.sets.map(x=>`${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")})`:""}`).join(" · ")}${fx.length?` · 조건부 효과(유지율 반영): ${fx.join(", ")}`:""}${Object.entries(X.types).filter(([k,v])=>v>0).length?` · 피해 보너스: ${Object.entries(X.types).filter(([k,v])=>v>0).map(([k,v])=>`${EchoDB.LABEL[k]} ${v.toFixed(1)}%`).join(", ")}`:""}</div>
+    ${erm.note||erm.adjText?`<div class="es-note">공명 효율 최소치 ${erm.min}%: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
+    ${erLow?`<div class="es-note warn">공명 효율이 최소치보다 ${(erm.min-X.er).toFixed(1)}% 낮아 사이클이 밀릴 수 있어요. 다른 칸의 부옵, 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도에는 반영하지 않음)</div>`:""}
+    ${echoSlots(id).filter(Boolean).length<5?`<div class="es-note">에코 ${echoSlots(id).filter(Boolean).length}/5 — 빈 칸은 스탯 0으로 계산합니다.</div>`:""}</div>`}
 function echoEditHTML(e,i){const M=(EchoDB.mainStats(e.cost)||{}).main||{};
-  const mainOpts=Object.keys(M).map(k=>`<option value="${k}"${k===e.main.k?" selected":""}>${esc(echoLab(k))}</option>`).join("");
+  const mainOpts=Object.keys(M).map(k=>`<option value="${k}"${k===e.main.k?" selected":""}>${esc(k==="el"?"속성 피해":echoLab(k)+(EchoDB.PCT_KEYS.has(k)&&["atk%","hp%","def%"].includes(k)?"%":""))}</option>`).join("");
   const subKeys=EchoDB.subKeys();
-  const row=(j,x)=>`<select data-esk="${i}:${j}"><option value="">(없음)</option>${subKeys.map(k=>`<option value="${k}"${x&&x.k===k?" selected":""}>${esc(echoLab(k))}${["atk","hp","def"].includes(k)?" (고정)":""}</option>`).join("")}</select><input type="number" step="any" data-esv="${i}:${j}" value="${x?x.v:""}">`;
-  return `<div class="eedit"><select data-ecost="${i}">${[4,3,1].map(c=>`<option value="${c}"${c===e.cost?" selected":""}>${c}코스트</option>`).join("")}</select><span></span>
-    <select data-emk="${i}">${mainOpts}</select><input type="number" step="any" data-emv="${i}" value="${e.main.v}">
-    ${e.main.k==="el"?`<select data-eme="${i}">${EL_ORDER.map(x=>`<option value="${x}"${x===e.main.elem?" selected":""}>${EL[x]} 피해</option>`).join("")}</select><span></span>`:""}
+  const row=(j,x)=>`<select data-esk="${i}:${j}" aria-label="부옵 ${j+1}"><option value="">(없음)</option>${subKeys.map(k=>`<option value="${k}"${x&&x.k===k?" selected":""}>${esc(echoLab(k))}${["atk%","hp%","def%"].includes(k)?"%":["atk","hp","def"].includes(k)?" (고정)":""}</option>`).join("")}</select><input type="number" step="any" data-esv="${i}:${j}" value="${x?x.v:""}" aria-label="부옵 ${j+1} 수치">`;
+  return `<div class="eedit"><select data-emk="${i}" aria-label="주옵">${mainOpts}</select><input type="number" step="any" data-emv="${i}" value="${e.main.v}" aria-label="주옵 수치">
+    ${e.main.k==="el"?`<select data-eme="${i}" aria-label="속성">${EL_ORDER.map(x=>`<option value="${x}"${x===e.main.elem?" selected":""}>${EL[x]} 피해</option>`).join("")}</select><span></span>`:""}
     ${[0,1,2,3,4].map(j=>row(j,(e.subs||[])[j])).join("")}</div>`}
 function saveEchoes(id,arr){const g=state.growth[id]=state.growth[id]||{};g.echoes=arr.some(Boolean)?arr:undefined;if(!g.echoes)delete g.echoes;
   persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})} // 입력칸 change·blur 처리 중에 다시 그리지 않도록 다음 프레임에
+function saveEchoSet(id,patch){const g=state.growth[id]=state.growth[id]||{};g.echoSet=Object.assign({},echoSetOf(id),patch);persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})}
+function newEcho(id,i){const cost=SLOT_COST[i]||1;const M=(EchoDB.mainStats(cost)||{}).main||{};const k=cost===4?"cr":cost===3?"el":"atk%";
+  return {cost,main:Object.assign({k,v:M[k]},k==="el"?{elem:(charMap[id]||{}).el}:{}),subs:[]}}
 function echoQueue(id,files){const E=echoSlots(id);const free=[];if(echoSel!=null&&files.length===1)free.push(echoSel);
-  E.forEach((e,i)=>{if(!e&&!free.includes(i))free.push(i)});if(!free.length&&files.length===1&&echoSel==null)free.push(0);
+  E.forEach((e,i)=>{if(!e&&!free.includes(i))free.push(i)});
   files.slice(0,free.length).forEach((f,k)=>ocrEcho(id,f,free[k]));
-  if(files.length>free.length)$("#pfEOcr")&&($("#pfEOcr").textContent=`빈 칸이 ${free.length}개라 ${files.length-free.length}장은 넣지 못했습니다. 칸을 지우거나 고른 뒤 다시 넣으세요.`)}
+  if(files.length>free.length){const m=$("#pfEOcr");if(m)m.textContent=free.length?`빈 칸이 ${free.length}개라 ${files.length-free.length}장은 넣지 못했어요.`:"빈 칸이 없어요. 바꿀 카드를 눌러 고른 뒤 다시 붙여넣으세요."}}
 /* 에코 캡처 인식: 줄마다 배경 밝기가 달라(강조 줄) 한 가지 흑백 기준으로는 글자가 깨질 때가 있다.
    기준을 바꿔 가며 몇 번 읽고, 부옵 5줄이 숫자 수정 없이 읽히면 바로 멈춘다. 가장 잘 읽힌 결과를 쓴다. */
 const ECHO_PASSES=[[130,0],[150,2],[115,0],[150,0]];
@@ -1450,8 +1507,8 @@ async function readEcho(blob){const w=await echoWorker();const got=[];
 async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";if(profId===id)renderProfile();
   const job=_eq.then(()=>readEcho(blob));_eq=job.catch(()=>{});
   try{const e=await job;if(!e||!e.main)throw new Error("에코 옵션을 찾지 못했습니다. 주옵부터 부옵까지 보이게 캡처해 주세요.");
-    const arr=echoSlots(id);const old=arr[i];arr[i]={cost:e.cost,main:e.main,subs:e.subs,set:(old&&old.set)||defaultSet(id,i)};
-    echoMsg[key]=`인식 완료${e.fixes.length?` · 고친 숫자: ${e.fixes.join(", ")}`:""}. 숫자가 맞는지 확인해 주세요.`;echoSel=null;saveEchoes(id,arr);
+    const arr=echoSlots(id);arr[i]={cost:e.cost,main:e.main,subs:e.subs};
+    delete echoMsg[key];echoSel=null;saveEchoes(id,arr);
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
@@ -1522,30 +1579,31 @@ function renderProfile(){
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
   $("#prof").innerHTML=`<form method="dialog" class="pf">
    <div class="pf-l"><div class="face${cardUrl(id)?" pic":""}${gameImg.card.has(id)?" tall":""}" style="--ec:var(--${c.el})${cardUrl(id)?`;--pic:url('${cardUrl(id)}')`:""}"><span class="elb"><img src="icons/el-${c.el}.png" alt=""></span></div></div>
+   <div class="pf-main">
    <div class="pf-r">
     <div class="pf-h"><h3>${esc(c.name)}</h3><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${c.rar}★</span><span class="chip">${ROLE[c.role]||""}</span><span class="chip">${WTYPE[t]||""}</span>
       <button class="x" value="close" aria-label="닫기">✕</button></div>
     <div class="pf-toggles"><label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
-    <label class="pf-own" title="육성하지 않은 공명자는 매트릭스에서 게임이 주는 체험 세팅으로 씁니다"><input type="checkbox" class="sw" id="pfTrial" ${g.trial?"checked":""}> 체험 세팅 (육성 안 함)</label></div>
+    <label class="pf-own" title="육성하지 않은 공명자는 매트릭스에서 게임이 주는 체험 세팅으로 씁니다"><input type="checkbox" class="sw" id="pfTrial" ${g.trial?"checked":""}> 체험 세팅 (육성 안 함)</label>
+    <span class="pf-own" style="margin-left:auto">캐릭터 점수 <b id="pfScore" style="color:#e6c36a;font-family:var(--f-num);margin-left:4px">${charScore(id).toFixed(1)}</b></span></div>
     ${g.trial?`<p class="pf-trial">매트릭스 체험 세팅으로 계산합니다: <b>90레벨 · ${wp.w?esc(wp.w.name):"상시 무기"} R1 · 스킬 8레벨 · 약한 에코</b>. 공명 체인만 지금 설정을 따릅니다. 스킬·에코 손실은 예측치(×${TRIAL_MUL})입니다.</p>`:""}
-    <div class="${g.trial?"pf-hide":""}">
-    <div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>
-    <div class="pf-lv"><input type="range" min="1" max="90" value="${lv}" id="pfLv" aria-label="레벨"><input type="number" min="1" max="90" value="${lv}" id="pfLvN" aria-label="레벨 숫자"></div>
+    <div class="pf-row2">
+     <div class="${g.trial?"pf-hide":""}"><div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>
+      <div class="pf-lv"><input type="range" min="1" max="90" value="${lv}" id="pfLv" aria-label="레벨"><input type="number" min="1" max="90" value="${lv}" id="pfLvN" aria-label="레벨 숫자"></div></div>
+     <div><div class="pf-sec"><span>공명 체인 (돌파)</span><b>${ch}돌파 · DPS ${Math.round(chainMul(id)*100)}%</b></div>
+      <div class="seg" id="pfCh">${[0,1,2,3,4,5,6].map(n=>`<button type="button" data-v="${n}" aria-pressed="${ch===n}">${n}</button>`).join("")}</div></div>
     </div>
-    <div class="pf-sec"><span>공명 체인 (돌파)</span><b>${ch}돌파 · DPS ${Math.round(chainMul(id)*100)}%</b></div>
-    <div class="seg" id="pfCh">${[0,1,2,3,4,5,6].map(n=>`<button type="button" data-v="${n}" aria-pressed="${ch===n}">${n}</button>`).join("")}</div>
     <div class="${g.trial?"pf-hide":""}">
     <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · 성능 ${wp.pct.toFixed(1)}%`:""}</b></div>
     <div class="wgrid" id="pfW">${ws.map(w=>{const e=pmap[w.id];const sel=wp.w&&wp.w.id===w.id;
       return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음(추정)"}">
         <span class="wi"><img src="${weaponIcon(w)}" alt="" onerror="this.remove()"></span>
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
-    <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
-    <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
+    <div class="seg" id="pfR" style="max-width:420px">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
     </div>
-    <p class="pf-foot">캐릭터 점수 <b id="pfScore">${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
    </div>
-   <div class="pf-s${g.trial?" pf-dim":""}">${statsHTML(id)}</div></form>`;
+   <div class="pf-s${g.trial?" pf-dim":""}">${statsHTML(id)}<input type="file" accept="image/*" id="pfEFile" multiple hidden></div>
+   </div></form>`;
 }
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
@@ -1887,10 +1945,12 @@ $("#prof").addEventListener("click",e=>{
   if(e.target.id==="pfEClear"){Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
   const ee=e.target.closest("[data-eedit]");if(ee){const i=+ee.dataset.eedit;echoEdit=echoEdit===i?null:i;return renderProfile()}
   const ed=e.target.closest("[data-edel]");if(ed){const i=+ed.dataset.edel;const a=echoSlots(profId);a[i]=null;delete echoMsg[profId+":"+i];if(echoEdit===i)echoEdit=null;return saveEchoes(profId,a)}
-  const es=e.target.closest(".eslot");if(es&&!e.target.closest("select,input,button")){const i=+es.dataset.eslot;
+  const nw=e.target.closest("[data-enew]");if(nw){const i=+nw.dataset.enew;const a=echoSlots(profId);a[i]=newEcho(profId,i);echoEdit=i;return saveEchoes(profId,a)}
+  const cp=e.target.closest("[data-ecap]");if(cp){echoSel=+cp.dataset.ecap;$("#pfEFile").click();return}
+  const sm=e.target.closest("[data-esmode]");if(sm){const S=echoSetOf(profId);return saveEchoSet(profId,{mode:sm.dataset.esmode,b:S.b||S.a})}
+  const es=e.target.closest(".ecard");if(es&&!e.target.closest("select,input,button")){const i=+es.dataset.eslot;
     if(es.classList.contains("empty")){echoSel=i;renderProfile();$("#pfEFile").click();return}
     echoSel=echoSel===i?null:i;return renderProfile()}
-  if(e.target.closest("#pfEPaste")&&!e.target.closest("input")){$("#pfEFile").click();return}
   const ch=e.target.closest("#pfCh button");if(ch)return setGrowth(profId,{chain:+ch.dataset.v});
   const r=e.target.closest("#pfR button");if(r)return setGrowth(profId,{ref:+r.dataset.v});
   const w=e.target.closest("#pfW button");if(w){const W=WMAP[+w.dataset.w];const g=state.growth[profId]||{};
@@ -1903,21 +1963,22 @@ $("#prof").addEventListener("input",e=>{
 document.addEventListener("paste",e=>{const d=$("#prof");if(!d||!d.open||!profId)return;
   const its=[...(e.clipboardData||{}).items||[]].filter(i=>i.type.startsWith("image/"));if(!its.length)return;e.preventDefault();
   if(pfTab(profId)==="echo")echoQueue(profId,its.map(i=>i.getAsFile()));else ocrStats(its[0].getAsFile());});
-const DROPZ="#pfPaste,#pfEPaste,.eslot";
+const DROPZ="#pfPaste,.ecard";
 $("#prof").addEventListener("dragover",e=>{const z=e.target.closest(DROPZ);if(z){e.preventDefault();z.classList.add("over")}});
 $("#prof").addEventListener("dragleave",e=>{const z=e.target.closest(DROPZ);if(z)z.classList.remove("over")});
 $("#prof").addEventListener("drop",e=>{const z=e.target.closest(DROPZ);if(!z)return;e.preventDefault();z.classList.remove("over");const fs=[...e.dataTransfer.files].filter(f=>f.type.startsWith("image/"));if(!fs.length)return;
   if(z.id==="pfPaste")return ocrStats(fs[0]);
-  if(z.classList.contains("eslot")&&fs.length===1){echoSel=+z.dataset.eslot}
+  if(z.classList.contains("ecard")&&fs.length===1){echoSel=+z.dataset.eslot}
   echoQueue(profId,fs)});
 $("#prof").addEventListener("change",e=>{
   if(e.target.id==="pfFile"){const f=e.target.files[0];if(f)ocrStats(f);return}
   if(e.target.id==="pfEFile"){const fs=[...e.target.files];e.target.value="";if(fs.length)echoQueue(profId,fs);return}
   const T=e.target,ds=T.dataset;
-  if(ds.eset!=null||ds.ecost!=null||ds.emk!=null||ds.emv!=null||ds.eme!=null||ds.esk!=null||ds.esv!=null){
-    const a=echoSlots(profId);const i=+(ds.eset??ds.ecost??ds.emk??ds.emv??ds.eme??String(ds.esk??ds.esv).split(":")[0]);const x=a[i];if(!x)return;
+  if(ds.eseta!=null)return saveEchoSet(profId,{a:T.value});
+  if(ds.esetb!=null)return saveEchoSet(profId,{b:T.value});
+  if(ds.ecost!=null||ds.emk!=null||ds.emv!=null||ds.eme!=null||ds.esk!=null||ds.esv!=null){
+    const a=echoSlots(profId);const i=+(ds.ecost??ds.emk??ds.emv??ds.eme??String(ds.esk??ds.esv).split(":")[0]);const x=a[i];if(!x)return;
     const e2=JSON.parse(JSON.stringify(x));
-    if(ds.eset!=null)e2.set=T.value;
     if(ds.ecost!=null){e2.cost=+T.value;const M=(EchoDB.mainStats(e2.cost)||{}).main||{};if(M[e2.main.k]==null){const k=Object.keys(M)[0];e2.main={k,v:M[k]}}}
     if(ds.emk!=null){const M=(EchoDB.mainStats(e2.cost)||{}).main||{};e2.main={k:T.value,v:M[T.value]??e2.main.v};if(T.value==="el")e2.main.elem=charMap[profId].el}
     if(ds.emv!=null)e2.main.v=+T.value||0;

@@ -49,6 +49,8 @@ async function pool(items, n, fn) {
 // 공명자 id → encore.moe 번호(공명자 파일의 eid). 번호가 없는 공명자는 portraits/ 이미지를 쓴다.
 const CHAR_EID = Object.fromEntries(MP.CHAR_LIST.map((id) => [id, MP._chars[id] && MP._chars[id].eid]).filter(([, e]) => e != null));
 const WEAPONS = ctx.window.WEAPONS || [];
+run('data/echoes.js');
+const SET_ICON = MP.ECHO_SET_ICON || {};
 
 const charFails = await pool(Object.entries(CHAR_EID), 4, async ([id, eid]) => {
   const sq = path.join(CACHE, 'char', `${id}.webp`);
@@ -65,6 +67,11 @@ const weaponFails = await pool(WEAPONS, 8, async ([wid, , , , icon]) => {
   await download(`${WICON}${icon || `T_IconWeapon${wid}_UI`}.webp`, path.join(CACHE, 'weapon', `${wid}.webp`));
 });
 
+const SICON = 'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconElementAttri/';
+const setFails = await pool(Object.values(SET_ICON), 6, async ([sid, icon]) => {
+  await download(`${SICON}${icon}.webp`, path.join(CACHE, 'set', `${sid}.webp`));
+});
+
 // 직접 넣은 이미지(img-manual/char|card|weapon/*.webp)가 있으면 encore.moe 이미지보다 우선한다.
 const MANUAL = 'img-manual';
 for (const kind of ['char', 'card', 'weapon']) {
@@ -75,7 +82,7 @@ for (const kind of ['char', 'card', 'weapon']) {
 }
 
 const index = {};
-for (const kind of ['char', 'card', 'weapon']) {
+for (const kind of ['char', 'card', 'weapon', 'set']) {
   const src = path.join(CACHE, kind);
   const files = fs.existsSync(src) ? fs.readdirSync(src).filter((f) => f.endsWith('.webp') && have(path.join(src, f))) : [];
   fs.mkdirSync(path.join(OUT, kind), { recursive: true });
@@ -84,5 +91,5 @@ for (const kind of ['char', 'card', 'weapon']) {
 }
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index));
 
-console.log(`img: char ${index.char.length}, card ${index.card.length}, weapon ${index.weapon.length}`);
-for (const f of [...charFails, ...weaponFails]) console.log('  실패:', f);
+console.log(`img: char ${index.char.length}, card ${index.card.length}, weapon ${index.weapon.length}, set ${index.set.length}`);
+for (const f of [...charFails, ...weaponFails, ...setFails]) console.log('  실패:', f);
