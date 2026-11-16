@@ -44,6 +44,8 @@
     /* 스탯 */
     base:id=>raw(id).base||null,
     ijk:id=>raw(id).ijk||null,
+    // 공명 효율 최소치 {min, est}. 표에 없으면 역할별 기본값(메인 120 / 서브 125 / 서포터 200, 추정)
+    erMin:id=>{const v=raw(id).er;if(v!=null)return {min:+v,est:false};const c=cur(id)||raw(id);return {min:({dps:120,sub:125,support:200})[c.role]||120,est:true}},
     scale:id=>{const c=cur(id);return (c&&c.statScale)||raw(id).statScale||"atk"},
     nodes:id=>raw(id).nodes||{},
     sets:id=>raw(id).sets||[],
