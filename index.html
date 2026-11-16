@@ -1709,7 +1709,7 @@ function startDrag(){const tk=press.tk;
   tip.classList.remove("on");tipFor=null;if(selected)setPick(null);
   const r=tk.getBoundingClientRect();ghost=tk.cloneNode(true);ghost.classList.add("dnd-ghost");ghost.removeAttribute("data-id");
   ghost.style.width=r.width+"px";ghost.style.height=r.height+"px";document.body.appendChild(ghost);
-  tk.classList.add("dragging");document.body.classList.add("dnd")}
+  tk.classList.add("dragging");document.body.classList.add("dnd");try{getSelection().removeAllRanges()}catch(_){}}
 function endDrag(drop){
   if(rafId){cancelAnimationFrame(rafId);rafId=0}
   const d=dragData;let t=null;if(drop&&d&&lastPt)t=dragTargetAt(lastPt.x,lastPt.y);
@@ -1736,20 +1736,25 @@ document.addEventListener("click",e=>{if(suppressClick){e.stopPropagation();e.pr
 addEventListener("keydown",e=>{if(e.key==="Escape"&&dragData){endDrag(false);press=null}});
 addEventListener("blur",()=>{if(dragData){endDrag(false);press=null}});
 document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(".tok"))e.preventDefault()}); // 남은 기본 드래그 차단
-document.addEventListener("contextmenu",e=>{
-  const tk=e.target.closest&&e.target.closest(".slot .tok"); if(!tk) return;
-  e.preventDefault(); unplace(+tk.dataset.team,+tk.dataset.slot);
-});
+/* 우클릭 동작은 마우스 오른쪽 버튼 누름(pointerdown, button 2)에서 바로 처리한다.
+   '우클릭 허용' 확장 프로그램들은 contextmenu 이벤트를 가로채서(사이트 처리 무력화) 우클릭 기능이 안 먹는 경우가 있다.
+   contextmenu는 메뉴를 막는 용도로만 쓰고, 터치 길게 누르기 등 포인터 우클릭이 없을 때만 대신 처리한다. */
+const RIGHT_ACTS=[]; // [선택자, 처리 함수(요소)]
+function rightAct(target){for(const [sel,fn] of RIGHT_ACTS){const el=target&&target.closest&&target.closest(sel);if(el){fn(el);return true}}return false}
+let lastRightAt=0;
+document.addEventListener("pointerdown",e=>{if(e.button!==2||e.pointerType==="touch")return;if(rightAct(e.target)){lastRightAt=Date.now()}});
+document.addEventListener("contextmenu",e=>{const hit=RIGHT_ACTS.some(([sel])=>e.target.closest&&e.target.closest(sel));if(!hit)return;
+  e.preventDefault();if(Date.now()-lastRightAt>700)rightAct(e.target)});
+RIGHT_ACTS.push([".slot .tok",tk=>unplace(+tk.dataset.team,+tk.dataset.slot)]);
 /* 보유 공명자 우클릭 → 칸 고르기: 우클릭한 공명자를 집어 든 상태가 되고, 원하는 칸(빈 칸·찬 칸 모두)을 누르면 거기에 넣는다.
    찬 칸이면 원래 있던 공명자와 바뀐다. 같은 공명자를 다시 우클릭하거나 Esc·빈 곳 클릭이면 취소. */
 function pickHover(e){setOver(slotAt(e))}
 function setPick(id){selected=id;tip.classList.remove("on");tipFor=null;document.body.classList.toggle("picking",!!id);renderPool();
   if(id)document.addEventListener("mouseover",pickHover);else{document.removeEventListener("mouseover",pickHover);setOver(null)}
   if(id)flash(`${charMap[id].name}: 넣을 칸을 누르세요 (Esc 취소)`)}
-document.getElementById("pool").addEventListener("contextmenu",e=>{
-  const tk=e.target.closest(".tok[data-src=pool]");if(!tk)return;e.preventDefault();
+RIGHT_ACTS.push(["#pool .tok[data-src=pool]",tk=>{
   if(tk.classList.contains("used"))return flash(tk.dataset.id.startsWith("rover_")?"방랑자는 속성과 관계없이 한 명만 편성할 수 있습니다.":"배치 횟수를 모두 사용했습니다.");
-  setPick(selected===tk.dataset.id?null:tk.dataset.id)});
+  setPick(selected===tk.dataset.id?null:tk.dataset.id)}]);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&selected)setPick(null)});
 document.addEventListener("click",e=>{if(selected&&!(e.target.closest&&(e.target.closest("#teams")||e.target.closest("#pool"))))setPick(null)});
 // long press to remove (touch)
@@ -1897,7 +1902,7 @@ $("#rq").addEventListener("input",e=>{ui.rq=e.target.value;renderRoster()});
 $("#rElFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.rel=b.dataset.el||null;renderRoster()});
 $("#rgrid").addEventListener("click",e=>{const tk=e.target.closest(".rcard");if(tk)openProfile(tk.dataset.id)});
 $("#rgrid").addEventListener("keydown",e=>{const tk=e.target.closest(".rcard");if(tk&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProfile(tk.dataset.id)}});
-$("#rgrid").addEventListener("contextmenu",e=>{const tk=e.target.closest(".rcard");if(!tk)return;e.preventDefault();toggleOwned(tk.dataset.id)});
+RIGHT_ACTS.push(["#rgrid .rcard",tk=>toggleOwned(tk.dataset.id)]);
 let rlp=null,rlpFired=false;
 $("#rgrid").addEventListener("touchstart",e=>{const tk=e.target.closest(".rcard");if(!tk)return;rlpFired=false;rlp=setTimeout(()=>{rlpFired=true;toggleOwned(tk.dataset.id)},550)},{passive:true});
 ["touchend","touchmove","touchcancel"].forEach(ev=>$("#rgrid").addEventListener(ev,e=>{clearTimeout(rlp);if(ev==="touchend"&&rlpFired){e.preventDefault();rlpFired=false}}));
