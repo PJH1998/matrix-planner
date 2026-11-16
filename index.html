@@ -1178,8 +1178,10 @@ function renderPool(){
 const RES_MUL=0.6, MAX_ROUNDS=8;
 // 라운드별 보스 HP 배율 (예측치, 커뮤니티 측정): 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25, 그 뒤는 라운드마다 +0.75로 가정
 const ROUND_HP_TABLE=[1,2,3.5,4.25];
-// 예상 점수: 1R 보스 1마리 HP = 4,800점 (실측 보정: 74.0% → 3,465점, 167.8% → 8,120점),
-// 라운드 점수 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25 (커뮤니티 예측치)
+// 예상 점수 = 준 피해(1R 보스 HP 단위) × 4,800점 × 라운드 점수 배율(1R 1.0 / 2R 1.15 / 3R 이후 1.25) × 보스 점수 배율
+//   1R 실측: 74.0% → 3,465점, 167.8% → 8,120점.
+//   2026-11-16: 예전엔 보스를 HP 비율로만 점수화해 라운드가 올라 HP가 커져도 점수가 거의 그대로였다(3R 보스 HP 3.5배인데 점수 1.25배).
+//   실측(3R 크라운리스 HP 40%에서 13만 점 이상)과 맞추려면 준 피해량에 비례해야 한다: 1R 5.1 + 2R 5.1×2×1.15 + 3R 2.4×3.5×1.25 ≈ 27.3 × 4,800 + 미믹 처치 2회 ≈ 13.3만
 const PTS_PER_BOSS=4800, ROUND_PTS=r=>r<=1?1:r===2?1.15:1.25;
 const roundHp=r=>r<=ROUND_HP_TABLE.length?ROUND_HP_TABLE[r-1]:ROUND_HP_TABLE[ROUND_HP_TABLE.length-1]+0.75*(r-ROUND_HP_TABLE.length);
 function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
@@ -1208,7 +1210,7 @@ function simulate(teams){
       const b=bosses[bi],f=b.res&&b.res===el?RES_MUL:1;
       if(!res[ti].hits.length&&f<1)bad++;
       const hit={name:b.name,round,resisted:f<1,from:hp/full(round)*100,left:0,pts:0};res[ti].hits.push(hit);
-      const ptsOf=dealt=>dealt/full(round)*PTS_PER_BOSS*ROUND_PTS(round)*(b.scoreMul||1);
+      const ptsOf=dealt=>dealt*PTS_PER_BOSS*ROUND_PTS(round)*(b.scoreMul||1); // dealt는 1R 보스 HP 단위(라운드 HP 배율 포함)
       if(D*f>=hp){D-=hp/f;progress+=hp/full(round);hit.pts=ptsOf(hp)+(b.killBonus||0);bi++;if(bi>=bosses.length){bi=0;round++}hp=full(round);}
       else{hp-=D*f;progress+=D*f/full(round);hit.pts=ptsOf(D*f);hit.left=hp/full(round)*100;D=0;}
     }
@@ -1334,7 +1336,7 @@ function teamWarnings(t){
 }
 // 예상 점수 + 보스별 예상 진행 (예측치)
 function fcastHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return `<span class="none">예상 없음</span>`;
-  const tip=`예상 점수·진행 · 예측치\n점수: 1R 보스 1마리 = 4,800점(실측 보정) × 라운드 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}`;
+  const tip=`예상 점수·진행 · 예측치\n점수: 준 피해 × 4,800점(1R 보스 1마리 HP 기준, 실측 보정) × 라운드 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25 — 라운드가 올라 보스 HP가 커지면 점수도 그만큼 커짐\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 2 / 3R 3.5 / 4R 4.25배, 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}`;
   const rows=r.hits.map(h=>`<li class="${h.resisted?"res":""}"><span class="bn">${h.round}R ${esc(h.name)}${h.resisted?" <em>저항</em>":""}</span><span class="hp">${Math.round(h.from)}% → ${h.left>0?`<b>${Math.round(h.left)}%</b>`:`<b class="kill">처치</b>`}</span></li>`).join("");
   return `<div class="fc-h" title="${esc(tip)}"><span>예상</span><b>${Math.round(r.pts).toLocaleString()}</b><span>점</span></div><ul class="fc-l">${rows}</ul>`;}
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
