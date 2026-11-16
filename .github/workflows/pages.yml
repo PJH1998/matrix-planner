@@ -30,7 +30,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir -p _site
-          cp index.html firebase-config.js cycle.js weapons.js assets.js updates.js teams.js stats.js _site/
+          cp index.html firebase-config.js cycle.js weapons.js assets.js updates.js teams.js stats.js echoes.js _site/
           cp -r portraits icons _site/
       - name: Restore game image cache
         uses: actions/cache@v4
