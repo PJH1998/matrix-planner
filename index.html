@@ -394,9 +394,13 @@ th{font-family:var(--f-num);background:var(--strip)}
 .pcard .ptxt b{display:flex;align-items:center;gap:6px;font-size:19px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);min-width:0}
 .pcard .ptxt .pnm{font-size:19px;color:#fff;font-family:var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 @media (max-width:560px){.pcard .ptxt .pnm{font-size:16px}}
-.pfav{flex:none;border:0;font-family:"Segoe UI Symbol","Noto Sans KR",sans-serif;background:rgba(0,0,0,.35);color:#d5dbe0;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pfav{flex:none;border:0;background:rgba(0,0,0,.35);color:#d5dbe0;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .pfav:hover{color:#ff7a9a}.pfav.on{color:#ff5c7f;background:rgba(255,92,127,.18)}
-.rcard .rfav{position:absolute;right:6px;top:6px;z-index:3;color:#ff5c7f;font-size:15px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.pfav svg,.rfav svg{display:block}
+.rcard .rfav{position:absolute;right:5px;bottom:60px;z-index:3;border:0;padding:3px;border-radius:50%;background:rgba(0,0,0,.45);color:#d5dbe0;cursor:pointer;opacity:0;transition:opacity .12s}
+.rcard:hover .rfav,.rcard .rfav:focus-visible,.rcard .rfav.on{opacity:1}
+.rcard .rfav.on{color:#ff5c7f;background:rgba(20,10,14,.6)}
+@media (hover:none){.rcard .rfav{opacity:1}}
 .pcard .ptxt span{font-size:13.5px;color:#d5dbe0;font-family:var(--f-num),var(--f-body)}
 .pcard .ptxt em{font-style:normal;color:#e6c36a}
 .pcard .pwep{position:relative;flex:none;width:52px;height:52px;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
@@ -1441,17 +1445,20 @@ function renderRoster(){
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
     const extra=(g.trial?`<span class="rlv rtr" title="체험 세팅 (육성 안 함)">체험</span>`:`<span class="rlv"><small>Lv.</small>${g.lv??90}</span>`)+`<span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
       (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
-      (on?"":`<span class="roff">미보유</span>`)+((state.fav||{})[c.id]?`<span class="rfav" title="즐겨찾기">♥</span>`:"");
+      (on?"":`<span class="roff">미보유</span>`)+favBtn(c,"rfav");
     return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
   }).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;
 }
+// 즐겨찾기 하트: 글꼴마다 ♥/♡ 크기가 달라 SVG로 그린다 (켜짐 = 채움, 꺼짐 = 외곽선, 같은 크기)
+const HEART=on=>`<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 8 3.4 4.5 7 4.5c2 0 3.6 1.1 5 2.9 1.4-1.8 3-2.9 5-2.9 3.6 0 5.6 3.5 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z" fill="${on?"currentColor":"none"}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
+const favBtn=(c,cls)=>{const on=!!(state.fav||{})[c.id];return `<button type="button" class="${cls}${on?" on":""}" data-fav="${c.id}" aria-pressed="${on}" aria-label="${esc(c.name)} 즐겨찾기" title="즐겨찾기 — 어떤 정렬이든 맨 앞에 보여요">${HEART(on)}</button>`};
 // 프로필 모드 카드: 전신 그림 + 속성·성급·레벨·돌파·무기
 function profCardHTML(c){const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);const pic=cardUrl(c.id);
   return `<div class="rcard pcard ${on?"":"off"}${c.rar===4?" r4":""}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}" style="--ec:var(--${c.el})">
     ${pic?`<div class="pimg" style="background-image:url('${pic}')"></div>`:""}<div class="pgrad"></div>
     <img class="pel" src="icons/el-${c.el}.png" alt="${EL[c.el]}"><span class="pstar">${"★".repeat(c.rar)}</span>
     ${on?"":`<span class="poff">미보유</span>`}
-    <div class="pinfo"><div class="ptxt"><b><span class="pnm">${esc(c.name)}</span><button type="button" class="pfav${(state.fav||{})[c.id]?" on":""}" data-fav="${c.id}" aria-pressed="${!!(state.fav||{})[c.id]}" aria-label="${esc(c.name)} 즐겨찾기" title="즐겨찾기 — 어떤 정렬이든 맨 앞에 보여요">${(state.fav||{})[c.id]?"♥":"♡"}</button></b><span>${g.trial?"체험 세팅":`Lv.${g.lv??90}`} · <em>${+g.chain||0}돌파</em></span></div>
+    <div class="pinfo"><div class="ptxt"><b><span class="pnm">${esc(c.name)}</span>${favBtn(c,"pfav")}</b><span>${g.trial?"체험 세팅":`Lv.${g.lv??90}`} · <em>${+g.chain||0}돌파</em></span></div>
       ${wp.w?`<span class="pwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:""}</div></div>`}
 function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
   if(!on) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
