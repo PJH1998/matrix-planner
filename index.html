@@ -108,6 +108,12 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 .grid .tok.sel .face{outline:3px solid var(--accent);outline-offset:2px}
 body.picking .slot{cursor:copy}body.picking .slot.empty,body.picking .slot.filled .tok{box-shadow:0 0 0 2px rgba(230,195,106,.55);border-radius:10px}body.picking .pool .tok.sel{transform:translateY(-2px)}
 .tok.dragging{opacity:.4}
+.tok{-webkit-user-select:none;user-select:none;-webkit-user-drag:none;touch-action:manipulation}.tok img{-webkit-user-drag:none}
+.dnd-ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;opacity:.9;will-change:transform;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:none}
+body.dnd,body.dnd *{cursor:grabbing!important}
+#pool.over{outline:2px dashed var(--accent);outline-offset:-4px}
+.slot.over{box-shadow:0 0 0 2px #e6c36a,0 0 16px rgba(230,195,106,.45)!important;border-radius:10px}
+.tok[data-drag="1"]{cursor:grab}
 
 /* teams */
 .teams-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
@@ -1229,7 +1235,7 @@ function renderPool(){
   pool.innerHTML=list.map(c=>{
     const max=vigorOf(c.id),left=max-usedCount(c.id);
     const cnt=`<span class="cnt ${max>1?"dbl":""}" title="남은 배치 횟수">${left}/${max}</span>`;
-    return `<div class="tok ${left<=0?"used":""} ${selected===c.id?"sel":""}" draggable="${left>0}" data-id="${c.id}" data-src="pool" role="button" tabindex="0" aria-label="${esc(c.name)} 남은 ${left}회">${tokenHTML(c,cnt)}</div>`;
+    return `<div class="tok ${left<=0?"used":""} ${selected===c.id?"sel":""}" data-drag="${left>0?1:0}" data-id="${c.id}" data-src="pool" role="button" tabindex="0" aria-label="${esc(c.name)} 남은 ${left}회">${tokenHTML(c,cnt)}</div>`;
   }).join("");
 }
 
@@ -1425,7 +1431,7 @@ function renderTeams(){
       const l=sy.links.filter(x=>x.i===si-1&&x.j===si).map(x=>x.txt);return `<span class="lnk ${on?"on":""}" title="${esc(on?l.join("\n"):"연결된 시너지 없음")}">${on?"✓":""}</span>`};
     return `<div class="team${sy.adj.wrap?" wrap":""}" data-team="${i}">
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
-      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" draggable="true" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
+      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" data-drag="1" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
@@ -1681,40 +1687,64 @@ let flashT=null;
 function flash(msg){setSave("busy",msg);clearTimeout(flashT);flashT=setTimeout(()=>setSave("ok",storeMode==="account"?"내 계정에 저장됨":"이 브라우저에 저장됨"),1800)}
 
 /* ---------- events ---------- */
-let dragData=null;
-document.addEventListener("dragstart",e=>{
-  const tk=e.target.closest&&e.target.closest(".tok[draggable=true]"); if(!tk) return;
-  dragData={id:tk.dataset.id,src:tk.dataset.src,team:+tk.dataset.team,slot:+tk.dataset.slot};
-  tk.classList.add("dragging"); try{e.dataTransfer.setData("text/plain",tk.dataset.id);e.dataTransfer.effectAllowed="move"}catch(_){}
-});
-document.addEventListener("dragend",e=>{document.querySelectorAll(".dragging,.over").forEach(n=>n.classList.remove("dragging","over"));
-  // dropped outside any slot while dragging from a slot → leave as is
-  dragData=null});
-/* 놓을 칸 찾기: 칸 위가 아니어도(칸 사이 틈, 파티 카드 여백 등) 같은 파티 카드 안이면 가로 위치가 가장 가까운 칸으로 본다.
-   예전엔 칸 테두리 밖에 놓으면 아무 일도 안 일어나 '가끔 드래그가 안 된다'는 문제가 있었다. */
+/* 드래그 편성: 브라우저 기본 드래그(HTML5 DnD) 대신 포인터 이벤트로 직접 처리한다.
+   (드래그 관련 브라우저 확장이 기본 드래그 이벤트를 가로채면 🚫 표시만 뜨고 놓을 수 없던 문제)
+   · 마우스·펜만 해당. 터치는 기존대로 탭해서 넣기 / 길게 눌러 빼기(스크롤과 안 겹치게).
+   · 누른 뒤 5px 이상 움직이면 드래그 시작, 그 전에 떼면 평소 클릭(첫 빈 칸에 넣기)으로 처리.
+   · 움직임 처리는 프레임당 한 번(requestAnimationFrame), 리스너는 누르고 있는 동안에만 붙인다. */
+let dragData=null,overSlot=null,overPool=false;
+/* 놓을 칸 찾기: 칸 위가 아니어도(칸 사이 틈, 파티 카드 여백 등) 같은 파티 카드 안이면 가로 위치가 가장 가까운 칸으로 본다. */
 function slotAt(e){const t=e.target;if(!t||!t.closest)return null;const s=t.closest(".slot");if(s)return s;
   const card=t.closest(".team");if(!card)return null;const ss=[...card.querySelectorAll(".slot")];if(!ss.length)return null;
   return ss.map(x=>{const r=x.getBoundingClientRect();return [x,Math.abs(e.clientX-(r.left+r.width/2))]}).sort((a,b)=>a[1]-b[1])[0][0]}
-let overSlot=null;
-document.addEventListener("dragover",e=>{if(!dragData)return;const s=slotAt(e);if(overSlot&&overSlot!==s){overSlot.classList.remove("over");overSlot=null}
-  if(s){e.preventDefault();s.classList.add("over");overSlot=s}});
-document.addEventListener("dragleave",e=>{const s=e.target.closest&&e.target.closest(".slot");if(s&&s!==overSlot)s.classList.remove("over")});
-document.addEventListener("drop",e=>{
-  if(overSlot){overSlot.classList.remove("over");overSlot=null}
-  const s=dragData&&slotAt(e);
-  if(s&&dragData){e.preventDefault();const ti=+s.dataset.team,si=+s.dataset.slot;
-    place(dragData.id,ti,si,dragData.src==="slot"?{team:dragData.team,slot:dragData.slot}:null);}
-  else if(dragData&&dragData.src==="slot"&&e.target.closest&&e.target.closest("#pool")){e.preventDefault();unplace(dragData.team,dragData.slot)}
+function setOver(sl){if(overSlot===sl)return;if(overSlot)overSlot.classList.remove("over");overSlot=sl||null;if(overSlot)overSlot.classList.add("over")}
+const DRAG_PX=5;let press=null,ghost=null,rafId=0,lastPt=null,suppressClick=false;
+function dragTargetAt(x,y){if(ghost)ghost.style.visibility="hidden";const el=document.elementFromPoint(x,y);if(ghost)ghost.style.visibility="";
+  return {el,sl:el?slotAt({target:el,clientX:x}):null,pool:!!(el&&el.closest&&el.closest("#pool"))}}
+function dragFrame(){rafId=0;if(!dragData||!lastPt)return;const {x,y}=lastPt;
+  ghost.style.transform=`translate3d(${x-press.ox}px,${y-press.oy}px,0)`;
+  const t=dragTargetAt(x,y);setOver(t.sl);const op=dragData.src==="slot"&&t.pool&&!t.sl;if(op!==overPool){overPool=op;$("#pool").classList.toggle("over",op)}}
+function startDrag(){const tk=press.tk;
+  dragData={id:tk.dataset.id,src:tk.dataset.src,team:+tk.dataset.team,slot:+tk.dataset.slot};
+  tip.classList.remove("on");tipFor=null;if(selected)setPick(null);
+  const r=tk.getBoundingClientRect();ghost=tk.cloneNode(true);ghost.classList.add("dnd-ghost");ghost.removeAttribute("data-id");
+  ghost.style.width=r.width+"px";ghost.style.height=r.height+"px";document.body.appendChild(ghost);
+  tk.classList.add("dragging");document.body.classList.add("dnd")}
+function endDrag(drop){
+  if(rafId){cancelAnimationFrame(rafId);rafId=0}
+  const d=dragData;let t=null;if(drop&&d&&lastPt)t=dragTargetAt(lastPt.x,lastPt.y);
+  setOver(null);if(overPool){overPool=false;$("#pool").classList.remove("over")}
+  if(ghost){ghost.remove();ghost=null}document.querySelectorAll(".tok.dragging").forEach(n=>n.classList.remove("dragging"));document.body.classList.remove("dnd");
   dragData=null;
-});
-document.getElementById("pool").addEventListener("dragover",e=>{if(dragData&&dragData.src==="slot")e.preventDefault()});
+  if(t&&d){if(t.sl)place(d.id,+t.sl.dataset.team,+t.sl.dataset.slot,d.src==="slot"?{team:d.team,slot:d.slot}:null);
+    else if(d.src==="slot"&&t.pool)unplace(d.team,d.slot);}
+}
+function onPMove(e){if(!press||e.pointerId!==press.id)return;lastPt={x:e.clientX,y:e.clientY};
+  if(!dragData){if(Math.hypot(e.clientX-press.x,e.clientY-press.y)<DRAG_PX)return;startDrag()}
+  if(!rafId)rafId=requestAnimationFrame(dragFrame)}
+function onPUp(e){if(!press||e.pointerId!==press.id)return;const was=!!dragData;
+  if(was){lastPt={x:e.clientX,y:e.clientY};endDrag(e.type==="pointerup");suppressClick=true;setTimeout(()=>{suppressClick=false},0)}
+  press=null;removeEventListener("pointermove",onPMove);removeEventListener("pointerup",onPUp);removeEventListener("pointercancel",onPUp)}
+document.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="touch"||e.button!==0||press)return;
+  const tk=e.target.closest&&e.target.closest(".tok[data-drag='1']");if(!tk)return;
+  e.preventDefault(); // 글자 선택·이미지 기본 드래그 방지
+  const r=tk.getBoundingClientRect();press={id:e.pointerId,tk,x:e.clientX,y:e.clientY,ox:e.clientX-r.left,oy:e.clientY-r.top};lastPt=null;
+  addEventListener("pointermove",onPMove,{passive:true});addEventListener("pointerup",onPUp);addEventListener("pointercancel",onPUp)});
+// 드래그를 끝낸 직후 따라오는 클릭(첫 빈 칸에 넣기 등)은 무시
+document.addEventListener("click",e=>{if(suppressClick){e.stopPropagation();e.preventDefault();suppressClick=false}},true);
+addEventListener("keydown",e=>{if(e.key==="Escape"&&dragData){endDrag(false);press=null}});
+addEventListener("blur",()=>{if(dragData){endDrag(false);press=null}});
+document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(".tok"))e.preventDefault()}); // 남은 기본 드래그 차단
 document.addEventListener("contextmenu",e=>{
   const tk=e.target.closest&&e.target.closest(".slot .tok"); if(!tk) return;
   e.preventDefault(); unplace(+tk.dataset.team,+tk.dataset.slot);
 });
 /* 보유 공명자 우클릭 → 칸 고르기: 우클릭한 공명자를 집어 든 상태가 되고, 원하는 칸(빈 칸·찬 칸 모두)을 누르면 거기에 넣는다.
    찬 칸이면 원래 있던 공명자와 바뀐다. 같은 공명자를 다시 우클릭하거나 Esc·빈 곳 클릭이면 취소. */
+function pickHover(e){setOver(slotAt(e))}
 function setPick(id){selected=id;tip.classList.remove("on");tipFor=null;document.body.classList.toggle("picking",!!id);renderPool();
+  if(id)document.addEventListener("mouseover",pickHover);else{document.removeEventListener("mouseover",pickHover);setOver(null)}
   if(id)flash(`${charMap[id].name}: 넣을 칸을 누르세요 (Esc 취소)`)}
 document.getElementById("pool").addEventListener("contextmenu",e=>{
   const tk=e.target.closest(".tok[data-src=pool]");if(!tk)return;e.preventDefault();
@@ -1750,7 +1780,7 @@ document.getElementById("teams").addEventListener("click",e=>{
     if(b.dataset.act==="down"&&i<T.length-1)[T[i+1],T[i]]=[T[i],T[i+1]];
     if(b.dataset.act==="del")T.splice(i,1);
     persist();rerenderPlan();return}
-  if(selected){const s=slotAt(e);if(!s){setPick(null);return}const id=selected;selected=null;document.body.classList.remove("picking");
+  if(selected){const s=slotAt(e);if(!s){setPick(null);return}const id=selected;selected=null;document.body.classList.remove("picking");document.removeEventListener("mouseover",pickHover);setOver(null);
     place(id,+s.dataset.team,+s.dataset.slot,null);
     const el=document.querySelector(`.slot[data-team="${s.dataset.team}"][data-slot="${s.dataset.slot}"]`);if(el){el.classList.add("just");setTimeout(()=>el.classList.remove("just"),700)}}
 });
