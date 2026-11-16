@@ -1687,7 +1687,7 @@ $("#btnClear").addEventListener("click",e=>{
    2) 정석 메인+서브 짝(PAIR_W 궁합 1)을 예상 점수보다 먼저 묶는다.
    3) 남은 메인 딜러는 궁합 또는 반주 이득이 있는 파트너가 있을 때만 짝을 짓는다. 메인 딜러를 모두 쓰려고 하지 않는다.
    4) 센 짝부터 서포터를 넣는다: 궁합 표의 서포터 → 5성 → 4성. 서포터가 남으면 안 쓴 메인 딜러로 파티를 더 만든다.
-   5) 3명을 못 채운 파티는 빼고, 강화 효과·순서를 정한 뒤 예상 점수가 MIN_POINTS(1000점) 미만인 파티는 뺀다. 방랑자는 속성과 관계없이 1명. */
+   5) 3명을 못 채운 파티는 빼고, 파티끼리 서포터를 맞바꿔 전체(강화 효과 포함)가 세지면 바꾼 뒤, 강화 효과·순서를 정한 뒤 예상 점수가 MIN_POINTS(1000점) 미만인 파티는 뺀다. 방랑자는 속성과 관계없이 1명. */
 const PAIR_W=window.PAIR_W||{}, TEAM_PRESETS=window.TEAM_PRESETS||[], MIN_POINTS=window.MIN_POINTS||1000;
 function affinity(main,ids){const t=PAIR_W[main]||{};return ids.filter(x=>x!==main).reduce((a,x)=>a+(t[x]||((PAIR_W[x]||{})[main]||0)*.5),0)}
 function recommendTeams(){
@@ -1725,10 +1725,25 @@ function recommendTeams(){
     const sup=own.filter(x=>isSup(x)&&can(x)).sort((a,b)=>val([m,b])-val([m,a]))[0];if(!sup)return;
     const o=own.filter(x=>can(x)&&x!==m&&x!==sup&&key(x)!==key(m)&&role(x)!=="dps"&&!isSup(x)&&syn2(m,x)).sort((a,b)=>val([m,sup,b])-val([m,sup,a]))[0]; // 궁합·반주 이득 없는 서브는 넣지 않는다
     if(!o)return;const ids=[m,o,sup];if(okIds(ids)){ids.forEach(use);cores.push(ids)}});
+  // 7) 마무리: 파티끼리 세 번째 멤버(서포터 등)를 맞바꾸거나 남은 서포터로 바꿔서 전체가 세지면 바꾼다.
+  //    강화 효과(파워 서킷)까지 넣은 강도로 비교하고, 피해는 강도의 제곱에 가까우므로 제곱 합으로 본다.
+  //    (예: 젠니·페비 + 시그리카·구원에 릴리·벨리나를 줄 때, 앞 파티부터 욕심내면 릴리가 젠니 쪽으로 가지만 시그리카 쪽이 더 크게 오른다)
+  const tv=ids=>{const t={slots:ids.slice(),buff:null};return Math.max(teamCalc(t).base,...(cycle.buffs||[]).map(b=>teamCalc({...t,buff:b.id}).total))};
+  const all=done.concat(cores).filter(ids=>ids.length===3),fixed=new Set(done);
+  const third=ids=>ids.findIndex(isSup)>=0?ids.findIndex(isSup):2;
+  const sq=x=>x*x;
+  for(let it=0,imp=true;imp&&it<4;it++){imp=false;
+    for(let i=0;i<all.length;i++){if(fixed.has(all[i]))continue;
+      for(let j=i+1;j<all.length;j++){if(fixed.has(all[j]))continue;
+        const A=all[i],B=all[j],ia=third(A),ib=third(B);if(A[ia]===B[ib])continue;
+        const A2=A.slice(),B2=B.slice();[A2[ia],B2[ib]]=[B[ib],A[ia]];if(!okIds(A2)||!okIds(B2))continue;
+        if(sq(tv(A2))+sq(tv(B2))>sq(tv(A))+sq(tv(B))+1e-6){all[i]=A2;all[j]=B2;imp=true}}
+      const A=all[i],ia=third(A);if(!isSup(A[ia]))continue;
+      own.filter(x=>isSup(x)&&can(x)&&x!==A[ia]).forEach(x=>{const cur=all[i],A2=cur.slice();A2[third(cur)]=x;if(okIds(A2)&&tv(A2)>tv(cur)+1e-6){left[key(cur[third(cur)])]++;use(x);all[i]=A2;imp=true}});}}
   // 서포터는 항상 3번 칸(2명 파티면 2번 칸 대신 3번 칸)
   const arrange=ids=>{const d=ids.filter(x=>!isSup(x)),su=ids.filter(isSup);const sl=[d[0]||null,d[1]||null,su.length?null:(d[2]||null)];
     su.forEach(x=>{if(!sl[2])sl[2]=x;else sl[sl.indexOf(null)]=x});return sl};
-  return done.concat(cores).filter(ids=>ids.length===3).map(ids=>{const t={slots:arrange(ids),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
+  return all.map(ids=>{const t={slots:arrange(ids),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
 }
 /* 자동 추천 미리보기: 처음 누를 때의 편성을 스냅샷으로 저장하고, 적용을 누르기 전까지는 저장소에 스냅샷 편성을 그대로 둔다.
    여러 번 눌러도 스냅샷은 첫 번째 그대로 → 되돌리기는 항상 자동 추천을 처음 누르기 전으로 돌아간다. */
