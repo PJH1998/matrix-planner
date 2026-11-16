@@ -814,7 +814,7 @@ const COND={
   tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW"]},
   tuneD:{label:"조화 밀집",scope:"team",m:["tuneD"]}, tuneW:{label:"조화 파동",scope:"team",m:["tuneW"]},
   hack:{label:"해킹",scope:"char",m:["hack"]},
-  unison:{label:"합일",scope:"team",m:["unison"]},
+  unison:{label:"합일",scope:"char",m:["unison"],min:2}, // 합일 대응: 합일 공명자 본인만, 파티에 합일 공명자가 2명 이상일 때
   shield:{label:"실드",scope:"team",m:["shield"]}
 };
 // 공명자별 피해 비중(%) — Prydwen Calculations 탭 Damage Profile(1타깃 로테이션). other = 이상 효과·조화도 파괴 등
@@ -824,6 +824,7 @@ function dmgShare(id,types){const p=DMG_PROFILE[id];if(!p)return null;return typ
 // 효과 하나가 공명자 id에게 걸리는 비율(0~1). 피해 유형 조건(일반 공격 피해 +20% 등)은 그 공명자 피해 중 해당 유형 비중만큼만 적용한다.
 function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||!c)return 0;
   if(d.scope==="team")return teamMeets(k,t)?1:0;
+  if(d.min&&t.slots.filter(x=>x&&(synOf(x).m||[]).some(m=>(d.m||[]).includes(m))).length<d.min)return 0;
   if((d.el||[]).includes(c.el))return 1;
   const S=synOf(id);
   if(d.w&&d.w.length){const sh=dmgShare(id,d.w);if(sh!=null)return sh;
@@ -832,9 +833,10 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
   return 0;}
 function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
   return (d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
-function teamMeets(k,t){return t.slots.some(id=>id&&charMeets(k,id))}
+function teamMeets(k,t){const d=COND[k];const n=t.slots.filter(id=>id&&charMeets(k,id)).length;return n>=((d&&d.min)||1)}
 // 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
-function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return false;return d.scope==="team"?teamMeets(k,t):charMeets(k,id)}
+function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return false;if(d.scope==="team")return teamMeets(k,t);
+  if(d.min&&t.slots.filter(x=>x&&(synOf(x).m||[]).some(m=>(d.m||[]).includes(m))).length<d.min)return false;return charMeets(k,id)}
 const selBuff=t=>(cycle.buffs||[]).find(b=>b.id===t.buff);
 
 // 주기 데이터는 cycle.js(window.MATRIX_CYCLE)에서 읽는다. 주기가 바뀌면 cycle.js만 고친다.
@@ -924,7 +926,7 @@ const OUTRO_V={
  hiyuki:{v:{el:20}}, lucilla:{v:{echo:50}}, zhezhi:{v:{el:20,skill:25}}, sanhua:{v:{basic:38}},
  aemeath:{v:{all:10},cond:{m:["burn","tuneW"],v:{all:20}}}, denia:{v:{all:15},cond:{m:["tuneD"],v:{all:40}}},
  lupa:{v:{el:20,basic:25}}, changli:{v:{el:20,lib:25}}, brant:{v:{el:20,skill:25}}, mortefi:{v:{heavy:38}},
- hsin:{v:{el:20},cond:{m:["unison"],v:{all:20}}}, suoming:{v:{el:20},cond:{m:["unison"],v:{el:20,skill:25}}},
+ hsin:{v:{el:20},cond:{m:["unison"],to:1,v:{all:20}}}, suoming:{v:{el:20},cond:{m:["unison"],to:1,v:{el:20,skill:25}}},
  augusta:{v:{all:15}}, rebecca:{v:{all:15,heavy:35}}, rover_e:{v:{},cond:{m:["anom","flare","frost","burn","erosion","frazzle","bane"],v:{all:25}}},
  yinlin:{v:{el:20,lib:25}}, lumi:{v:{skill:38}}, cartethyia:{v:{el:17.5}}, iuno:{v:{heavy:50}}, qiuyuan:{v:{echo:50}},
  aalto:{v:{el:23}}, lynae:{v:{all:15,lib:25}}, zani:{v:{el:20}}, lucy:{v:{basic:25},cond:{m:["hack"],v:{basic:25,all:20}}},
@@ -1015,11 +1017,14 @@ function circuitMul(t,id){
   return {mul:1+add/100,hits};
 }
 /* 반주 이득: 공명자 g의 반주(OUTRO_V)를 공명자 x가 받을 때 x의 피해가 몇 % 늘어나는지 */
-function dmgShare(x,k){const p=DMG_PROFILE[x];if(p)return (p[k]||0)/100;const w=synOf(x).w||[];return w.includes(k)?0.6/w.length:0}
-function outroVals(g,ids){const o=(charMap[g]&&charMap[g].outroV)||OUTRO_V[g];if(!o)return null;
-  if(o.cond&&ids.some(x=>x!==g&&(synOf(x).m||[]).some(m=>o.cond.m.includes(m))))return o.cond.v;return o.v}
-function outroGain(g,x,ids){const v=outroVals(g,ids);if(!v)return 0;const cg=charMap[g],cx=charMap[x];let a=0;
-  Object.entries(v).forEach(([k,n])=>{if(k==="all")a+=n;else if(k==="el"){if(cg.el===cx.el)a+=n/BONUS_BASE}else a+=n*dmgShare(x,k)/BONUS_BASE});
+function typeShare(x,k){const p=DMG_PROFILE[x];if(p)return (p[k]||0)/100;const w=synOf(x).w||[];return w.includes(k)?0.6/w.length:0}
+// cond.to: 받는 공명자 본인이 그 메커니즘을 가져야 cv 적용(예: 합일 버프는 합일 캐릭터만). 없으면 파티에 다른 누가 가져도 적용.
+const hasM=(x,ms)=>(synOf(x).m||[]).some(m=>ms.includes(m));
+function outroVals(g,ids,x){const o=(charMap[g]&&charMap[g].outroV)||OUTRO_V[g];if(!o)return null;if(!o.cond)return o.v;
+  if(o.cond.to)return x&&hasM(x,o.cond.m)&&ids.filter(y=>hasM(y,o.cond.m)).length>=2?o.cond.v:o.v;
+  return ids.some(y=>y!==g&&hasM(y,o.cond.m))?o.cond.v:o.v}
+function outroGain(g,x,ids){const v=outroVals(g,ids,x);if(!v)return 0;const cg=charMap[g],cx=charMap[x];let a=0;
+  Object.entries(v).forEach(([k,n])=>{if(k==="all")a+=n;else if(k==="el"){if(cg.el===cx.el)a+=n/BONUS_BASE}else a+=n*typeShare(x,k)/BONUS_BASE});
   return a/100;}
 const usesAmp=id=>{const c=charMap[id];return c&&c.role==="support"&&(c.amp!=null||AMP[id]!=null)};
 /* 파티 안 반주 배분: 교대 순환(A→B→C→A)에서 각자 반주를 한 번 주고 한 번 받는다. 두 순환 방향 중 이득이 큰 쪽을 쓴다.
