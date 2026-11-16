@@ -538,7 +538,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
     <div class="teams-col">
       <div class="teams-h">
         <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
-        <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도. 최상위 = 실측 기준(매우 잘하는 유저)">숙련도 <select id="skillSel"><option value="top">최상위</option><option value="good">숙련</option><option value="normal">보통</option></select></label>
+        <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도&#10;숙련: 퀵스왑 + 4해방 (실측 기준, ×1)&#10;보통: 평범한 321 사이클 (×0.8)&#10;뉴비: 321 사이클도 잘 못 굴림 (×0.65)&#10;보통·뉴비 배율은 추정치">숙련도 <select id="skillSel"><option value="top" title="퀵스왑 + 4해방">숙련</option><option value="good" title="평범한 321 사이클">보통</option><option value="normal" title="321 사이클도 잘 못 굴림">뉴비</option></select></label>
         <button class="btn pri" id="btnAuto" title="보유 공명자로 파티를 자동으로 짭니다. 센 딜러 조합부터 만들고, 5성 서포터를 센 파티에 먼저 넣습니다.">자동 추천</button>
         <button class="btn ghost" id="btnUndo" hidden>되돌리기</button>
         <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">순서 정렬</button>
@@ -1189,7 +1189,9 @@ function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null
    → 파티 피해(보스 HP 단위) = (강도 / 44.85)^2. 강도는 더하기로 쌓지만 실제 피해는 곱으로 커지기 때문에 제곱에 가깝다.
    실측은 매우 잘하는 유저 기준이라 숙련도 설정으로 낮출 수 있다. */
 const S_REF=47.5, DMG_EXP=2; // 2026-11-16 반주 수치 계산으로 바꾸며 강도 평균이 약 6% 올라 기준값도 같이 올림(44.85 → 47.5)
-const SKILL_LV={top:{label:"최상위",mul:1},good:{label:"숙련",mul:0.8},normal:{label:"보통",mul:0.65}};
+// 숙련 = 퀵스왑 + 4해방(실측 기준) / 보통 = 평범한 321 사이클 / 뉴비 = 321 사이클도 잘 못 굴림. 보통·뉴비 배율은 추정치
+// (저장 키 top/good/normal은 예전 설정과 호환되도록 그대로 둔다)
+const SKILL_LV={top:{label:"숙련",mul:1},good:{label:"보통",mul:0.8},normal:{label:"뉴비",mul:0.65}};
 const skillMul=()=>(SKILL_LV[state.skill]||SKILL_LV.top).mul;
 const partyDamage=score=>Math.pow(Math.max(0,score)/S_REF,DMG_EXP)*skillMul();
 function simulate(teams){
