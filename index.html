@@ -64,6 +64,13 @@ section.view{display:none} section.view.on{display:block}
 .ph .sp{margin-left:auto}
 .lbl{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .pool{position:sticky;top:12px}
+/* 넓은 화면: 세 칸이 각자 스크롤 → 파티가 많아도 공명자 목록이 항상 보인다 */
+@media (min-width:721px){
+  .teams-col,.intel{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:4px}
+  .teams-col .teams-h{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:8px}
+  .pool{height:calc(100vh - 24px);display:flex;flex-direction:column}
+  .pool .grid{max-height:none;flex:1 1 0;min-height:0;align-content:start;grid-auto-rows:max-content}
+}
 .pool .tools{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
 input[type=search],input[type=text],input[type=number],select,textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
 .elf{display:flex;gap:4px;flex-wrap:wrap}
@@ -521,7 +528,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
       <div class="grid" id="pool"></div>
     </aside>
 
-    <div>
+    <div class="teams-col">
       <div class="teams-h">
         <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
         <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도. 최상위 = 실측 기준(매우 잘하는 유저)">숙련도 <select id="skillSel"><option value="top">최상위</option><option value="good">숙련</option><option value="normal">보통</option></select></label>
