@@ -1774,7 +1774,10 @@ const RIGHT_ACTS=[]; // [선택자, 처리 함수(요소)]
 function rightAct(target){for(const [sel,fn] of RIGHT_ACTS){const el=target&&target.closest&&target.closest(sel);if(el){fn(el);return true}}return false}
 let lastRightAt=0;
 document.addEventListener("pointerdown",e=>{if(e.button!==2||e.pointerType==="touch")return;if(rightAct(e.target)){lastRightAt=Date.now()}});
-document.addEventListener("contextmenu",e=>{const hit=RIGHT_ACTS.some(([sel])=>e.target.closest&&e.target.closest(sel));if(!hit)return;
+// 배치·보유 캐릭터 화면에서는 우클릭 기능이 없는 곳에서도 브라우저 메뉴를 띄우지 않는다(입력칸·글 선택 중일 때는 그대로)
+const NO_MENU="#v-plan,#v-roster,#prof";
+document.addEventListener("contextmenu",e=>{const t=e.target;const hit=RIGHT_ACTS.some(([sel])=>t.closest&&t.closest(sel));
+  if(!hit){if(t.closest&&t.closest(NO_MENU)&&!t.closest("input,textarea,select,[contenteditable]")&&!String(getSelection&&getSelection()).trim())e.preventDefault();return}
   e.preventDefault();if(Date.now()-lastRightAt>700)rightAct(e.target)});
 RIGHT_ACTS.push([".slot .tok",tk=>unplace(+tk.dataset.team,+tk.dataset.slot)]);
 /* 보유 공명자 우클릭 → 칸 고르기: 우클릭한 공명자를 집어 든 상태가 되고, 원하는 칸(빈 칸·찬 칸 모두)을 누르면 거기에 넣는다.
