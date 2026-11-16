@@ -1,0 +1,18 @@
+/* 설지 — 응결 · 4★ · 서포터 */
+MP.addChar({
+  id:"baizhi", name:"설지", el:"glacio", rar:4, role:"support",
+  release:6, eid:1103,  // 출시 순서 · encore.moe 번호(이미지)
+
+  // 반주·메커니즘
+  syn:{o:"다음 캐릭터 지속 회복, 회복받으면 전체 피해 +15% (6초)",ob:["all"],w:[],m:["coord"]},
+  // 파티 딜증(%)
+  amp:15,
+
+  // 90레벨 기본 [HP, 공격력, 방어력]
+  base:[12813,213,1002],
+  // 고유 스탯 노드 합계
+  nodes:{heal:12,"hp%":12},
+
+  // 무기 종류
+  wtype:5,
+});

@@ -13,11 +13,16 @@ const API = 'https://api-v2.encore.moe/api/ko/character/';
 const WICON = 'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/';
 const UA = { 'user-agent': 'matrix-planner-build (+https://github.com/PJH1998/matrix-planner)' };
 
-function load(file) {
-  const ctx = { window: {} };
-  vm.runInNewContext(fs.readFileSync(file, 'utf8'), ctx);
-  return ctx.window;
-}
+// 사이트와 같은 순서로 데이터 파일을 한 컨텍스트에 읽는다(등록소 → 데이터). 브라우저 전용 코드는 document가 없어 건너뛴다.
+const ctx = {};
+ctx.window = ctx; // 브라우저처럼 window = 전역
+vm.createContext(ctx);
+const run = (file) => vm.runInContext(fs.readFileSync(file, 'utf8'), ctx, { filename: file });
+run('core/hub.js');
+run('data/weapons.js');
+run('data/chars/_list.js');
+const MP = ctx.window.MP;
+MP.CHAR_LIST.forEach((id) => run(`data/chars/${id}.js`));
 const have = (f) => fs.existsSync(f) && fs.statSync(f).size > 0;
 
 async function download(url, dest) {
@@ -41,8 +46,9 @@ async function pool(items, n, fn) {
   return fails;
 }
 
-const { CHAR_EID = {} } = load('assets.js');
-const { WEAPONS = [] } = load('weapons.js');
+// 공명자 id → encore.moe 번호(공명자 파일의 eid). 번호가 없는 공명자는 portraits/ 이미지를 쓴다.
+const CHAR_EID = Object.fromEntries(MP.CHAR_LIST.map((id) => [id, MP._chars[id] && MP._chars[id].eid]).filter(([, e]) => e != null));
+const WEAPONS = ctx.window.WEAPONS || [];
 
 const charFails = await pool(Object.entries(CHAR_EID), 4, async ([id, eid]) => {
   const sq = path.join(CACHE, 'char', `${id}.webp`);

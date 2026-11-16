@@ -1,0 +1,41 @@
+/* =====================================================================
+   공명자 데이터 — 공명자마다 파일 하나 (data/chars/<id>.js)
+   새 공명자: 파일을 하나 만들고 아래 목록에 id를 추가한다. 목록 순서 = 기본 표시 순서(속성별).
+
+   필드 (없는 값은 생략 — 역할·등급별 기본값을 쓴다)
+     id, name, el, rar, role    기본 정보. role: dps 메인 딜러 / sub 서브 딜러 / support 서포터
+     release                    출시 순서(클수록 최근)        eid   encore.moe 공명자 번호(이미지 받기용)
+     syn   {o, ob, p, w, m}     반주·메커니즘 (출처: encore.moe 반주·고유 스킬 설명)
+             o  반주 요약 / ob 반주 버프 대상(basic·heavy·skill·lib·echo·coord·el·all)
+             p  1이면 파티 전체 버프 / w 주력 피해 유형 / m 메커니즘(frost·burn·erosion·flare·frazzle·bane·anom·tuneD·tuneW·hack·unison·shield·echo·coord)
+     outro {v, cond}            반주 버프 수치(%). cond: 파티에 메커니즘 m이 있으면 v 대신 cond.v (to:1이면 받는 쪽 본인이 m을 가져야 함)
+     profile                    피해 비중(%) — Prydwen Calculations Damage Profile. other = 이상 효과·조화도 파괴 등
+     dps, chain                 S0 기본 DPS, 0~6체인 DPS 배율 (Prydwen Calculations, 2026-11)
+     amp                        서포터(·일부 서브)의 파티 딜증(%) 추정치
+     supCond(x, ids, main, C)   서포터 조건부 보정. 파티 ids의 공명자 x가 받는 추가 피해 {a, t}.
+                                다른 공명자 정보는 C(중개자 컨텍스트)로만 읽는다: C.el(id) · C.has(id, 메커니즘[]) · C.share(id, 피해유형) · C.BONUS_BASE
+     needs {m, mul, txt}        파티에 메커니즘 m을 가진 다른 공명자가 없으면 피해 × mul
+     base                       90레벨 기본 [HP, 공격력, 방어력] (encore.moe)
+     ijk                        '이 정도면 잘 키웠다' 기준 스탯 {main:[atk|hp, 값], cr, cd, el(3코 속성 개수), cfg, node}
+                                출처: 아카라이브 명조 채널 위키 「이정도면 잘키웠다표」 (CC BY-SA 4.0), 2026-11-14 판
+     statScale                  공격력 대신 비례하는 주 스탯(hp)
+     nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)
+     wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)
+     pairs                      자동 추천 궁합 {상대 id: 가중치} (1 = 정석 파트너, 0.5~0.8 = 무난한 대체)
+   ===================================================================== */
+(function(g){
+const LIST=[
+ "hiyuki","lucilla","suisui","carlotta","zhezhi","lingyang","sanhua","baizhi","youhu",
+ "mornye","aemeath","denia","jingran","lupa","galbrena","encore","changli","brant","mortefi","chixia",
+ "hsin","suoming","augusta","rebecca","rover_e","calcharo","xiangliyao","yinlin","buling","yuanwu","lumi",
+ "sigrika","ciaccona","cartethyia","iuno","qiuyuan","qingxiao","jiyan","rover_a","jianxin","aalto","yangyang",
+ "shorekeeper","lynae","verina","luuk","jinhsi","phoebe","zani","lucy","rover_s","lily",
+ "chisa","xuanling","phrolova","cantarella","camellya","roccia","rover_h","danjin","taoqi"
+];
+g.MP.CHAR_LIST=LIST;
+// 브라우저: 목록 순서대로 공명자 파일을 이어서 읽는다(파싱 중 동기 로드 → 본문 스크립트보다 먼저 등록됨)
+if(typeof document!=="undefined"&&document.readyState==="loading"){
+  const base=(document.currentScript&&document.currentScript.src||"").replace(/[^/]*$/,"");
+  document.write(LIST.map(id=>`<script src="${base}${id}.js"><\/script>`).join(""));
+}
+})(typeof window!=="undefined"?window:globalThis);

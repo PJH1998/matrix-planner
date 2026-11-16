@@ -603,11 +603,11 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
     <div class="panel">
       <div class="ph">주기 데이터 편집 (JSON) <span class="sp"></span></div>
       <div class="card-b">
-        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 이 브라우저에만 적용됩니다. 모두에게 반영하려면 이 JSON을 <code>cycle.js</code>의 <code>window.MATRIX_CYCLE=</code> 뒤에 붙여 넣고 커밋하세요.</p>
+        <p class="prose">주기가 바뀌면 여기서 보스, 강화 효과(파워 서킷), 배치 횟수 2회 공명자, 피해 증가 공명자를 고쳐 저장하세요. 저장한 값은 이 브라우저에만 적용됩니다. 모두에게 반영하려면 이 JSON을 <code>data/cycle.js</code>의 <code>window.MATRIX_CYCLE=</code> 뒤에 붙여 넣고 커밋하세요.</p>
         <textarea id="cycleJson" spellcheck="false" aria-label="주기 데이터 JSON"></textarea>
         <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn pri" id="cycleSave">적용</button>
-          <button class="btn" id="cycleReset">기본값(cycle.js)으로 되돌리기</button>
+          <button class="btn" id="cycleReset">기본값(data/cycle.js)으로 되돌리기</button>
         </div>
         <div class="msg" id="cycleMsg"></div>
       </div>
@@ -684,11 +684,18 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 </main>
 
 <script src="firebase-config.js"></script>
-<script src="cycle.js"></script>
-<script src="weapons.js"></script>
-<script src="stats.js"></script>
+<!-- 데이터 등록소 → 데이터 파일 → 중개자(CharDB · BossDB · EchoDB) 순서로 읽는다 -->
+<script src="core/hub.js"></script>
+<script src="data/cycle.js"></script>
+<script src="data/conds.js"></script>
+<script src="data/weapons.js"></script>
+<script src="data/echoes.js"></script>
+<script src="data/teams.js"></script>
+<script src="data/chars/_list.js"></script>
+<script src="core/chardb.js"></script>
+<script src="core/bossdb.js"></script>
+<script src="core/echodb.js"></script>
 <script src="updates.js"></script>
-<script src="teams.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -703,150 +710,18 @@ const ICON={ // original simple glyphs, not game assets
  spectro:'<svg viewBox="0 0 14 14" fill="#fff"><path d="M7 1l1.4 4.6L13 7l-4.6 1.4L7 13l-1.4-4.6L1 7l4.6-1.4z"/></svg>',
  havoc:'<svg viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M7 2a5 5 0 0 1 0 10a2.5 2.5 0 0 1 0-5a2.5 2.5 0 0 0 0-5z" fill="#fff"/></svg>'
 };
-// id, 이름, 속성, 성급, 역할
-const DEFAULT_CHARS=[
- ["hiyuki","히유키","glacio",5,"dps"],["lucilla","루실라","glacio",5,"sub"],["suisui","수수","glacio",5,"support"],
- ["carlotta","카를로타","glacio",5,"dps"],["zhezhi","절지","glacio",5,"sub"],["lingyang","능양","glacio",5,"dps"],
- ["sanhua","산화","glacio",4,"sub"],["baizhi","설지","glacio",4,"support"],["youhu","유호","glacio",4,"support"],
- ["mornye","모니에","fusion",5,"support"],["aemeath","에이메스","fusion",5,"dps"],["denia","데니아","fusion",5,"sub"],
- ["jingran","경연","fusion",5,"dps"],["lupa","루파","fusion",5,"sub"],["galbrena","갈브레나","fusion",5,"dps"],
- ["encore","앙코","fusion",5,"dps"],["changli","장리","fusion",5,"dps"],["brant","브렌트","fusion",5,"sub"],
- ["mortefi","모르테피","fusion",4,"sub"],["chixia","치샤","fusion",4,"dps"],
- ["hsin","여우의 별자리","electro",5,"dps"],["suoming","쇄명","electro",5,"dps"],["augusta","아우구스타","electro",5,"dps"],
- ["rebecca","레베카","electro",5,"sub"],["rover_e","방랑자(전도)","electro",5,"sub"],["calcharo","카카루","electro",5,"dps"],
- ["xiangliyao","상리요","electro",5,"dps"],["yinlin","음림","electro",5,"sub"],["buling","복링","electro",4,"support"],
- ["yuanwu","연무","electro",4,"sub"],["lumi","루미","electro",4,"sub"],
- ["sigrika","시그리카","aero",5,"dps"],["ciaccona","샤콘","aero",5,"sub"],["cartethyia","카르티시아","aero",5,"dps"],
- ["iuno","유노","aero",5,"sub"],["qiuyuan","구원","aero",5,"sub"],["qingxiao","청초","aero",5,"dps"],
- ["jiyan","기염","aero",5,"dps"],["rover_a","방랑자(기류)","aero",5,"sub"],["jianxin","감심","aero",5,"support"],
- ["aalto","알토","aero",4,"sub"],["yangyang","양양","aero",4,"sub"],
- ["shorekeeper","파수인","spectro",5,"support"],["lynae","린네","spectro",5,"sub"],["verina","벨리나","spectro",5,"support"],
- ["luuk","루크 · 헤르센","spectro",5,"dps"],["jinhsi","금희","spectro",5,"dps"],["phoebe","페비","spectro",5,"sub"],
- ["zani","젠니","spectro",5,"dps"],["lucy","루시","spectro",5,"dps"],["rover_s","방랑자(회절)","spectro",5,"sub"],["lily","릴리","spectro",5,"support"],
- ["chisa","치사","havoc",5,"sub"],["xuanling","양양·현령","havoc",5,"dps"],["phrolova","플로로","havoc",5,"dps"],
- ["cantarella","칸타렐라","havoc",5,"sub"],["camellya","카멜리아","havoc",5,"dps"],["roccia","로코코","havoc",5,"sub"],
- ["rover_h","방랑자(인멸)","havoc",5,"dps"],["danjin","단근","havoc",4,"dps"],["taoqi","도기","havoc",4,"support"]
-].map(([id,name,el,rar,role])=>({id,name,el,rar,role}));
+/* 데이터는 중개자로만 읽는다 — 공명자: CharDB(data/chars/*.js) · 보스·주기: BossDB(data/cycle.js, conds.js) · 에코: EchoDB(data/echoes.js) */
+const {CharDB,BossDB,EchoDB}=window.MP;
+CharDB.check();
+const DEFAULT_CHARS=CharDB.defaults(); // 기본 공명자 목록 {id,name,el,rar,role}
 
-/* ---------- synergy data (출처: encore.moe 반주 스킬·고유 스킬 설명) ----------
-   o  : 반주 스킬 요약
-   ob : 반주 버프 대상 — basic 일반 공격 / heavy 강공격 / skill 공명 스킬 / lib 공명 해방 / echo 에코 어빌리티 / coord 협동 공격 / el 자기 속성 피해 / all 전체 피해
-   p  : 1이면 파티 전체(또는 필드)에 걸리는 버프, 없으면 다음 등장 캐릭터
-   w  : 주력 피해 유형 (반주 버프를 받으면 좋은 유형)
-   m  : 메커니즘 — frost 서리 / burn 불꽃 / erosion 풍식 / flare 전자 / frazzle 광학 / bane 암흑 / anom 이상 효과 전반 / tuneD 조화 밀집 / tuneW 조화 파동 / hack 해킹 / unison 합일 / shield 실드 / echo 에코 */
-const SYN={
- hiyuki:{o:"근처 아군이 서리 효과 대상에게 주는 응결 피해 +20% (20초)",ob:["el"],p:1,w:["lib"],m:["frost"]},
- lucilla:{o:"서리 모드: 서리 효과 피해 +60% (30초) · 에코 모드: 다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["basic"],m:["frost","echo"]},
- suisui:{o:"파티 전체 피해 +25% (30초), 꽃향기의 편지 소모량에 따라 추가 효과",ob:["all"],p:1,w:[],m:["frost","anom"]},
- carlotta:{o:"응결 피해 (버프 없음)",ob:[],w:["skill"],m:[]},
- zhezhi:{o:"다음 캐릭터 응결 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic","skill"],m:["coord"]},
- lingyang:{o:"응결 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
- sanhua:{o:"다음 캐릭터 일반 공격 피해 +38% (14초)",ob:["basic"],w:[],m:[]},
- baizhi:{o:"다음 캐릭터 지속 회복, 회복받으면 전체 피해 +15% (6초)",ob:["all"],w:[],m:["coord"]},
- youhu:{o:"다음 캐릭터 협동 공격 피해 +100% (28초)",ob:["coord"],w:[],m:["coord"]},
- mornye:{o:"파티 전체 피해 +25% (30초)",ob:["all"],p:1,w:[],m:["tuneW","tuneD"]},
- aemeath:{o:"파티 전체 피해 +10%, 조화 파동 이탈·불꽃 효과 부여 시 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW","burn"]},
- denia:{o:"불꽃 모드: 불꽃 효과 피해 +60% (30초) · 조화 밀집 모드: 다음 캐릭터 전체 피해 +15%, 조화 밀집 이탈 부여 시 +40% (16초)",ob:["all"],w:["lib"],m:["burn","tuneD"]},
- jingran:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy"],m:["shield"]},
- lupa:{o:"다음 캐릭터 용융 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["lib"],m:[]},
- galbrena:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy","echo"],m:["echo"]},
- encore:{o:"대지의 불길 지속 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
- changli:{o:"다음 캐릭터 용융 피해 +20%, 공명 해방 피해 +25% (10초)",ob:["el","lib"],w:["skill","lib"],m:[]},
- brant:{o:"다음 캐릭터 용융 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic"],m:[]},
- mortefi:{o:"다음 캐릭터 강공격 피해 +38% (14초)",ob:["heavy"],w:[],m:[]},
- chixia:{o:"용융 피해 (버프 없음)",ob:[],w:["skill"],m:[]},
- hsin:{o:"합일 모드: 합일 보유 캐릭터 전체 피해 +20% (30초) · 전자 모드: 파티 전도 피해 +20% (20초)",ob:["all","el"],p:1,w:["skill"],m:["unison","flare"]},
- suoming:{o:"다음 캐릭터 전도 피해 +20%, 합일 버프 보유 시 공명 스킬 피해 +25% (8초)",ob:["el","skill"],w:["basic"],m:["unison"]},
- augusta:{o:"다음 캐릭터 전체 피해 +15% (14초)",ob:["all"],w:["heavy"],m:["shield"]},
- rebecca:{o:"다음 캐릭터 전체 피해 +15%, 강공격 피해 최대 +35% (14초)",ob:["all","heavy"],w:["basic"],m:["hack"]},
- rover_e:{o:"다음 캐릭터가 이상 효과 부여 시 전체 피해 +25% (14초)",ob:["all"],w:[],m:["flare","anom"]},
- calcharo:{o:"사냥 그림자 전도 피해 (버프 없음)",ob:[],w:["lib"],m:[]},
- xiangliyao:{o:"다음 캐릭터 일반 공격 명중 시 협동 공격 (8초)",ob:[],w:["lib"],m:["coord"]},
- yinlin:{o:"다음 캐릭터 전도 피해 +20%, 공명 해방 피해 +25% (14초)",ob:["el","lib"],w:["skill"],m:[]},
- buling:{o:"지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:["flare"]},
- yuanwu:{o:"공진 수치 피해 (버프 없음)",ob:[],w:[],m:[]},
- lumi:{o:"다음 캐릭터 공명 스킬 피해 +38% (10초)",ob:["skill"],w:[],m:[]},
- sigrika:{o:"기류 피해, 에코 어빌리티 사용 시 목표 정체",ob:[],w:["echo"],m:["echo"]},
- ciaccona:{o:"주변 적이 받는 풍식 효과 피해 +100% (30초)",ob:[],p:1,w:["lib"],m:["erosion"]},
- cartethyia:{o:"이상 효과 대상에게 주는 기류 피해 +17.5% (20초)",ob:["el"],p:1,w:["basic"],m:["erosion","anom"]},
- iuno:{o:"다음 캐릭터 강공격 피해 +50% (14초)",ob:["heavy"],w:["lib"],m:["shield"]},
- qiuyuan:{o:"다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["heavy","echo"],m:["echo"]},
- qingxiao:{o:"기류 피해 (버프 없음)",ob:[],w:["basic","heavy"],m:["tuneD"]},
- jiyan:{o:"다음 캐릭터 강공격 명중 시 협동 공격 (8초)",ob:[],w:["heavy"],m:["coord"]},
- rover_a:{o:"파티 전체 침식의 경계: 풍식 효과 최대 스택 +3 (30초)",ob:[],p:1,w:[],m:["erosion","anom"]},
- jianxin:{o:"다음 캐릭터 공명 해방 피해 +38% (14초)",ob:["lib"],w:[],m:[]},
- aalto:{o:"다음 캐릭터 기류 피해 +23% (14초)",ob:["el"],w:[],m:[]},
- yangyang:{o:"다음 캐릭터 공명 에너지 회복 (5초)",ob:[],w:[],m:[]},
- shorekeeper:{o:"파티 전체 피해 +15%, 피격 회피 보조 (30초)",ob:["all"],p:1,w:[],m:[]},
- lynae:{o:"다음 캐릭터 전체 피해 +15%, 공명 해방 피해 +25% (14초)",ob:["all","lib"],w:["basic"],m:["tuneW","tuneD"]},
- verina:{o:"다음 캐릭터 지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:["coord"]},
- luuk:{o:"회절 피해 (버프 없음)",ob:[],w:["basic"],m:["tuneD"]},
- jinhsi:{o:"봄의 빛 공생 강화 (20초)",ob:[],w:["skill"],m:["coord"]},
- phoebe:{o:"고해 상태: 회절 저항 -10%, 광학 효과 피해 +100% (30초)",ob:[],p:1,w:["heavy"],m:["frazzle"]},
- zani:{o:"강렬한 불기운 대상에게 주는 회절 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["frazzle"]},
- lucy:{o:"다음 캐릭터 일반 공격 피해 +25%, 해킹 이탈 부여 시 전체 피해 +20%",ob:["basic","all"],w:["heavy"],m:["hack"]},
- lily:{o:"파티 전체 피해 +25% (30초). 공명 해방 후 다른 캐릭터가 변주 스킬을 쓰면 꿈내음(파티 공격력 증가, 최대 4스택). 강공격 종막 뒤 반주 시 빛바랜 꿈결: 합일 버프 스택당 공격력 증가, 에코 어빌리티 크리티컬·크리티컬 피해 증가",ob:["all"],p:1,w:[],m:["unison","echo","shield"]},
- rover_s:{o:"다음 캐릭터 주변 정체 구역 (3초)",ob:[],w:[],m:["frazzle"]},
- chisa:{o:"파티 전체 이상 효과·자기 폭발 최대 스택 +3 (20초)",ob:[],p:1,w:["lib"],m:["anom","bane"]},
- xuanling:{o:"암흑 효과 부여 시 파티 인멸 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["bane"]},
- phrolova:{o:"다음 캐릭터 인멸 피해 +20%, 강공격 피해 +25% (14초)",ob:["el","heavy"],w:["echo","skill"],m:["echo"]},
- cantarella:{o:"다음 캐릭터 인멸 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic"],m:[]},
- camellya:{o:"인멸 피해 (버프 없음)",ob:[],w:["basic"],m:[]},
- roccia:{o:"다음 캐릭터 인멸 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["heavy"],m:[]},
- rover_h:{o:"인멸 필드 지속 피해 (버프 없음)",ob:[],w:["basic","lib"],m:[]},
- danjin:{o:"다음 캐릭터 인멸 피해 +23% (14초)",ob:["el"],w:["heavy"],m:[]},
- taoqi:{o:"다음 캐릭터 공명 스킬 피해 +38% (14초)",ob:["skill"],w:[],m:[]}
-};
-/* 추천 조합: 2~3명 모두 같은 파티에 있으면 표시 */
-const COMBOS=[
- {ids:["qingxiao","denia","mornye"],name:"조화 밀집"},
- {ids:["hsin","suoming"],name:"합일"},
- {ids:["augusta","iuno"],name:"아우구스타 정석"},
- {ids:["lucy","rebecca"],name:"해킹"},
- {ids:["cartethyia","ciaccona","rover_a"],name:"풍식"},
- {ids:["zani","phoebe"],name:"광학"},
- {ids:["hiyuki","lucilla"],name:"서리"},
- {ids:["xuanling","chisa"],name:"암흑"},
- {ids:["aemeath","mornye"],name:"조화 파동"},
- {ids:["jinhsi","zhezhi","shorekeeper"],name:"금희 정석"},
- {ids:["carlotta","zhezhi"],name:"카를로타 정석"},
- {ids:["xiangliyao","yinlin"],name:"전도 정석"},
- {ids:["jiyan","mortefi"],name:"강공격 정석"},
- {ids:["phrolova","cantarella"],name:"인멸 정석"},
- {ids:["camellya","sanhua"],name:"일반 공격 정석"}
-];
 const DT={basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티",coord:"협동 공격",all:"전체 피해"};
 const MT={frost:"서리 효과",burn:"불꽃 효과",erosion:"풍식 효과",flare:"전자 효과",frazzle:"광학 효과",bane:"암흑 효과",anom:"이상 효과",tuneD:"조화 밀집",tuneW:"조화 파동",hack:"해킹",unison:"합일",shield:"실드",echo:"에코",coord:"협동 공격"};
-const ANOM=["frost","burn","erosion","flare","frazzle","bane"];
+const ANOM=BossDB.anom();
 
-/* ---------- 파워 서킷 조건 표 ----------
-   cycle.js의 buffs[].effects[].cond 와 bosses[].effects[].tags 가 이 키를 쓴다.
-   scope "char": 조건을 만족하는 공명자에게만 적용 / "team": 파티원 중 한 명이라도 만족하면 파티 전원에게 적용
-   판정: w(주력 피해 유형) · el(속성) · m(메커니즘) 중 하나라도 겹치면 만족. 새 조건은 여기에 한 줄 추가한다. */
-const COND={
-  basic:{label:"일반 공격",scope:"char",w:["basic"]},
-  heavy:{label:"강공격",scope:"char",w:["heavy"]},
-  skill:{label:"공명 스킬",scope:"char",w:["skill"]},
-  lib:{label:"공명 해방",scope:"char",w:["lib"]},
-  echo:{label:"에코 어빌리티",scope:"char",w:["echo"],m:["echo"]},
-  coord:{label:"협동 공격",scope:"char",w:["coord"]},
-  glacio:{label:"응결",scope:"char",el:["glacio"]}, fusion:{label:"용융",scope:"char",el:["fusion"]},
-  electro:{label:"전도",scope:"char",el:["electro"]}, aero:{label:"기류",scope:"char",el:["aero"]},
-  spectro:{label:"회절",scope:"char",el:["spectro"]}, havoc:{label:"인멸",scope:"char",el:["havoc"]},
-  negative:{label:"이상 효과",scope:"team",m:ANOM.concat("anom")},
-  frost:{label:"서리 효과",scope:"team",m:["frost"]}, burn:{label:"불꽃 효과",scope:"team",m:["burn"]},
-  erosion:{label:"풍식 효과",scope:"team",m:["erosion"]}, flare:{label:"전자 효과",scope:"team",m:["flare"]},
-  frazzle:{label:"광학 효과",scope:"team",m:["frazzle"]}, bane:{label:"암흑 효과",scope:"team",m:["bane"]},
-  tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW"]},
-  tuneD:{label:"조화 밀집",scope:"team",m:["tuneD"]}, tuneW:{label:"조화 파동",scope:"team",m:["tuneW"]},
-  hack:{label:"해킹",scope:"char",m:["hack"]},
-  unison:{label:"합일",scope:"char",m:["unison"],min:2}, // 합일 대응: 합일 공명자 본인만, 파티에 합일 공명자가 2명 이상일 때
-  shield:{label:"실드",scope:"team",m:["shield"]}
-};
-// 공명자별 피해 비중(%) — Prydwen Calculations 탭 Damage Profile(1타깃 로테이션). other = 이상 효과·조화도 파괴 등
-const DMG_PROFILE={"aalto":{"basic":35.7,"skill":31.0,"lib":14.8,"intro":6.6,"echo":11.9},"aemeath":{"basic":8.3,"lib":67.6,"echo":2.6,"other":21.4},"augusta":{"heavy":88.1,"skill":9.5,"intro":1.1,"echo":1.3},"brant":{"basic":83.5,"lib":13.0,"intro":3.6},"calcharo":{"basic":25.2,"skill":2.3,"lib":54.5,"intro":5.1,"outro":7.6,"echo":5.2},"camellya":{"basic":67.9,"lib":15.6,"intro":1.9,"outro":6.0,"echo":8.5},"cantarella":{"basic":69.1,"heavy":2.3,"skill":7.2,"intro":3.2,"outro":9.8,"echo":8.3},"carlotta":{"basic":1.0,"skill":84.8,"intro":2.6,"outro":7.6,"echo":3.9},"cartethyia":{"basic":42.9,"skill":8.2,"lib":27.8,"intro":2.0,"echo":1.3,"other":17.7},"changli":{"basic":1.8,"heavy":1.8,"skill":68.7,"lib":19.7,"intro":2.0,"echo":5.9},"chisa":{"basic":2.7,"heavy":4.3,"skill":4.1,"lib":84.5,"intro":2.6,"echo":1.8},"chixia":{"skill":47.8,"lib":32.5,"intro":2.8,"outro":9.6,"echo":7.3},"ciaccona":{"basic":20.1,"heavy":17.0,"skill":3.9,"lib":28.6,"intro":4.4,"echo":10.6,"other":15.3},"danjin":{"basic":4.7,"heavy":24.4,"skill":25.5,"lib":29.7,"intro":5.6,"echo":10.1},"denia":{"basic":2.1,"skill":1.7,"lib":60.8,"intro":1.7,"echo":4.4,"other":29.2},"encore":{"basic":47.0,"skill":15.0,"lib":14.6,"intro":3.5,"outro":12.9,"echo":7.1},"galbrena":{"heavy":36.8,"intro":0.9,"outro":9.7,"echo":52.6},"hiyuki":{"basic":1.2,"skill":6.7,"lib":64.9,"echo":3.0,"other":24.3},"hsin":{"basic":7.6,"skill":85.9,"lib":2.1,"outro":1.7,"echo":2.6},"iuno":{"skill":3.9,"lib":90.6,"intro":1.3,"outro":1.0,"echo":3.1},"jianxin":{"basic":30.9,"heavy":12.1,"skill":7.9,"lib":36.1,"intro":5.0,"echo":8.0},"jingran":{"basic":0.7,"heavy":84.1,"skill":3.6,"intro":1.3,"outro":8.4,"echo":1.9},"jinhsi":{"skill":79.1,"lib":15.2,"intro":4.0,"echo":1.7},"jiyan":{"heavy":81.7,"skill":8.9,"intro":1.9,"outro":3.0,"echo":4.4},"lingyang":{"basic":33.8,"heavy":3.2,"skill":31.7,"lib":7.3,"intro":4.3,"outro":13.9,"echo":5.8},"lucilla":{"basic":31.3,"skill":7.7,"intro":1.3,"echo":3.7,"other":56.0},"lucy":{"basic":4.0,"heavy":77.3,"skill":2.3,"intro":1.4,"echo":3.4,"other":11.6},"lumi":{"basic":36.0,"skill":26.3,"lib":29.6,"intro":3.5,"echo":4.6},"lupa":{"basic":5.4,"heavy":1.3,"skill":12.1,"lib":76.0,"echo":5.3},"luuk":{"basic":88.9,"intro":2.9,"outro":6.6,"echo":1.6},"lynae":{"basic":42.4,"lib":14.5,"intro":3.6,"outro":1.6,"echo":4.4,"other":33.6},"mortefi":{"basic":12.1,"skill":20.8,"lib":61.3,"intro":3.6,"echo":2.2},"phoebe":{"basic":13.9,"heavy":42.8,"skill":1.2,"lib":16.8,"intro":1.9,"outro":17.6,"echo":3.5,"other":2.3},"phrolova":{"basic":1.3,"skill":31.9,"echo":66.7},"qingxiao":{"basic":22.8,"heavy":31.2,"skill":1.4,"lib":28.5,"intro":1.3,"outro":10.8,"echo":4.1},"qiuyuan":{"heavy":57.2,"echo":42.8},"rebecca":{"basic":56.4,"heavy":3.5,"skill":4.1,"intro":3.4,"echo":1.2,"other":31.3},"roccia":{"basic":4.9,"heavy":69.8,"skill":1.5,"intro":3.8,"outro":10.8,"echo":9.2},"rover_a":{"basic":5.0,"skill":67.3,"lib":18.9,"intro":6.6,"echo":2.2},"rover_e":{"basic":12.8,"skill":50.1,"lib":28.8,"intro":3.9,"echo":0.4,"other":3.9},"rover_h":{"basic":31.6,"heavy":3.4,"skill":18.5,"lib":26.2,"intro":2.2,"outro":7.2,"echo":10.9},"rover_s":{"basic":4.6,"heavy":9.2,"skill":31.8,"lib":35.5,"intro":5.5,"echo":5.5,"other":8.1},"sanhua":{"heavy":23.0,"skill":40.6,"lib":23.8,"intro":3.9,"echo":8.7},"sigrika":{"basic":4.0,"intro":0.7,"outro":4.2,"echo":91.0},"suoming":{"basic":74.9,"lib":22.5,"echo":2.6},"taoqi":{"basic":43.1,"skill":9.7,"lib":37.3,"intro":4.0,"echo":5.8},"xiangliyao":{"basic":8.2,"heavy":2.0,"skill":12.9,"lib":66.6,"intro":2.1,"outro":3.0,"echo":5.2},"yangyang":{"basic":31.8,"skill":13.5,"lib":42.1,"intro":3.1,"echo":9.5},"xuanling":{"basic":3.1,"heavy":90.6,"intro":0.8,"outro":2.9,"echo":2.6},"yinlin":{"basic":1.8,"heavy":6.8,"skill":68.0,"lib":14.3,"intro":2.4,"echo":6.8},"yuanwu":{"skill":48.5,"lib":39.6,"intro":4.9,"echo":7.0},"zani":{"basic":1.1,"heavy":68.9,"skill":6.6,"lib":13.4,"intro":1.3,"outro":7.3,"echo":1.4},"zhezhi":{"basic":79.4,"heavy":4.9,"skill":5.8,"intro":4.8,"echo":5.1}};
-const DT_KEYS=["basic","heavy","skill","lib","echo"];
-function dmgShare(id,types){const p=DMG_PROFILE[id];if(!p)return null;return types.reduce((a,k)=>a+(p[k]||0),0)/100;}
+// 파워 서킷·보스 효과 조건 표(data/conds.js)
+const COND=BossDB.conds();
+const dmgShare=(id,types)=>CharDB.shareOf(id,types);
 // 효과 하나가 공명자 id에게 걸리는 비율(0~1). 피해 유형 조건(일반 공격 피해 +20% 등)은 그 공명자 피해 중 해당 유형 비중만큼만 적용한다.
 function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||!c)return 0;
   if(d.scope==="team")return teamMeets(k,t)?1:0;
@@ -855,7 +730,7 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
   const S=synOf(id);
   if(d.w&&d.w.length){const sh=dmgShare(id,d.w);if(sh!=null)return sh;
     const w=(S.w||[]);const n=d.w.filter(x=>w.includes(x)).length;if(n)return n/Math.max(1,w.length);}
-  if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&DMG_PROFILE[id]))return 1;
+  if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&CharDB.profile(id)))return 1;
   return 0;}
 function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
   return (d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
@@ -865,14 +740,13 @@ function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return fals
   if(d.min&&t.slots.filter(x=>x&&(synOf(x).m||[]).some(m=>(d.m||[]).includes(m))).length<d.min)return false;return charMeets(k,id)}
 const selBuff=t=>(cycle.buffs||[]).find(b=>b.id===t.buff);
 
-// 주기 데이터는 cycle.js(window.MATRIX_CYCLE)에서 읽는다. 주기가 바뀌면 cycle.js만 고친다.
-const DEFAULT_CYCLE=window.MATRIX_CYCLE||{name:"",period:"",bosses:[],buffs:[],vigor2:[],emergency:null,dmgBonus:{},examples:[]};
+// 주기 데이터는 BossDB가 data/cycle.js에서 읽는다. 주기가 바뀌면 data/cycle.js만 고친다.
 
-const EXAMPLE_TEAMS=(DEFAULT_CYCLE.examples||[]).map(t=>({slots:[0,1,2].map(i=>(t.slots||[])[i]||null),buff:t.buff||null,example:true}));
+const EXAMPLE_TEAMS=BossDB.examples().map(t=>({slots:[0,1,2].map(i=>(t.slots||[])[i]||null),buff:t.buff||null,example:true}));
 
 /* ---------- admin mode ----------
    주기 설정 탭은 관리자 모드에서만 보인다. 주소 뒤에 ?admin=1 을 붙여 한 번 열면 이 브라우저에 기억되고, ?admin=0 으로 끈다.
-   (정적 사이트라 진짜 잠금은 아님. 다른 사람이 켜도 자기 브라우저에만 적용되고, 모두에게 보이는 값은 cycle.js뿐이다.) */
+   (정적 사이트라 진짜 잠금은 아님. 다른 사람이 켜도 자기 브라우저에만 적용되고, 모두에게 보이는 값은 data/cycle.js뿐이다.) */
 const IS_ADMIN=(()=>{try{const q=new URLSearchParams(location.search).get("admin");
   if(q==="1")localStorage.setItem("mp-admin","1");else if(q==="0")localStorage.removeItem("mp-admin");
   return localStorage.getItem("mp-admin")==="1";}catch(e){return false}})();
@@ -905,15 +779,13 @@ function normalize(s){
 function derive(){
   chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
   charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
-  for(const k in _dpsAvg)delete _dpsAvg[k];if(typeof _syn!=="undefined")for(const k in _syn)delete _syn[k];
+  for(const k in _dpsAvg)delete _dpsAvg[k];
+  CharDB.use(chars); // 사용자가 고친 공명자 값을 중개자에 알린다
   chars.forEach(c=>{ if(!(c.id in state.owned)) state.owned[c.id]=true; });
-  cycle=(IS_ADMIN&&state.cycle)||DEFAULT_CYCLE; // 주기 수정값은 관리자 모드에서만 사용
+  BossDB.use(IS_ADMIN&&state.cycle||null); // 주기 수정값은 관리자 모드에서만 사용
+  cycle=BossDB.cycle();
 }
-function vigorOf(id){
-  let v=(cycle.vigor2||[]).includes(id)?2:1;
-  if(cycle.emergency&&cycle.emergency.id===id) v+= (cycle.emergency.extraVigor||1);
-  return v;
-}
+const vigorOf=id=>BossDB.vigor(id);
 // 방랑자는 속성이 달라도 한 명 — 어느 속성이든 하나가 편성되면 다른 속성 방랑자도 쓴 것으로 센다
 const sameChar=(a,b)=>a===b||(!!a&&!!b&&a.startsWith("rover_")&&b.startsWith("rover_"));
 function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(sameChar(s,id))n++}));return n}
@@ -922,73 +794,30 @@ function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(sam
    캐릭터 점수 = 14 × 무기 성능% × DPS 배율(메인·서브 공통 평균 대비) × 레벨(또는 스탯) × 공명 체인 배율 × 주기 피해 증가
    파티 강도 = Σ(캐릭터 점수 × 역할 비중 × (1 + 받은 반주·파티 버프) × 파워 서킷) × (1 + 서포터 딜증%) × (1 + 메커니즘·추천 조합%)
      역할 비중: 메인 1 / 서브 0.5 / 서포터 0.2. 서포터 없는 파티에서 반주 이득을 못 받는 공명자는 ×0.75
-     반주: 교대 순환(A→B→C→A)으로 각자 한 번 주고 받는다. 이득 = 버프% × 받는 쪽 피해 비중(DMG_PROFILE) ÷ 1.9 (OUTRO_V) */
-// 캐릭터별 0~6체인 DPS 배율 (Prydwen 'Calculations' 탭의 S0 대비 DPS %, 1타깃 기준. 2026-11 수집)
-const CHAIN_DATA={"aalto":[1,1.0,1.067,1.313,1.374,1.421,1.52],"augusta":[1,1.17,1.464,1.723,1.815,1.815,2.466],"brant":[1,1.158,1.563,1.92,1.92,1.995,2.487],"camellya":[1,1.102,1.354,1.521,1.592,1.709,2.169],"cantarella":[1,1.183,1.564,1.843,1.843,1.859,2.288],"chixia":[1,1.05,1.05,1.077,1.077,1.196,1.196],"ciaccona":[1,1.123,1.193,1.22,1.397,1.469,1.599],"danjin":[1,1.101,1.208,1.254,1.288,1.452,1.557],"encore":[1,1.038,1.071,1.071,1.151,1.162,1.243],"hsin":[1,1.089,1.286,1.591,1.685,1.685,2.692],"iuno":[1,1.128,1.312,1.556,1.556,1.65,2.158],"jinhsi":[1,1.151,1.151,1.328,1.425,1.642,2.014],"jiyan":[1,1.0,1.111,1.364,1.461,1.714,2.248],"lucilla":[1,1.063,1.25,1.409,1.416,1.444,2.152],"lucy":[1,1.055,1.313,1.782,1.879,1.879,2.622],"lupa":[1,1.159,1.338,1.738,2.103,2.187,2.524],"lynae":[1,1.07,1.197,1.442,1.523,1.651,1.898],"mortefi":[1,1.052,1.052,1.09,1.418,1.504,1.633],"phrolova":[1,1.077,1.316,1.744,1.87,1.87,2.626],"qingxiao":[1,1.151,1.329,1.611,1.713,1.73,2.33],"rover_e":[1,1.0,1.0,1.084,1.138,1.209,1.209],"sigrika":[1,1.071,1.392,1.549,1.661,1.707,2.723],"suoming":[1,1.111,1.257,1.478,1.591,1.656,2.037],"taoqi":[1,1.0,1.084,1.084,1.084,1.16,1.189],"xiangliyao":[1,1.147,1.246,1.371,1.416,1.79,2.142],"xuanling":[1,1.105,1.278,1.555,1.65,1.65,2.743],"zani":[1,1.213,1.42,1.558,1.676,1.722,2.098],"zhezhi":[1,1.099,1.206,1.383,1.461,1.825,2.159],"aemeath":[1,1.069,1.304,1.689,1.785,1.785,3.175],"calcharo":[1,1.0,1.003,1.094,1.179,1.191,1.3],"carlotta":[1,1.104,1.334,1.68,1.781,1.84,2.336],"cartethyia":[1,1.146,1.507,1.884,1.994,1.994,2.455],"changli":[1,1.003,1.176,1.246,1.336,1.646,2.065],"chisa":[1,1.184,1.597,2.022,2.022,2.181,2.801],"denia":[1,1.068,1.411,2.031,2.126,2.172,3.172],"galbrena":[1,1.078,1.347,1.619,1.738,1.769,2.508],"hiyuki":[1,1.134,1.358,1.787,1.885,1.963,2.603],"jingran":[1,1.074,1.441,1.663,1.753,1.753,2.813],"lingyang":[1,1.0,1.0,1.041,1.123,1.163,1.282],"lumi":[1,1.0,1.031,1.075,1.137,1.137,1.166],"luuk":[1,1.136,1.416,1.766,1.887,1.939,2.768],"phoebe":[1,1.106,1.29,1.615,1.792,1.863,1.995],"qiuyuan":[1,1.153,1.301,1.589,1.724,1.867,2.192],"rebecca":[1,1.021,1.177,1.464,1.597,1.684,2.127],"roccia":[1,1.04,1.222,1.442,1.787,1.881,2.288],"rover_a":[1,1.0,1.0,1.084,1.14,1.181,1.302],"rover_h":[1,1.025,1.025,1.025,1.117,1.161,1.361],"rover_s":[1,1.086,1.197,1.197,1.197,1.272,1.406],"sanhua":[1,1.0,1.0,1.129,1.232,1.576,1.734],"yangyang":[1,1.0,1.0,1.034,1.119,1.308,1.336],"yinlin":[1,1.034,1.075,1.402,1.49,1.569,1.764],"yuanwu":[1,1.0,1.0,1.238,1.238,1.316,1.471]};
-// 캐릭터별 S0 기본 DPS (Prydwen Calculations, 1타깃 솔로 로테이션). 같은 역할 평균 대비 비율을 기본 체급으로 쓴다.
-const BASE_DPS={"aalto":12903,"aemeath":146568,"augusta":117278,"brant":78893,"calcharo":29219,"camellya":74249,"encore":31763,"rover_h":28228,"yuanwu":26470,"cantarella":40355,"carlotta":90807,"cartethyia":107200,"changli":68304,"chisa":31826,"chixia":29162,"ciaccona":84287,"danjin":16075,"denia":83102,"galbrena":116333,"hiyuki":162781,"hsin":215294,"iuno":112013,"jingran":167329,"jinhsi":96558,"jiyan":58922,"lingyang":25234,"lucilla":91534,"lucy":104445,"lumi":10762,"lupa":55225,"luuk":127869,"lynae":79761,"mortefi":29027,"phoebe":93822,"phrolova":132778,"qingxiao":169516,"qiuyuan":31079,"rebecca":71049,"roccia":47605,"rover_a":19408,"rover_e":41311,"rover_s":21732,"sanhua":32793,"sigrika":153622,"suoming":68857,"taoqi":7222,"xiangliyao":73383,"yangyang":16094,"xuanling":198998,"yinlin":58753,"zani":92760,"zhezhi":55428};
+     반주: 교대 순환(A→B→C→A)으로 각자 한 번 주고 받는다. 이득 = 버프% × 받는 쪽 피해 비중(profile) ÷ 1.9 (outro) */
+
 const DPS_EXP=0.75, DPS_CLAMP=[0.4,2]; // 계산 조건(무기·로테이션·패치) 차이를 감안해 비율을 완만하게 반영
 const _dpsAvg={};
-function dpsFactor(id){const c=charMap[id];if(!c)return 1;const v=c.baseDps!=null?+c.baseDps:BASE_DPS[id];if(!v)return 1;
+function dpsFactor(id){const c=charMap[id];if(!c)return 1;const v=CharDB.baseDps(id);if(!v)return 1;
   // 메인·서브 딜러를 같은 평균으로 나눈다 → 서브 딜러는 실제 DPS만큼 낮게 나온다(예전엔 역할별 평균이라 서브가 메인급으로 부풀었다)
-  if(_dpsAvg.all==null){const xs=chars.filter(x=>x.role!=="support").map(x=>x.baseDps!=null?+x.baseDps:BASE_DPS[x.id]).filter(Boolean);_dpsAvg.all=xs.reduce((a,b)=>a+b,0)/(xs.length||1);}
+  if(_dpsAvg.all==null){const xs=chars.filter(x=>x.role!=="support").map(x=>CharDB.baseDps(x.id)).filter(Boolean);_dpsAvg.all=xs.reduce((a,b)=>a+b,0)/(xs.length||1);}
   return clamp(Math.pow(v/_dpsAvg.all,DPS_EXP),DPS_CLAMP[0],DPS_CLAMP[1]);}
-// CHAIN_DATA에 없는 캐릭터용 역할별 평균 (위 데이터의 메인 딜러 28명 / 서브 딜러 23명 평균).
-// 서포터는 Prydwen에 DPS 계산이 없어 딜증(AMP)에 곱하는 완만한 배율을 쓴다.
+// 체인 데이터(공명자 파일의 chain)가 없는 캐릭터용 역할별 평균 (위 데이터의 메인 딜러 28명 / 서브 딜러 23명 평균).
+// 서포터는 Prydwen에 DPS 계산이 없어 딜증(amp)에 곱하는 완만한 배율을 쓴다.
 const CHAIN_MUL={
   dps:[1.0, 1.09, 1.27, 1.49, 1.58, 1.66, 2.21],
   sub:[1.0, 1.07, 1.21, 1.42, 1.52, 1.62, 1.92],
   support:[1,1.03,1.06,1.1,1.13,1.16,1.2]};
 function chainMul(id){const c=charMap[id];const ch=clamp(Math.round(+((state.growth[id]||{}).chain)||0),0,6);
-  const t=(c&&c.chainMul)||CHAIN_DATA[id]||CHAIN_MUL[c&&c.role]||CHAIN_MUL.sub;return t[ch]||1;}
+  const t=CharDB.chain(id)||CHAIN_MUL[c&&c.role]||CHAIN_MUL.sub;return t[ch]||1;}
 const ROLE_W={main:1,dps:0.5,sub:0.5,support:0.2}; // 파티 내 피해 비중 (메인 딜러는 1)
-// 서포터 딜증(%) 추정치 — 반주·고유 스킬·공명 체인 0 기준 파티 전체 피해 증가. 메인 딜러 본인에게는 적용하지 않는다.
-// 서포터의 반주 버프는 이 값에 포함돼 있으므로 OUTRO_V로 따로 계산하지 않는다(서포터 중 AMP가 없는 캐릭터만 OUTRO_V 사용).
-// 서브 딜러는 반주를 OUTRO_V로 계산하고, 수치로 옮기기 어려운 효과(이상 효과 스택 등)만 여기에 둔다.
-const AMP={lily:40,shorekeeper:40,verina:30,mornye:35,suisui:35,baizhi:15,buling:20,youhu:10,jianxin:10,
-  chisa:20,ciaccona:20,rover_a:15,phoebe:20};
-/* 반주(변주 아웃트로)·파티 버프 수치 (%). 키: el 자기 속성 / all 전체 피해(심화) / basic·heavy·skill·lib·echo 피해 유형.
-   cond: 파티에 해당 메커니즘(m)을 가진 다른 공명자가 있으면 v 대신 cv를 쓴다. 파티 버프 여부는 SYN의 p.
-   실제 이득 = all은 그대로, el은 (같은 속성일 때) v ÷ (1 + 평소 피해 보너스 90%), 피해 유형은 v × 받는 쪽 피해 비중(DMG_PROFILE) ÷ 1.9 */
-const OUTRO_V={
- hiyuki:{v:{el:20}}, lucilla:{v:{echo:50}}, zhezhi:{v:{el:20,skill:25}}, sanhua:{v:{basic:38}},
- aemeath:{v:{all:10},cond:{m:["burn","tuneW"],v:{all:20}}}, denia:{v:{all:15},cond:{m:["tuneD"],v:{all:40}}},
- lupa:{v:{el:20,basic:25}}, changli:{v:{el:20,lib:25}}, brant:{v:{el:20,skill:25}}, mortefi:{v:{heavy:38}},
- hsin:{v:{el:20},cond:{m:["unison"],to:1,v:{all:20}}}, suoming:{v:{el:20},cond:{m:["unison"],to:1,v:{el:20,skill:25}}},
- augusta:{v:{all:15}}, rebecca:{v:{all:15,heavy:35}}, rover_e:{v:{},cond:{m:["anom","flare","frost","burn","erosion","frazzle","bane"],v:{all:25}}},
- yinlin:{v:{el:20,lib:25}}, lumi:{v:{skill:38}}, cartethyia:{v:{el:17.5}}, iuno:{v:{heavy:50}}, qiuyuan:{v:{echo:50}},
- aalto:{v:{el:23}}, lynae:{v:{all:15,lib:25}}, zani:{v:{el:20}}, lucy:{v:{basic:25},cond:{m:["hack"],v:{basic:25,all:20}}},
- xuanling:{v:{el:20}}, phrolova:{v:{el:20,heavy:25}}, cantarella:{v:{el:20,skill:25}}, roccia:{v:{el:20,basic:25}},
- danjin:{v:{el:23}}, taoqi:{v:{skill:38}}, jianxin:{v:{lib:38}}
-};
-/* 메커니즘 의존: 해당 메커니즘을 가진 파티원이 없으면 피해 배율을 낮춘다(추정치).
-   금희: 파티원 협동 공격 피해마다 「봄의 빛」 2pt(속성 피해는 1pt) — 절지·벨리나·설지 등 협동 공격 파트너가 없으면 스택이 느려진다.
-   Prydwen 금희 DPS는 절지 파티 기준이므로 파트너가 없을 때만 깎는다. */
-const NEEDS={jinhsi:{m:"coord",mul:0.85,txt:"협동 공격 파트너 없음"}};
-/* 서포터 조건부 버프 (encore.moe 스킬 설명 기준, 수치는 추정) — 기본 딜증(AMP)에 더해 특정 조합에서만 붙는 몫.
-   반환: 공명자 x가 받는 추가 피해 비율(0.15 = +15%)과 표시 문구.
-   · 수수 공명 해방(천리강산): 암흑 효과 소모 후 인멸 피해가 방어력 6%·인멸 저항 12% 무시 → 암흑 파티의 인멸 공명자 +15%
-                              이상 효과 스택 최대치 +3 → 이상 효과 피해 비중 × 30% (치사의 같은 효과와는 중첩 안 됨)
-   · 릴리 빛바랜 꿈결: 합일 대응 가능 시 합일 버프 1스택당 공격력(최대 4스택) → 합일 공명자 +14%
-                       에코 어빌리티 크리티컬·크리티컬 피해 증가 → 에코 피해 비중 × 12%
-   · 모니에 간섭 표기: 조화 파동·밀집 간섭 상태 목표에게 파티 피해 증가(최대 40%, 공명 효율 비례) → 조화 파티 +20%
-   · 복령 뇌법: 변주 두 번 뒤 파티 공명 스킬 피해 보너스 +25% → 공명 스킬 비중 × 25% ÷ 1.9
-   · 감심 반주: 다음 캐릭터 공명 해방 피해 +38% → 메인 딜러 해방 비중 × 38% ÷ 1.9
-   그 밖의 서포터(파수인·벨리나·설지)는 조건 없는 파티 버프라 AMP에 이미 포함. 유호(협동 공격 +100%)는 협동 공격 피해 비중 데이터가 없어 반영하지 않음 */
-const SUP_COND={
- suisui:(x,ids)=>{let a=0;const t=[];
-   if(ids.some(y=>hasM(y,["bane"]))&&charMap[x].el==="havoc"){a+=0.15;t.push("암흑: 인멸 저항 무시")}
-   const sh=((DMG_PROFILE[x]||{}).other||0)/100;
-   if(sh>0&&!ids.includes("chisa")&&ids.some(y=>hasM(y,["frost","burn","erosion","frazzle","flare"]))){a+=sh*0.3;t.push("이상 효과 스택 +3")}
-   return {a,t}},
- mornye:(x,ids)=>ids.some(y=>y!=="mornye"&&hasM(y,["tuneD","tuneW"]))?{a:0.20,t:["조화 간섭 표기: 피해 증가"]}:{a:0,t:[]},
- buling:x=>{const sh=((DMG_PROFILE[x]||{}).skill||0)/100;return sh>0.05?{a:sh*0.25/BONUS_BASE,t:["공명 스킬 피해 보너스 +25%"]}:{a:0,t:[]}},
- jianxin:(x,ids,main)=>{if(x!==main)return {a:0,t:[]};const sh=((DMG_PROFILE[x]||{}).lib||0)/100;return sh>0.05?{a:sh*0.38/BONUS_BASE,t:["반주: 공명 해방 피해 +38%"]}:{a:0,t:[]}},
- lily:(x,ids)=>{let a=0;const t=[];
-   if(hasM(x,["unison"])&&ids.filter(y=>hasM(y,["unison"])).length>=2){a+=0.14;t.push("합일: 공격력")}
-   const e=((DMG_PROFILE[x]||{}).echo||0)/100;if(e>0.05){a+=e*0.12;t.push("에코 크리티컬")}
-   return {a,t}}
-};
+// 서포터 딜증(%) 추정치(공명자 파일의 amp) — 반주·고유 스킬·공명 체인 0 기준 파티 전체 피해 증가. 메인 딜러 본인에게는 적용하지 않는다.
+// 서포터의 반주 버프는 이 값에 포함돼 있으므로 outro로 따로 계산하지 않는다(서포터 중 amp가 없는 캐릭터만 outro 사용).
+// 서브 딜러는 반주를 outro로 계산하고, 수치로 옮기기 어려운 효과(이상 효과 스택 등)만 amp에 둔다.
+/* 반주(변주 아웃트로)·파티 버프 수치(공명자 파일의 outro, %). 키: el 자기 속성 / all 전체 피해(심화) / basic·heavy·skill·lib·echo 피해 유형.
+   실제 이득 = all은 그대로, el은 (같은 속성일 때) v ÷ (1 + 평소 피해 보너스 90%), 피해 유형은 v × 받는 쪽 피해 비중(profile) ÷ 1.9
+   메커니즘 의존(공명자 파일의 needs): 해당 메커니즘을 가진 파티원이 없으면 피해 배율을 낮춘다(예: 금희 협동 공격 파트너).
+   서포터 조건부 버프(공명자 파일의 supCond): 기본 딜증(amp)에 더해 특정 조합에서만 붙는 몫. 공명자 파일은 다른 공명자 정보를 SUP_CTX로만 읽는다. */
 const BONUS_BASE=1.9; // 평소 피해 보너스 합(≈90%) — 같은 종류 보너스는 더하기라 실제 이득이 줄어든다
 const MAIN_SUB_RATIO=1.3; // 서브 딜러 점수가 메인 딜러 후보보다 30% 넘게 높으면 서브 딜러를 메인으로 본다
 const NOSYN_W=0.75, NOSYN_MIN=0.05; // 서포터 없는 파티에서 다른 둘에게 반주 이득을 5% 미만 받는 공명자는 비중 ×0.75
@@ -1002,14 +831,14 @@ const REF_STEP={5:3,4:2,3:1.5}; // 재련 1단계당 성능 % (추정)
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
 const weaponIcon=w=>gameImg.weapon.has(w.id)?`img/weapon/${w.id}.webp`:WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
 const _perf={};
-function perfList(cid){if(_perf[cid])return _perf[cid];const l=((window.WEAPON_PERF||{})[cid]||[]).filter(x=>WMAP[x[0]]);
+function perfList(cid){if(_perf[cid])return _perf[cid];const l=CharDB.weaponPerf(cid).filter(x=>WMAP[x[0]]);
   const mx=Math.max(0,...l.map(x=>x[2]));const seen=new Set();
   return _perf[cid]=l.filter(x=>!seen.has(x[0])&&seen.add(x[0])).map(([id,r,p])=>({id,r,p:p/mx*100})).sort((a,b)=>b.p-a.p);}
 function weaponPct(cid,wid,ref){const w=WMAP[wid];if(!w)return null;const l=perfList(cid);const e=l.find(x=>x.id===wid);
   let base,baseR;
   if(e){base=e.p;baseR=e.r}else{const same=l.filter(x=>WMAP[x.id].q===w.q);base=same.length?Math.min(...same.map(x=>x.p))-3:({5:85,4:72,3:60}[w.q]||55);baseR=w.q===5?1:5}
   return base*(1+(REF_STEP[w.q]||2)/100*(ref-baseR));}
-function charWType(cid){const c=charMap[cid];return (c&&c.wtype)||(window.CHAR_WTYPE||{})[cid]||null}
+const charWType=cid=>CharDB.wtype(cid);
 function defaultWeapon(cid){const c=charMap[cid];const g=state.growth[cid]||{};const want=+g.wr||(c&&c.rar===5?5:4);
   const l=perfList(cid);const best=l.find(x=>WMAP[x.id].q===want)||l[0];if(best)return best.id;
   const t=charWType(cid);const w=Object.values(WMAP).find(w=>w.type===t&&w.q===want);return w?w.id:null;}
@@ -1034,18 +863,17 @@ function weaponOf(cid){const g=state.growth[cid]||{};
      무기는 '패시브 몫'만 곱한다 = 무기 성능 % ÷ (내 무기 스탯 배율 ÷ 최고 무기 스탯 배율).
    공명 체인 배율은 스탯 화면에 안 잡히는 효과(조건부 버프·추가타)가 대부분이라 그대로 곱한다.
    기준 피해 보너스 = 속성(3코 속성 개수 × 30 + 세트 10 + 속성 노드 12) + 주력 유형 10. 비워 둔 칸은 이 기준값으로 채운다. */
-const STAT_SCALE={cartethyia:"hp",jingran:"hp"}; // 공격력이 아닌 HP/방어력에 비례하는 공명자
 const TYPE_REF=10, FLAT_ATK=350, FLAT_HP=2300;
 const BONUS_KEYS={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
 function bonusKeysOf(id){const S=synOf(id);return ["el",...(S.w||[]).filter(k=>BONUS_KEYS[k])];}
-function scaleOf(id){const c=charMap[id];return (c&&c.statScale)||STAT_SCALE[id]||"atk"}
-function ijkOf(id){const I=(window.IJK||{})[id];if(I)return I;const c=charMap[id]||{};const sc=scaleOf(id);
+const scaleOf=id=>CharDB.scale(id); // 공격력이 아닌 HP에 비례하는 공명자는 공명자 파일의 statScale
+function ijkOf(id){const I=CharDB.ijk(id);if(I)return I;const c=charMap[id]||{};const sc=scaleOf(id);
   return {main:[sc,sc==="hp"?45000:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
 function elRefOf(id){const I=ijkOf(id);return I.el*30+10+(I.node?12:0)}
 const _wst=id=>(window.WEAPON_STATS||{})[id]||null;
 function bestWeaponId(cid){const l=perfList(cid);return l.length?l[0].id:defaultWeapon(cid)}
 // 무기를 바꿨을 때 기준 스탯에서 달라지는 값(무기 기본 공격력 · 부옵션)
-function statsWithWeapon(cid,wid){const I=ijkOf(cid);const sc=I.main[0];const base=(window.CHAR_BASE||{})[cid]||[11000,400,1150];
+function statsWithWeapon(cid,wid){const I=ijkOf(cid);const sc=I.main[0];const base=CharDB.base(cid)||[11000,400,1150];
   const r={main:I.main[1],cr:I.cr,cd:I.cd};const W0=_wst(bestWeaponId(cid)),W1=_wst(wid);if(!W0||!W1||bestWeaponId(cid)===wid)return r;
   const sub=(W,k)=>W[1]===k?W[2]:0;
   if(sc==="atk"){const B=base[1];const P0=Math.max(0,(I.main[1]-FLAT_ATK)/(B+W0[0])-1);const P1=P0-sub(W0,"atk%")/100+sub(W1,"atk%")/100;r.main=(B+W1[0])*(1+P1)+FLAT_ATK}
@@ -1060,19 +888,21 @@ function statFactor(id){
   const sc=scaleOf(id);const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
   const b=st.b||{};const has=k=>b[k]!=null&&b[k]!=="";
   const el=has("el")?+b.el:elRefOf(id);
-  const ks=bonusKeysOf(id).filter(k=>k!=="el");const p=DMG_PROFILE[id]||{};
+  const ks=bonusKeysOf(id).filter(k=>k!=="el");const p=CharDB.profile(id)||{};
   const wt=k=>(p[k]||0)>0?p[k]:1;const tw=ks.reduce((a,k)=>a+wt(k),0);
   const typeB=ks.length?ks.reduce((a,k)=>a+(has(k)?+b[k]:TYPE_REF)*wt(k),0)/tw:TYPE_REF;
   const bonus=el+typeB;
   const f=clamp(expDmg(main,cr,cd,bonus)/refDmg(id),0.4,2);
   return {f,sc,crit:1+Math.min(cr,100)/100*(cd/100-1),bonus};
 }
+// 서포터 조건부 보정에 넘기는 중개 컨텍스트 — 공명자 파일이 다른 공명자를 직접 참조하지 않게 한다
+const SUP_CTX={el:id=>(charMap[id]||{}).el,has:(id,ms)=>CharDB.has(id,ms),share:(id,k)=>CharDB.share(id,k),BONUS_BASE};
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
   const tr=!!g.trial;
   const lv=tr?90:clamp(+g.lv||90,1,90);
-  const hasDps=c.baseDps!=null||BASE_DPS[id]!=null; // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
+  const hasDps=CharDB.hasDps(id); // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
   const wp=weaponOf(id);
   const sf=tr?null:statFactor(id);
   let s=(hasDps?10:(c.rar===5?10:6));
@@ -1081,12 +911,12 @@ function charScore(id){
   else s+=4;
   s*=dpsFactor(id);
   if(sf) s*=sf.f; else s*=0.5+0.5*(lv/90); // 스탯을 입력했으면 레벨 대신 스탯으로 계산
-  s*=c.role==='support'&&!CHAIN_DATA[id]?1:chainMul(id);
+  s*=c.role==='support'&&!CharDB.hasChainData(id)?1:chainMul(id);
   if(tr) s*=TRIAL_MUL;
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
   return s;
 }
-function ampOf(id){const c=charMap[id];if(!c)return 0;const a=c.amp!=null?+c.amp:(AMP[id]||0);
+function ampOf(id){const c=charMap[id];if(!c)return 0;const a=CharDB.amp(id);
   const ch=clamp(Math.round(+((state.growth[id]||{}).chain)||0),0,6);return a*(CHAIN_MUL.support[ch]);}
 // 파워 서킷(강화 효과) 반영: 조건을 만족하는 공명자 점수에 효과 수치(%)를 곱한다
 function circuitMul(t,id){
@@ -1095,17 +925,17 @@ function circuitMul(t,id){
   (buff.effects||[]).forEach(e=>{const v=+e.dmg||0;const w=v?condWeight(e.cond,t,id):0;if(w>0){add+=v*w;hits.push(e.text+(w<1?` (${Math.round(w*100)}% 적용)`:""))}});
   return {mul:1+add/100,hits};
 }
-/* 반주 이득: 공명자 g의 반주(OUTRO_V)를 공명자 x가 받을 때 x의 피해가 몇 % 늘어나는지 */
-function typeShare(x,k){const p=DMG_PROFILE[x];if(p)return (p[k]||0)/100;const w=synOf(x).w||[];return w.includes(k)?0.6/w.length:0}
+/* 반주 이득: 공명자 g의 반주(outro)를 공명자 x가 받을 때 x의 피해가 몇 % 늘어나는지 */
+const typeShare=(x,k)=>CharDB.typeShare(x,k);
 // cond.to: 받는 공명자 본인이 그 메커니즘을 가져야 cv 적용(예: 합일 버프는 합일 캐릭터만). 없으면 파티에 다른 누가 가져도 적용.
-const hasM=(x,ms)=>(synOf(x).m||[]).some(m=>ms.includes(m));
-function outroVals(g,ids,x){const o=(charMap[g]&&charMap[g].outroV)||OUTRO_V[g];if(!o)return null;if(!o.cond)return o.v;
+const hasM=(x,ms)=>CharDB.has(x,ms);
+function outroVals(g,ids,x){const o=CharDB.outro(g);if(!o)return null;if(!o.cond)return o.v;
   if(o.cond.to)return x&&hasM(x,o.cond.m)&&ids.filter(y=>hasM(y,o.cond.m)).length>=2?o.cond.v:o.v;
   return ids.some(y=>y!==g&&hasM(y,o.cond.m))?o.cond.v:o.v}
 function outroGain(g,x,ids){const v=outroVals(g,ids,x);if(!v)return 0;const cg=charMap[g],cx=charMap[x];let a=0;
   Object.entries(v).forEach(([k,n])=>{if(k==="all")a+=n;else if(k==="el"){if(cg.el===cx.el)a+=n/BONUS_BASE}else a+=n*typeShare(x,k)/BONUS_BASE});
   return a/100;}
-const usesAmp=id=>{const c=charMap[id];return c&&c.role==="support"&&(c.amp!=null||AMP[id]!=null)};
+const usesAmp=id=>{const c=charMap[id];return c&&c.role==="support"&&CharDB.hasAmp(id)};
 /* 파티 안 반주 배분: 교대 순환(A→B→C→A)에서 각자 반주를 한 번 주고 한 번 받는다. 두 순환 방향 중 이득이 큰 쪽을 쓴다.
    파티 버프(SYN의 p)는 순환과 관계없이 전원(본인 포함)에게. 반환: gain = 받는 이득 합, from = 다른 공명자에게서 받은 이득 */
 function outroMap(ids,main,wOf){
@@ -1122,13 +952,13 @@ function teamCalc(t){
   const main=mainDps(t);r.main=main;
   const wOf=id=>id===main?ROLE_W.main:(ROLE_W[charMap[id].role]||0.5);
   const om=outroMap(ids,main,wOf);r.gain=om.gain;r.links=om.links;
-  ids.forEach(g=>{const f=SUP_COND[g];if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids,main);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
+  ids.forEach(g=>{const f=CharDB.supCond(g);if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids,main,SUP_CTX);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
   const noSup=!ids.some(id=>charMap[id].role==="support");
   let dmg=0,dmgC=0;
   ids.forEach(id=>{let w=wOf(id);
     const ampIn=ids.filter(x=>x!==id&&charMap[x].role!=="support").reduce((a,x)=>a+ampOf(x),0)/100; // 수치로 못 옮긴 서브 딜러 버프(이상 효과 스택 등)도 받은 것으로 친다
     if(noSup&&ids.length===3&&om.from[id]+ampIn<NOSYN_MIN){w*=NOSYN_W;r.weak.push(id)}
-    const nd=(charMap[id].needs)||NEEDS[id];if(nd&&!ids.some(x=>x!==id&&(synOf(x).m||[]).includes(nd.m))){w*=nd.mul;r.needs.push(id)}
+    const nd=CharDB.needs(id);if(nd&&!ids.some(x=>x!==id&&(synOf(x).m||[]).includes(nd.m))){w*=nd.mul;r.needs.push(id)}
     const v=charScore(id)*w*(1+om.gain[id]);dmg+=v;dmgC+=v*circuitMul(t,id).mul;});
   r.amp=ids.filter(id=>id!==main).reduce((a,id)=>a+(usesAmp(id)?ampOf(id):(charMap[id].role==="support"?0:ampOf(id))),0);
   const sy=teamSynergy(t);let syn=0;const seen=new Set();
@@ -1233,11 +1063,10 @@ function renderFilter(){
   box.innerHTML=`<button data-el="" aria-pressed="${!ui.el}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.el===e}"><img class="eli" src="icons/el-${e}.png" alt=""></button>`).join("");
 }
 // 공명자 정렬: rar 5성 먼저(같으면 속성 순) / desc·asc 강함순(캐릭터 점수) / name 이름순. ownedFirst면 보유 공명자를 앞에
-// 출시 순서 (클수록 최근). 실제 배너 순서 기준 (1.0 초기 캐릭터는 초상화 번호)
+// 출시 순서는 공명자 파일의 release (클수록 최근). 실제 배너 순서 기준 (1.0 초기 캐릭터는 초상화 번호)
 // (3.0 린네→모니에, 3.1 에이메스→루크, 3.2 시그리카, 3.3 히유키→데니아, 3.4 루시·레베카→루실라). 신캐는 숫자를 이어서 추가
-const RELEASE={"hiyuki":66,"lucilla":69,"suisui":71,"carlotta":32,"zhezhi":26,"lingyang":14,"sanhua":7,"baizhi":6,"youhu":28.5,"mornye":61,"aemeath":62,"denia":67,"jingran":74,"lupa":40,"galbrena":55,"encore":8,"changli":25,"brant":35,"mortefi":13,"chixia":2,"hsin":75,"suoming":76,"augusta":48,"rebecca":68.5,"rover_e":4,"calcharo":18,"xiangliyao":27,"yinlin":17,"buling":58,"yuanwu":15,"lumi":30,"sigrika":65,"ciaccona":38,"cartethyia":39,"iuno":51,"qiuyuan":56,"qingxiao":73,"jiyan":11,"rover_a":4,"jianxin":23,"aalto":12,"yangyang":1,"shorekeeper":28,"lynae":60,"verina":3,"luuk":63,"jinhsi":24,"phoebe":34,"zani":37,"lucy":68,"rover_s":4,"chisa":57,"xuanling":70,"phrolova":41,"cantarella":36,"camellya":29,"roccia":33,"danjin":10,"taoqi":9,"lily":77,"rover_h":4};
 function sortChars(list,mode,ownedFirst){const sc={};const S=id=>sc[id]??(sc[id]=charScore(id));
-  const cmp={new:(a,b)=>(RELEASE[b.id]||999)-(RELEASE[a.id]||999)||a.name.localeCompare(b.name,"ko"),rar:(a,b)=>b.rar-a.rar||EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||a.name.localeCompare(b.name,"ko"),
+  const cmp={new:(a,b)=>(CharDB.release(b.id)||999)-(CharDB.release(a.id)||999)||a.name.localeCompare(b.name,"ko"),rar:(a,b)=>b.rar-a.rar||EL_ORDER.indexOf(a.el)-EL_ORDER.indexOf(b.el)||a.name.localeCompare(b.name,"ko"),
     desc:(a,b)=>S(b.id)-S(a.id),asc:(a,b)=>S(a.id)-S(b.id),name:(a,b)=>a.name.localeCompare(b.name,"ko")}[mode||"rar"]||((a,b)=>0);
   return list.sort((a,b)=>(ownedFirst?(+!!state.owned[b.id])-(+!!state.owned[a.id]):0)||cmp(a,b));}
 function renderPool(){
@@ -1257,15 +1086,8 @@ function renderPool(){
 
 /* ---------- boss-run simulation ----------
    파티는 순서대로 보스를 상대하고, 남은 HP는 다음 파티가 이어받는다고 가정한다.
-   보스 HP = 편성된 파티 평균 강도 × ROUND_HP^(라운드-1). 메인 딜러 속성을 보스가 저항하면 피해 × RES_MUL. */
-const RES_MUL=0.6, MAX_ROUNDS=8;
-/* 보스 HP·점수 (2026-11-16 재보정 — 상위권 플레이 영상의 파티별 점수·보스 HP 14건)
-   점수 = 준 피해(1R 보스 HP 단위) × 4,750점 × 라운드 점수 배율(1R 1.0 / 2R 1.1 / 3R 이후 1.25, 게임 표기).
-   라운드별 보스 HP: 2R 1.77배, 3R 3.36배(영상의 라운드별 점수 ÷ 점수 배율), 4R 이후는 라운드마다 ×2.1로 가정(측정 없음).
-   매트릭스 미믹은 라운드 마지막 5번째, HP 1.1배 · 점수 1.1배 · 처치 1,000점(cycle.js의 hpMul·scoreMul·killBonus). */
-const ROUND_HP_TABLE=[1,1.77,3.36];
-const PTS_PER_BOSS=4750, ROUND_PTS=r=>r<=1?1:r===2?1.1:1.25;
-const roundHp=r=>r<=ROUND_HP_TABLE.length?ROUND_HP_TABLE[r-1]:ROUND_HP_TABLE[ROUND_HP_TABLE.length-1]*Math.pow(2.1,r-ROUND_HP_TABLE.length);
+   보스 HP·점수·저항 배율은 BossDB(core/bossdb.js)가 내준다. */
+const MAX_ROUNDS=BossDB.MAX_ROUNDS;
 function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
   const by=l=>l.slice().sort((a,b)=>charScore(b)-charScore(a))[0];
   const d=by(ids.filter(id=>charMap[id]&&charMap[id].role==="dps")),sb=by(ids.filter(id=>charMap[id]&&charMap[id].role==="sub"));
@@ -1281,19 +1103,19 @@ const SKILL_LV={top:{label:"숙련",mul:1},good:{label:"보통",mul:0.8},normal:
 const skillMul=()=>(SKILL_LV[state.skill]||SKILL_LV.top).mul;
 const partyDamage=score=>Math.pow(Math.max(0,score)/S_REF,DMG_EXP)*skillMul();
 function simulate(teams){
-  const bosses=(cycle.bosses||[]);const live=teams.filter(t=>t.slots.some(Boolean));
+  const bosses=BossDB.bosses();const live=teams.filter(t=>t.slots.some(Boolean));
   const res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
-  const full=roundHp;const bHp=(b,r)=>full(r)*((b&&b.hpMul)||1);
+  const bHp=BossDB.hp;
   let bi=0,round=1,hp=bHp(bosses[0],1),progress=0,bad=0;
   teams.forEach((t,ti)=>{
     if(!t.slots.some(Boolean))return;
     const d=mainDps(t),el=d&&charMap[d].el;let D=partyDamage(teamScore(t));
     while(D>1e-9&&round<=MAX_ROUNDS){
-      const b=bosses[bi],f=b.res&&b.res===el?RES_MUL:1;
+      const b=bosses[bi],f=BossDB.resMul(b,el);
       if(!res[ti].hits.length&&f<1)bad++;
       const H=bHp(b,round);const hit={name:b.name,round,resisted:f<1,from:hp/H*100,left:0,pts:0};res[ti].hits.push(hit);
-      const ptsOf=dealt=>dealt*PTS_PER_BOSS*ROUND_PTS(round)*(b.scoreMul||1); // dealt는 1R 보스 HP 단위(라운드 HP 배율 포함)
-      if(D*f>=hp){D-=hp/f;progress+=hp/H;hit.pts=ptsOf(hp)+(b.killBonus||0);bi++;if(bi>=bosses.length){bi=0;round++}hp=bHp(bosses[bi],round);}
+      const ptsOf=dealt=>BossDB.points(dealt,b,round); // dealt는 1R 보스 HP 단위(라운드 HP 배율 포함)
+      if(D*f>=hp){D-=hp/f;progress+=hp/H;hit.pts=ptsOf(hp)+BossDB.killBonus(b);bi++;if(bi>=bosses.length){bi=0;round++}hp=bHp(bosses[bi],round);}
       else{hp-=D*f;progress+=D*f/H;hit.pts=ptsOf(D*f);hit.left=hp/H*100;D=0;}
     }
   });
@@ -1319,11 +1141,8 @@ function bestOrder_(){
 }
 
 /* ---------- synergy ---------- */
-const _syn={};
-// 메인 딜러의 주력 피해 유형은 피해 비중 20% 이상인 유형으로 정한다 (Prydwen 피해 비중이 있을 때)
-function synOf(id){if(_syn[id])return _syn[id];const c=charMap[id];const base=(c&&c.syn)||SYN[id]||{o:"",ob:[],w:[],m:[]};
-  const p=DMG_PROFILE[id];if(!c||c.syn||c.role!=="dps"||!p)return _syn[id]=base;
-  const w=DT_KEYS.filter(k=>(p[k]||0)>=20).sort((a,b)=>p[b]-p[a]);return _syn[id]=w.length?{...base,w}:base;}
+// 메인 딜러의 주력 피해 유형은 피해 비중 20% 이상인 유형으로 정한다 (CharDB.syn)
+const synOf=id=>CharDB.syn(id);
 // pairwise links between two characters in the same party
 function pairLinks(a,b){
   const out=[],A=synOf(a),B=synOf(b),ca=charMap[a],cb=charMap[b];if(!ca||!cb)return out;
@@ -1335,8 +1154,8 @@ function pairLinks(a,b){
   const shared=ma.filter(t=>mb.includes(t));
   if(ma.includes("anom")&&!mb.includes("anom")) shared.push(...mb.filter(t=>ANOM.includes(t)));
   if(mb.includes("anom")&&!ma.includes("anom")) shared.push(...ma.filter(t=>ANOM.includes(t)));
-  // 협동 공격은 그걸 받아 쓰는 공명자(금희 등 NEEDS)와 같이 있을 때만 시너지로 친다
-  const needsC=x=>((charMap[x].needs||NEEDS[x]||{}).m)==="coord";
+  // 협동 공격은 그걸 받아 쓰는 공명자(금희 등 needs)와 같이 있을 때만 시너지로 친다
+  const needsC=x=>((CharDB.needs(x)||{}).m)==="coord";
   [...new Set(shared)].filter(t=>t!=="coord"||needsC(a)||needsC(b)).forEach(t=>out.push({k:"mech",tag:t,txt:MT[t]}));
   return out;
 }
@@ -1350,7 +1169,7 @@ function teamSynergy(t){
     const r=x=>x.n*10+(charMap[x.to].role==="dps"?1:0);if(!b||r(l)>r(b))best[l.from]=l;});
   links=links.filter(l=>l.k!=="outro"||synOf(l.from).p||best[l.from]===l);
   links.forEach(l=>{if(l.j===l.i+1)adj[l.j]=true;else adj.wrap=true});
-  const combos=COMBOS.filter(c=>c.ids.every(id=>ids.includes(id)));
+  const combos=CharDB.combos().filter(c=>c.ids.every(id=>ids.includes(id)));
   return {links,adj,combos};
 }
 function synChips(t){
@@ -1364,7 +1183,7 @@ function synChips(t){
   const pb={};r.links.filter(l=>l.party).forEach(l=>{(pb[l.from]=pb[l.from]||[]).push(l)});
   Object.entries(pb).forEach(([g,ls])=>h+=`<span class="chip syn" title="파티 버프: ${esc(synOf(g).o||"")}">${esc(nm(g))} 파티 버프 +${Math.round(Math.max(...ls.map(l=>l.e))*100)}%</span>`);
   r.supx.filter(l=>l.e>=0.01).forEach(l=>h+=`<span class="chip syn" title="서포터 조건부 효과(추정): ${esc(l.t.join(", "))}">${esc(nm(l.from))} → ${esc(nm(l.to))} +${Math.round(l.e*100)}%</span>`);
-  r.needs.forEach(id=>{const nd=charMap[id].needs||NEEDS[id];h+=`<span class="chip" title="이 메커니즘을 가진 파티원이 없어 피해를 ×${nd.mul}로 계산합니다(추정)">${esc(nm(id))}: ${esc(nd.txt)}</span>`});
+  r.needs.forEach(id=>{const nd=CharDB.needs(id);h+=`<span class="chip" title="이 메커니즘을 가진 파티원이 없어 피해를 ×${nd.mul}로 계산합니다(추정)">${esc(nm(id))}: ${esc(nd.txt)}</span>`});
   if(r.weak.length)h+=`<span class="chip" title="서포터 없는 파티에서 다른 둘에게 반주 이득을 거의 못 받는 공명자는 피해 비중을 ×${NOSYN_W}로 낮춰 계산합니다">반주 시너지 없음: ${esc(r.weak.map(nm).join(", "))}</span>`;
   // cycle power circuit ↔ party mechanics
   const buff=selBuff(t);
@@ -1554,7 +1373,7 @@ async function ocrStats(blob){
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
 window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
-window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams()};
+window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
 
 /* ---------- profile dialog ---------- */
 let profId=null;
@@ -1596,8 +1415,8 @@ function renderProfile(){
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
 function renderCycleView(){
   $("#cycleView").innerHTML=`<dl class="kv"><dt>주기</dt><dd>${esc(cycle.name||"")}</dd><dt>기간</dt><dd>${esc(cycle.period||"")}</dd><dt>보스</dt><dd>${(cycle.bosses||[]).length}종</dd><dt>강화 효과</dt><dd>${(cycle.buffs||[]).map(b=>esc(b.name)).join(", ")}</dd><dt>상태</dt><dd>${IS_ADMIN&&state.cycle?"이 브라우저에서 수정한 값 사용 중":"cycle.js 기본값 사용 중"}</dd></dl>
-  <p class="prose">필드 설명은 <code>cycle.js</code> 맨 위 주석에 있습니다. 강화 효과의 <b>cond</b>와 보스 효과의 <b>tags</b>에 쓸 수 있는 조건 키: ${Object.entries(COND).map(([k,d])=>`<code>${k}</code>(${esc(d.label)})`).join(", ")}</p>
-  ${unknownConds().length?`<p class="prose" style="color:var(--bad)">알 수 없는 조건 키: ${unknownConds().map(esc).join(", ")} — COND 표에 추가하거나 키를 고치세요. 이 효과는 강도 계산에서 빠집니다.</p>`:""}
+  <p class="prose">필드 설명은 <code>data/cycle.js</code> 맨 위 주석에 있습니다. 강화 효과의 <b>cond</b>와 보스 효과의 <b>tags</b>에 쓸 수 있는 조건 키: ${Object.entries(COND).map(([k,d])=>`<code>${k}</code>(${esc(d.label)})`).join(", ")}</p>
+  ${unknownConds().length?`<p class="prose" style="color:var(--bad)">알 수 없는 조건 키: ${unknownConds().map(esc).join(", ")} — data/conds.js에 추가하거나 키를 고치세요. 이 효과는 강도 계산에서 빠집니다.</p>`:""}
   ${cycle.source?`<p class="prose">출처: ${esc(cycle.source)}</p>`:""}`;
   $("#cycleJson").value=JSON.stringify(cycle,null,2);
 }
@@ -1830,12 +1649,12 @@ $("#btnClear").addEventListener("click",e=>{
 });
 /* ---------- 파티 자동 추천 (조합 데이터: teams.js) ----------
    1) 최우선 조합(TEAM_PRESETS)을 그대로 묶는다. (히유키·루실라·수수, 여우의 별자리·쇄명·릴리, 장리·브렌트·루파 …)
-   2) 정석 메인+서브 짝(PAIR_W 궁합 1)을 예상 점수보다 먼저 묶는다.
+   2) 정석 메인+서브 짝(공명자 파일 pairs 궁합 1)을 예상 점수보다 먼저 묶는다.
    3) 남은 메인 딜러는 궁합 또는 반주 이득이 있는 파트너가 있을 때만 짝을 짓는다. 메인 딜러를 모두 쓰려고 하지 않는다.
    4) 센 짝부터 서포터를 넣는다: 궁합 표의 서포터 → 5성 → 4성. 서포터가 남으면 안 쓴 메인 딜러로 파티를 더 만든다.
    5) 3명을 못 채운 파티는 빼고, 파티끼리 서포터를 맞바꿔 전체(강화 효과 포함)가 세지면 바꾼 뒤, 강화 효과·순서를 정한 뒤 예상 점수가 MIN_POINTS(1000점) 미만인 파티는 뺀다. 방랑자는 속성과 관계없이 1명. */
-const PAIR_W=window.PAIR_W||{}, TEAM_PRESETS=window.TEAM_PRESETS||[], MIN_POINTS=window.MIN_POINTS||1000;
-function affinity(main,ids){const t=PAIR_W[main]||{};return ids.filter(x=>x!==main).reduce((a,x)=>a+(t[x]||((PAIR_W[x]||{})[main]||0)*.5),0)}
+const TEAM_PRESETS=CharDB.presets(), MIN_POINTS=CharDB.minPoints();
+function affinity(main,ids){return ids.filter(x=>x!==main).reduce((a,x)=>a+(CharDB.pairW(main,x)||CharDB.pairW(x,main)*.5),0)}
 function recommendTeams(){
   const own=chars.filter(c=>state.owned[c.id]).map(c=>c.id);
   const key=id=>id.startsWith("rover_")?"rover":id;
@@ -1844,13 +1663,13 @@ function recommendTeams(){
   const okIds=ids=>new Set(ids.map(key)).size===ids.length;
   const val=ids=>teamCalc({slots:ids.slice(),buff:null}).base;
   const role=id=>charMap[id].role, isSup=id=>role(id)==="support";
-  const pw=(a,b)=>(PAIR_W[a]||{})[b]||(PAIR_W[b]||{})[a]||0;
+  const pw=(a,b)=>CharDB.pairW(a,b)||CharDB.pairW(b,a)||0;
   const done=[],cores=[];
   // 1) 최우선 조합(셋 다 고정)
   TEAM_PRESETS.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))&&okIds(ids)){ids.forEach(use);done.push(ids.slice())}});
   // 2) 정석 메인+서브 짝(궁합 1, 서포터 제외)을 예상 점수보다 먼저 묶는다. 같은 파트너를 두 메인이 원하면 2인 강도가 높은 쪽
   const mains=own.filter(id=>role(id)==="dps");
-  const pairs=[];mains.forEach(m=>Object.entries(PAIR_W[m]||{}).forEach(([x,w])=>{if(w>=1&&state.owned[x]&&charMap[x]&&!isSup(x)&&key(x)!==key(m))pairs.push({ids:[m,x],v:val([m,x])})}));
+  const pairs=[];mains.forEach(m=>Object.entries(CharDB.pairs(m)).forEach(([x,w])=>{if(w>=1&&state.owned[x]&&charMap[x]&&!isSup(x)&&key(x)!==key(m))pairs.push({ids:[m,x],v:val([m,x])})}));
   pairs.sort((a,b)=>b.v-a.v).forEach(p=>{if(p.ids.every(can)){p.ids.forEach(use);cores.push(p.ids)}});
   // 3) 남은 메인 딜러: 궁합이 있거나 반주 이득이 5% 이상인 비서포터 파트너가 있을 때만 짝을 짓는다(없으면 쓰지 않음 — 조합 우선)
   const syn2=(m,x)=>pw(m,x)>0||outroGain(x,m,[m,x])>=0.05||outroGain(m,x,[m,x])>=0.05;
@@ -1961,7 +1780,7 @@ $("#cycleSave").addEventListener("click",()=>{
     state.cycle=o;derive();persist();renderAll();m.className="msg okm";m.textContent="주기 데이터를 적용했습니다.";
   }catch(err){m.className="msg err";m.textContent="적용하지 못했습니다: "+err.message}
 });
-$("#cycleReset").addEventListener("click",()=>{state.cycle=null;derive();persist();renderAll();$("#cycleMsg").className="msg okm";$("#cycleMsg").textContent="cycle.js 기본값으로 되돌렸습니다."});
+$("#cycleReset").addEventListener("click",()=>{state.cycle=null;derive();persist();renderAll();$("#cycleMsg").className="msg okm";$("#cycleMsg").textContent="data/cycle.js 기본값으로 되돌렸습니다."});
 // chars
 $("#charSave").addEventListener("click",()=>{
   const m=$("#charMsg");
