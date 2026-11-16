@@ -666,6 +666,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 <script src="firebase-config.js"></script>
 <script src="cycle.js"></script>
 <script src="weapons.js"></script>
+<script src="stats.js"></script>
 <script src="updates.js"></script>
 <script src="teams.js"></script>
 <script>
@@ -1005,27 +1006,46 @@ function weaponOf(cid){const g=state.growth[cid]||{};
   if(g.trial){const id=trialWeapon(cid);const w=WMAP[id]||null;return {w,ref:1,pct:w?weaponPct(cid,id,1):null,custom:false,trial:true}}
   const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
   const ref=clamp(+g.ref||(w&&w.q<5?5:1),1,5);return {w,ref,pct:w?weaponPct(cid,id,ref):null,custom:!!(g.wid&&WMAP[g.wid])};}
-/* ---------- 입력한 스탯 → 배율 ----------
-   기대 피해 ∝ 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 피해 보너스)
-   일반적인 완성 세팅(STAT_REF)과 비교한 비율을 점수에 곱한다(0.4~2배). 서포터는 점수에 쓰지 않는다. */
-const STAT_REF={atk:2100,hp:30000,def:2000,cr:70,cd:250,bonus:90,bonusEl:60,bonusType:30}; // 피해 보너스 기준 90% = 속성 60 + 주력 유형 30
-const STAT_SCALE={cartethyia:"hp"}; // 공격력이 아닌 HP/방어력에 비례하는 공명자
+/* ---------- 스탯 → 배율 (stats.js · weapons.js) ----------
+   기준점: 공명자별 '이 정도면 잘 키웠다' 스탯(IJK) + 최고 무기(Prydwen 100%) = Prydwen DPS가 나오는 세팅으로 본다.
+   기대 피해 D = 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 속성 피해 + 주력 유형 피해)
+   · 스탯 입력 없음: 무기 효과 = Prydwen 무기 성능 %(스탯 + 패시브)를 그대로 쓴다.
+   · 스탯 입력: 스탯 배율 = D(내 스탯) ÷ D(기준). 입력한 스탯에 무기 기본 스탯이 이미 들어 있으므로
+     무기는 '패시브 몫'만 곱한다 = 무기 성능 % ÷ (내 무기 스탯 배율 ÷ 최고 무기 스탯 배율).
+   공명 체인 배율은 스탯 화면에 안 잡히는 효과(조건부 버프·추가타)가 대부분이라 그대로 곱한다.
+   기준 피해 보너스 = 속성(3코 속성 개수 × 30 + 세트 10 + 속성 노드 12) + 주력 유형 10. 비워 둔 칸은 이 기준값으로 채운다. */
+const STAT_SCALE={cartethyia:"hp",jingran:"hp"}; // 공격력이 아닌 HP/방어력에 비례하는 공명자
+const TYPE_REF=10, FLAT_ATK=350, FLAT_HP=2300;
 const BONUS_KEYS={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
 function bonusKeysOf(id){const S=synOf(id);return ["el",...(S.w||[]).filter(k=>BONUS_KEYS[k])];}
+function scaleOf(id){const c=charMap[id];return (c&&c.statScale)||STAT_SCALE[id]||"atk"}
+function ijkOf(id){const I=(window.IJK||{})[id];if(I)return I;const c=charMap[id]||{};const sc=scaleOf(id);
+  return {main:[sc,sc==="hp"?45000:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
+function elRefOf(id){const I=ijkOf(id);return I.el*30+10+(I.node?12:0)}
+const _wst=id=>(window.WEAPON_STATS||{})[id]||null;
+function bestWeaponId(cid){const l=perfList(cid);return l.length?l[0].id:defaultWeapon(cid)}
+// 무기를 바꿨을 때 기준 스탯에서 달라지는 값(무기 기본 공격력 · 부옵션)
+function statsWithWeapon(cid,wid){const I=ijkOf(cid);const sc=I.main[0];const base=(window.CHAR_BASE||{})[cid]||[11000,400,1150];
+  const r={main:I.main[1],cr:I.cr,cd:I.cd};const W0=_wst(bestWeaponId(cid)),W1=_wst(wid);if(!W0||!W1||bestWeaponId(cid)===wid)return r;
+  const sub=(W,k)=>W[1]===k?W[2]:0;
+  if(sc==="atk"){const B=base[1];const P0=Math.max(0,(I.main[1]-FLAT_ATK)/(B+W0[0])-1);const P1=P0-sub(W0,"atk%")/100+sub(W1,"atk%")/100;r.main=(B+W1[0])*(1+P1)+FLAT_ATK}
+  else if(sc==="hp"){const B=base[0];const P0=Math.max(0,(I.main[1]-FLAT_HP)/B-1);r.main=B*(1+P0-sub(W0,"hp%")/100+sub(W1,"hp%")/100)+FLAT_HP}
+  r.cr+=sub(W1,"cr")-sub(W0,"cr");r.cd+=sub(W1,"cd")-sub(W0,"cd");return r}
+const expDmg=(main,cr,cd,bonus)=>main*(1+Math.min(Math.max(cr,0),100)/100*(cd/100-1))*(1+bonus/100);
+function refDmg(cid){const I=ijkOf(cid);return expDmg(I.main[1],I.cr,I.cd,elRefOf(cid)+TYPE_REF)}
+// 무기 스탯만으로 본 배율(기준 = 최고 무기). 패시브 몫 = 무기 성능 % ÷ 이 값
+function weaponStatRatio(cid,wid){const r=statsWithWeapon(cid,wid);return expDmg(r.main,r.cr,r.cd,elRefOf(cid)+TYPE_REF)/refDmg(cid)}
 function statFactor(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats;if(!c||!st||c.role==="support")return null;
-  const sc=(c.statScale)||STAT_SCALE[id]||"atk";const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
-  const crit=1+Math.min(cr,100)/100*(cd/100-1),critRef=1+STAT_REF.cr/100*(STAT_REF.cd/100-1);
-  // 피해 보너스 = 속성 + 주력 피해 유형(피해 비중 가중 평균). 비워 둔 칸은 0이 아니라 일반적인 완성 세팅 값으로 채운다.
-  // (예전엔 일반 공격 피해만 입력하면 속성 피해를 0%로 봐서 오히려 강도가 떨어졌다)
+  const sc=scaleOf(id);const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
   const b=st.b||{};const has=k=>b[k]!=null&&b[k]!=="";
-  const el=has("el")?+b.el:STAT_REF.bonusEl;
+  const el=has("el")?+b.el:elRefOf(id);
   const ks=bonusKeysOf(id).filter(k=>k!=="el");const p=DMG_PROFILE[id]||{};
   const wt=k=>(p[k]||0)>0?p[k]:1;const tw=ks.reduce((a,k)=>a+wt(k),0);
-  const typeB=ks.length?ks.reduce((a,k)=>a+(has(k)?+b[k]:STAT_REF.bonusType)*wt(k),0)/tw:STAT_REF.bonusType;
+  const typeB=ks.length?ks.reduce((a,k)=>a+(has(k)?+b[k]:TYPE_REF)*wt(k),0)/tw:TYPE_REF;
   const bonus=el+typeB;
-  const f=clamp((main/STAT_REF[sc])*(crit/critRef)*((1+bonus/100)/(1+STAT_REF.bonus/100)),0.4,2);
-  return {f,sc,crit,bonus};
+  const f=clamp(expDmg(main,cr,cd,bonus)/refDmg(id),0.4,2);
+  return {f,sc,crit:1+Math.min(cr,100)/100*(cd/100-1),bonus};
 }
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
@@ -1036,8 +1056,8 @@ function charScore(id){
   const wp=weaponOf(id);
   const sf=tr?null:statFactor(id);
   let s=(hasDps?10:(c.rar===5?10:6));
-  // 무기: 공명자별 최고 무기(재련 기준값) = 100%. 스탯을 입력했으면 무기 기본 스탯은 스탯에 이미 들어 있으므로 차이를 절반만 반영(패시브 몫, 추정)
-  if(wp.pct!=null) s=(s+4)*(sf?Math.sqrt(wp.pct/100):wp.pct/100);
+  // 무기: 공명자별 최고 무기(재련 기준값) = 100%. 스탯을 입력했으면 무기 기본 스탯은 스탯에 이미 들어 있으므로 패시브 몫만 반영
+  if(wp.pct!=null) s=(s+4)*(sf&&wp.w?clamp(wp.pct/100/weaponStatRatio(id,wp.w.id),0.5,1.3):wp.pct/100);
   else s+=4;
   s*=dpsFactor(id);
   if(sf) s*=sf.f; else s*=0.5+0.5*(lv/90); // 스탯을 입력했으면 레벨 대신 스탯으로 계산
@@ -1461,13 +1481,16 @@ const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],[
 function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
-  const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${grp?`기준 ${k==="el"?STAT_REF.bonusEl:STAT_REF.bonusType}`:"–"}"><em>${unit}</em></label>`;
+  const I=ijkOf(id),sc=scaleOf(id);
+  const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:k===sc?`${I.main[1]}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
+  const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);
   return `<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
    <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
+   <p class="sbnote">기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${I.main[1].toLocaleString()} · 크리티컬 ${I.cr}% · 크리티컬 피해 ${I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 주 스탯·크리티컬·크리티컬 피해를 넣으면 이 기준과 비교해 강도에 반영합니다.</p>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
-   <p class="sbnote">비워 둔 칸은 기준치(속성 ${STAT_REF.bonusEl}% · 주력 피해 유형 ${STAT_REF.bonusType}%)로 계산합니다.</p>
+   <p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>
    <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/st-${c.el}.png`:`icons/st-${k}.png`)).join("")}</div>
    <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`;
 }
