@@ -367,6 +367,12 @@ th{font-family:var(--f-num);background:var(--strip)}
 .rgrid{--face:150px;display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--face) + 4px),1fr));gap:16px 12px;justify-items:center;padding:4px 0 24px}
 @media (max-width:560px){.rgrid{--face:104px}}
 .rcard{cursor:pointer}
+.rlv.rtr{color:#8fd3ff;letter-spacing:.06em}
+.pf-toggles{display:flex;flex-wrap:wrap;gap:6px 18px}
+.pf-trial{margin:6px 0 4px;padding:8px 10px;border-left:3px solid #8fd3ff;background:rgba(143,211,255,.07);font-size:13px;line-height:1.6}
+.pf-hide{display:none}
+.pf-s.pf-dim{position:relative}.pf-s.pf-dim>*{opacity:.25;pointer-events:none}
+.pf-s.pf-dim::after{content:"체험 세팅에서는 스탯 입력을 쓰지 않습니다";position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-size:13px;color:var(--fg);white-space:nowrap;padding:8px 14px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px}
 .rcard:hover{border-color:#e6c36a}
 .rcard.off .face{filter:grayscale(1) brightness(.42)}
 .rcard.off .nm{color:#8a9097;border-top-color:#5a5f66}
@@ -533,7 +539,9 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
       <div class="teams-h">
         <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
         <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도. 최상위 = 실측 기준(매우 잘하는 유저)">숙련도 <select id="skillSel"><option value="top">최상위</option><option value="good">숙련</option><option value="normal">보통</option></select></label>
-        <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">추천 순서로 정렬</button>
+        <button class="btn pri" id="btnAuto" title="보유 공명자로 파티를 자동으로 짭니다. 센 딜러 조합부터 만들고, 5성 서포터를 센 파티에 먼저 넣습니다.">자동 추천</button>
+        <button class="btn ghost" id="btnUndo" hidden>되돌리기</button>
+        <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">순서 정렬</button>
         <button class="btn" id="btnAdd">+ 파티 추가</button>
         <button class="btn ghost danger" id="btnClear">전체 비우기</button>
       </div>
@@ -924,7 +932,18 @@ function charWType(cid){const c=charMap[cid];return (c&&c.wtype)||(window.CHAR_W
 function defaultWeapon(cid){const c=charMap[cid];const g=state.growth[cid]||{};const want=+g.wr||(c&&c.rar===5?5:4);
   const l=perfList(cid);const best=l.find(x=>WMAP[x.id].q===want)||l[0];if(best)return best.id;
   const t=charWType(cid);const w=Object.values(WMAP).find(w=>w.type===t&&w.q===want);return w?w.id:null;}
-function weaponOf(cid){const g=state.growth[cid]||{};const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
+/* 체험 세팅: 보유했지만 육성하지 않은 공명자를 매트릭스에서 쓸 때 게임이 주는 기본 세팅.
+   90레벨, 5성은 상시 5성 무기 · 4성은 4성 상시 무기(R1), 스킬 8레벨, 에코 세트는 맞지만 옵션이 약하다. 공명 체인은 그대로.
+   스킬·에코 손실은 TRIAL_MUL(예측치)로 반영한다. */
+const TRIAL_MUL=0.82;
+const isTrial=id=>!!(state.growth[id]||{}).trial;
+function trialWeapon(cid){const c=charMap[cid];const t=+charWType(cid);
+  if(c&&c.rar===5&&t){const id=21000015+t*10000;if(WMAP[id])return id}
+  const l=perfList(cid).filter(x=>WMAP[x.id].q===4);if(l.length)return l[l.length-1].id;
+  const w=Object.values(WMAP).find(w=>w.type===t&&w.q===4);return w?w.id:null}
+function weaponOf(cid){const g=state.growth[cid]||{};
+  if(g.trial){const id=trialWeapon(cid);const w=WMAP[id]||null;return {w,ref:1,pct:w?weaponPct(cid,id,1):null,custom:false,trial:true}}
+  const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
   const ref=clamp(+g.ref||(w&&w.q<5?5:1),1,5);return {w,ref,pct:w?weaponPct(cid,id,ref):null,custom:!!(g.wid&&WMAP[g.wid])};}
 /* ---------- 입력한 스탯 → 배율 ----------
    기대 피해 ∝ 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 피해 보너스)
@@ -947,10 +966,11 @@ function statFactor(id){
 function charScore(id){
   const c=charMap[id]; if(!c) return 0;
   const g=state.growth[id]||{};
-  const lv=clamp(+g.lv||90,1,90);
+  const tr=!!g.trial;
+  const lv=tr?90:clamp(+g.lv||90,1,90);
   const hasDps=c.baseDps!=null||BASE_DPS[id]!=null; // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
   const wp=weaponOf(id);
-  const sf=statFactor(id);
+  const sf=tr?null:statFactor(id);
   let s=(hasDps?10:(c.rar===5?10:6));
   // 무기: 공명자별 최고 무기(재련 기준값) = 100%. 스탯을 입력했으면 무기 기본 스탯은 스탯에 이미 들어 있으므로 차이를 절반만 반영(패시브 몫, 추정)
   if(wp.pct!=null) s=(s+4)*(sf?Math.sqrt(wp.pct/100):wp.pct/100);
@@ -958,6 +978,7 @@ function charScore(id){
   s*=dpsFactor(id);
   if(sf) s*=sf.f; else s*=0.5+0.5*(lv/90); // 스탯을 입력했으면 레벨 대신 스탯으로 계산
   s*=c.role==='support'&&!CHAIN_DATA[id]?1:chainMul(id);
+  if(tr) s*=TRIAL_MUL;
   const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
   return s;
 }
@@ -1310,7 +1331,7 @@ function renderRoster(){
   $("#ownCount").textContent=`보유 ${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}`;
   $("#rgrid").innerHTML=list.map(c=>{
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
-    const extra=`<span class="rlv"><small>Lv.</small>${g.lv??90}</span><span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
+    const extra=(g.trial?`<span class="rlv rtr" title="체험 세팅 (육성 안 함)">체험</span>`:`<span class="rlv"><small>Lv.</small>${g.lv??90}</span>`)+`<span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
       (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
       (on?"":`<span class="roff">미보유</span>`);
     return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
@@ -1373,6 +1394,7 @@ async function ocrStats(blob){
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
 window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
+window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams()};
 
 /* ---------- profile dialog ---------- */
 let profId=null;
@@ -1388,11 +1410,16 @@ function renderProfile(){
    <div class="pf-r">
     <div class="pf-h"><h3>${esc(c.name)}</h3><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${c.rar}★</span><span class="chip">${ROLE[c.role]||""}</span><span class="chip">${WTYPE[t]||""}</span>
       <button class="x" value="close" aria-label="닫기">✕</button></div>
-    <label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
+    <div class="pf-toggles"><label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
+    <label class="pf-own" title="육성하지 않은 공명자는 매트릭스에서 게임이 주는 체험 세팅으로 씁니다"><input type="checkbox" class="sw" id="pfTrial" ${g.trial?"checked":""}> 체험 세팅 (육성 안 함)</label></div>
+    ${g.trial?`<p class="pf-trial">매트릭스 체험 세팅으로 계산합니다: <b>90레벨 · ${wp.w?esc(wp.w.name):"상시 무기"} R1 · 스킬 8레벨 · 약한 에코</b>. 공명 체인만 지금 설정을 따릅니다. 스킬·에코 손실은 예측치(×${TRIAL_MUL})입니다.</p>`:""}
+    <div class="${g.trial?"pf-hide":""}">
     <div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>
     <div class="pf-lv"><input type="range" min="1" max="90" value="${lv}" id="pfLv" aria-label="레벨"><input type="number" min="1" max="90" value="${lv}" id="pfLvN" aria-label="레벨 숫자"></div>
+    </div>
     <div class="pf-sec"><span>공명 체인 (돌파)</span><b>${ch}돌파 · DPS ${Math.round(chainMul(id)*100)}%</b></div>
     <div class="seg" id="pfCh">${[0,1,2,3,4,5,6].map(n=>`<button type="button" data-v="${n}" aria-pressed="${ch===n}">${n}</button>`).join("")}</div>
+    <div class="${g.trial?"pf-hide":""}">
     <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · 성능 ${wp.pct.toFixed(1)}%`:""}</b></div>
     <div class="wgrid" id="pfW">${ws.map(w=>{const e=pmap[w.id];const sel=wp.w&&wp.w.id===w.id;
       return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음(추정)"}">
@@ -1400,9 +1427,10 @@ function renderProfile(){
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
     <div class="pf-sec"><span>재련</span><b>R${wp.ref}</b></div>
     <div class="seg" id="pfR">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
+    </div>
     <p class="pf-foot">캐릭터 점수 <b id="pfScore">${charScore(id).toFixed(1)}</b> · 무기 성능은 Prydwen 무기 계산(공명자별 최고 무기 = 100%) 기준이고, 재련 보정과 목록에 없는 무기는 추정치입니다.</p>
    </div>
-   <div class="pf-s">${statsHTML(id)}</div></form>`;
+   <div class="pf-s${g.trial?" pf-dim":""}">${statsHTML(id)}</div></form>`;
 }
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
@@ -1588,6 +1616,67 @@ $("#btnClear").addEventListener("click",e=>{
   clearArm=false;e.target.textContent="전체 비우기";
   state.teams.forEach(t=>{t.slots=[null,null,null];t.buff=null;t.example=false});persist();rerenderPlan();
 });
+/* ---------- 파티 자동 추천 ----------
+   0) 서포터 없는 정석 파티(NO_SUPPORT, 예: 플로로바·칸타렐라·로코코)는 셋 다 있으면 먼저 그대로 묶는다.
+   1) 딜러 조합: 보유한 메인 딜러 + 다른 딜러 2인 조합의 강도를 모두 계산해 센 조합부터 고른다(공명자 중복 없이, 배치 횟수 안에서).
+      조합마다 서포터 대신 딜러를 하나 더 넣은 3인(예: 플로로바·칸타렐라·로코코)이 더 세면 그대로 서포터 없는 파티로 확정한다.
+   2) 서포터: 센 파티부터 차례로, 남은 5성 서포터 중 그 파티를 가장 세게 만드는 서포터를 넣는다. 5성이 다 떨어지면 4성.
+      배치 2회 서포터는 두 파티까지 들어간다. 서포터가 모자라면 남은 딜러로 채운다.
+   3) 강화 효과는 파티마다 추천 효과로, 파티 순서는 '추천 순서로 정렬'과 같은 방식으로 정한다. 방랑자는 속성과 관계없이 1명만. */
+// 서포터 없이 완성되는 정석 파티. 셋 다 보유하고 배치 횟수가 남아 있으면 자동 추천에서 먼저 그대로 묶는다.
+const NO_SUPPORT=[["phrolova","cantarella","roccia"],["cartethyia","ciaccona","rover_a"]];
+function recommendTeams(){
+  const own=chars.filter(c=>state.owned[c.id]);
+  const key=id=>id.startsWith("rover_")?"rover":id;
+  const left={};own.forEach(c=>{const k=key(c.id);left[k]=k==="rover"?1:Math.max(left[k]||0,vigorOf(c.id))});
+  const can=id=>left[key(id)]>0, use=id=>{left[key(id)]--};
+  const val=ids=>teamCalc({slots:ids.slice(),buff:null}).base;
+  const sups=own.filter(c=>c.role==="support").map(c=>c.id), dps=own.filter(c=>c.role!=="support").map(c=>c.id);
+  const bestSupVal=ids=>Math.max(0,...sups.map(s=>val([...ids,s])));
+  // 1) 2인 딜러 조합 후보
+  const pairs=[];
+  dps.forEach(a=>{if(charMap[a].role!=="dps")return;dps.forEach(b=>{if(a===b||key(a)===key(b))return;
+    if(charMap[b].role==="dps"&&a>b&&pairs.some(p=>p.a===b&&p.b===a))return;pairs.push({a,b,v:val([a,b])})})});
+  // 2인 강도만으로는 세 번째 자리와의 궁합(서포터·딜러 3인 조합)이 안 보이므로, 상위 후보는 '가장 좋은 세 번째 공명자'까지 넣은 강도로 다시 줄 세운다
+  pairs.sort((x,y)=>y.v-x.v);
+  const inCombo=(a,b)=>COMBOS.some(c=>c.ids.includes(a)&&c.ids.includes(b));
+  pairs.forEach((p,i)=>{if(i<220||inCombo(p.a,p.b)){let m=bestSupVal([p.a,p.b]);dps.forEach(c=>{if(c!==p.a&&c!==p.b&&key(c)!==key(p.a)&&key(c)!==key(p.b))m=Math.max(m,val([p.a,p.b,c]))});p.full=m}else p.full=p.v*1.3});
+  pairs.sort((x,y)=>y.full-x.full);
+  const cores=[];
+  NO_SUPPORT.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))){ids.forEach(use);cores.push({ids:ids.slice(),v:val(ids),full:true})}});
+  for(const p of pairs){if(!can(p.a)||!can(p.b))continue;
+    use(p.a);use(p.b);
+    let third=null,tv=0;dps.forEach(c=>{if(c===p.a||c===p.b||!can(c)||key(c)===key(p.a)||key(c)===key(p.b))return;const v=val([p.a,p.b,c]);if(v>tv){tv=v;third=c}});
+    if(third&&tv>=bestSupVal([p.a,p.b])){use(third);cores.push({ids:[p.a,p.b,third],v:tv,full:true})}
+    else cores.push({ids:[p.a,p.b],v:p.v,full:false});
+  }
+  // 2) 서포터: 센 파티부터 5성 → 4성
+  cores.filter(c=>!c.full).sort((x,y)=>y.v-x.v).forEach(c=>{
+    const pick=rar=>{let b=null,bv=-1;sups.forEach(s=>{if(!can(s)||charMap[s].rar!==rar||c.ids.includes(s))return;const v=val([...c.ids,s]);if(v>bv){bv=v;b=s}});return b};
+    let s=pick(5)||pick(4);
+    if(!s){let bv=-1;dps.forEach(d=>{if(!can(d)||c.ids.some(x=>key(x)===key(d)))return;const v=val([...c.ids,d]);if(v>bv){bv=v;s=d}})}
+    if(s){use(s);c.ids.push(s)}
+    c.v=val(c.ids);});
+  // 남은 공명자로 만들 수 있는 3인 파티 (딜러 1명 이상)
+  for(;;){const rest=own.map(c=>c.id).filter(can);const d=rest.filter(id=>charMap[id].role!=="support").sort((a,b)=>charScore(b)-charScore(a));
+    if(!d.length||rest.length<3)break;const ids=[d[0]];use(d[0]);
+    for(let k=0;k<2;k++){let b=null,bv=-1;own.map(c=>c.id).forEach(x=>{if(!can(x)||ids.some(y=>key(y)===key(x)))return;const v=val([...ids,x]);if(v>bv){bv=v;b=x}});if(!b)break;use(b);ids.push(b)}
+    if(ids.length<3){break}cores.push({ids,v:val(ids),full:true});}
+  const teams=cores.filter(c=>c.ids.length===3).map(c=>{const t={slots:c.ids.slice(),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
+  return teams;
+}
+let undoTeams=null;
+$("#btnAuto").addEventListener("click",()=>{
+  const ok=chars.filter(c=>state.owned[c.id]).length;if(ok<3){flash("보유 캐릭터 탭에서 가진 공명자를 먼저 체크하세요.");return}
+  const t0=performance.now();const teams=recommendTeams();
+  if(!teams.length){flash("추천할 수 있는 파티가 없습니다.");return}
+  undoTeams=JSON.parse(JSON.stringify(state.teams));
+  state.teams=teams;state.teams=bestOrder();
+  persist();rerenderPlan();$("#btnUndo").hidden=false;
+  flash(`파티 ${teams.length}개를 자동으로 짰습니다`);
+  console.log("recommend ms",Math.round(performance.now()-t0));
+});
+$("#btnUndo").addEventListener("click",()=>{if(!undoTeams)return;state.teams=undoTeams;undoTeams=null;$("#btnUndo").hidden=true;persist();rerenderPlan();flash("자동 추천 전으로 되돌렸습니다.")});
 $("#btnSort").addEventListener("click",()=>{
   // 보스 진행을 시뮬레이션해 가장 멀리 가는 순서를 고른다 (메인 딜러 저항 보스는 피하고, 비슷하면 약한 파티를 앞으로). 빈 파티는 맨 뒤.
   state.teams=bestOrder();const r=simulate(state.teams);
@@ -1626,6 +1715,7 @@ $("#prof").addEventListener("change",e=>{
     if(e.target.dataset.grp==="b"){st.b=Object.assign({},st.b);if(v==null)delete st.b[e.target.dataset.st];else st.b[e.target.dataset.st]=v}else{if(v==null)delete st[e.target.dataset.st];else st[e.target.dataset.st]=v}
     persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);renderRoster();rerenderPlan();return}
   if(e.target.id==="pfLv"||e.target.id==="pfLvN")return setGrowth(profId,{lv:clamp(+e.target.value||90,1,90)});
+  if(e.target.id==="pfTrial")return setGrowth(profId,{trial:e.target.checked});
   if(e.target.id==="pfOwn"){if(!!state.owned[profId]!==e.target.checked)toggleOwned(profId);renderProfile();}
 });
 $("#ownAll").addEventListener("click",()=>{chars.forEach(c=>state.owned[c.id]=true);persist();renderRoster();rerenderPlan()});
