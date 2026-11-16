@@ -36,7 +36,7 @@ window.PAIR_W={
  camellya:{sanhua:1,roccia:.7},
  zani:{phoebe:1,shorekeeper:.7},
  lucy:{rebecca:1},
- xuanling:{chisa:1},
+ xuanling:{chisa:1,suisui:1},
  jiyan:{mortefi:1,verina:.8},
  luuk:{denia:.8,lynae:.8,mornye:.8},
  galbrena:{lupa:.8,qiuyuan:.8},

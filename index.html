@@ -942,6 +942,23 @@ const OUTRO_V={
    금희: 파티원 협동 공격 피해마다 「봄의 빛」 2pt(속성 피해는 1pt) — 절지·벨리나·설지 등 협동 공격 파트너가 없으면 스택이 느려진다.
    Prydwen 금희 DPS는 절지 파티 기준이므로 파트너가 없을 때만 깎는다. */
 const NEEDS={jinhsi:{m:"coord",mul:0.85,txt:"협동 공격 파트너 없음"}};
+/* 서포터 조건부 버프 (encore.moe 스킬 설명 기준, 수치는 추정) — 기본 딜증(AMP)에 더해 특정 조합에서만 붙는 몫.
+   반환: 공명자 x가 받는 추가 피해 비율(0.15 = +15%)과 표시 문구.
+   · 수수 공명 해방(천리강산): 암흑 효과 소모 후 인멸 피해가 방어력 6%·인멸 저항 12% 무시 → 암흑 파티의 인멸 공명자 +15%
+                              이상 효과 스택 최대치 +3 → 이상 효과 피해 비중 × 30% (치사의 같은 효과와는 중첩 안 됨)
+   · 릴리 빛바랜 꿈결: 합일 대응 가능 시 합일 버프 1스택당 공격력(최대 4스택) → 합일 공명자 +14%
+                       에코 어빌리티 크리티컬·크리티컬 피해 증가 → 에코 피해 비중 × 12% */
+const SUP_COND={
+ suisui:(x,ids)=>{let a=0;const t=[];
+   if(ids.some(y=>hasM(y,["bane"]))&&charMap[x].el==="havoc"){a+=0.15;t.push("암흑: 인멸 저항 무시")}
+   const sh=((DMG_PROFILE[x]||{}).other||0)/100;
+   if(sh>0&&!ids.includes("chisa")&&ids.some(y=>hasM(y,["frost","burn","erosion","frazzle","flare"]))){a+=sh*0.3;t.push("이상 효과 스택 +3")}
+   return {a,t}},
+ lily:(x,ids)=>{let a=0;const t=[];
+   if(hasM(x,["unison"])&&ids.filter(y=>hasM(y,["unison"])).length>=2){a+=0.14;t.push("합일: 공격력")}
+   const e=((DMG_PROFILE[x]||{}).echo||0)/100;if(e>0.05){a+=e*0.12;t.push("에코 크리티컬")}
+   return {a,t}}
+};
 const BONUS_BASE=1.9; // 평소 피해 보너스 합(≈90%) — 같은 종류 보너스는 더하기라 실제 이득이 줄어든다
 const MAIN_SUB_RATIO=1.3; // 서브 딜러 점수가 메인 딜러 후보보다 30% 넘게 높으면 서브 딜러를 메인으로 본다
 const NOSYN_W=0.75, NOSYN_MIN=0.05; // 서포터 없는 파티에서 다른 둘에게 반주 이득을 5% 미만 받는 공명자는 비중 ×0.75
@@ -1048,10 +1065,11 @@ function outroMap(ids,main,wOf){
   const A=run(ids),B=ids.length>2?run([ids[0],ids[2],ids[1]]):A;return A.val>=B.val?A:B;
 }
 function teamCalc(t){
-  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[]};if(!ids.length)return r;
+  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[]};if(!ids.length)return r;
   const main=mainDps(t);r.main=main;
   const wOf=id=>id===main?ROLE_W.main:(ROLE_W[charMap[id].role]||0.5);
   const om=outroMap(ids,main,wOf);r.gain=om.gain;r.links=om.links;
+  ids.forEach(g=>{const f=SUP_COND[g];if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
   const noSup=!ids.some(id=>charMap[id].role==="support");
   let dmg=0,dmgC=0;
   ids.forEach(id=>{let w=wOf(id);
@@ -1289,6 +1307,7 @@ function synChips(t){
   r.links.filter(l=>!l.party&&l.e>=0.01).forEach(l=>h+=`<span class="chip syn" title="반주 스킬: ${esc((synOf(l.from).o)||"")}">${esc(nm(l.from))} → ${esc(nm(l.to))} +${Math.round(l.e*100)}%</span>`);
   const pb={};r.links.filter(l=>l.party).forEach(l=>{(pb[l.from]=pb[l.from]||[]).push(l)});
   Object.entries(pb).forEach(([g,ls])=>h+=`<span class="chip syn" title="파티 버프: ${esc(synOf(g).o||"")}">${esc(nm(g))} 파티 버프 +${Math.round(Math.max(...ls.map(l=>l.e))*100)}%</span>`);
+  r.supx.filter(l=>l.e>=0.01).forEach(l=>h+=`<span class="chip syn" title="서포터 조건부 효과(추정): ${esc(l.t.join(", "))}">${esc(nm(l.from))} → ${esc(nm(l.to))} +${Math.round(l.e*100)}%</span>`);
   r.needs.forEach(id=>{const nd=charMap[id].needs||NEEDS[id];h+=`<span class="chip" title="이 메커니즘을 가진 파티원이 없어 피해를 ×${nd.mul}로 계산합니다(추정)">${esc(nm(id))}: ${esc(nd.txt)}</span>`});
   if(r.weak.length)h+=`<span class="chip" title="서포터 없는 파티에서 다른 둘에게 반주 이득을 거의 못 받는 공명자는 피해 비중을 ×${NOSYN_W}로 낮춰 계산합니다">반주 시너지 없음: ${esc(r.weak.map(nm).join(", "))}</span>`;
   // cycle power circuit ↔ party mechanics
