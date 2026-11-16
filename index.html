@@ -504,7 +504,16 @@ table.rt{min-width:0}
 .thsort{background:none;border:0;padding:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer}
 .thsort:hover,.thsort.on{color:var(--gold)}
 .thsort i{font-style:normal;font-size:11px;margin-left:2px;opacity:.85}
-.upd{display:flex;flex-direction:column;gap:14px;max-width:960px}
+.upd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:900px){.upd{grid-template-columns:1fr}}
+.upd-a{margin:0}
+.upd-a>summary{list-style:none;cursor:pointer;user-select:none}
+.upd-a>summary::-webkit-details-marker{display:none}
+.upd-a>summary .ph{display:flex;align-items:center;flex-wrap:wrap}
+.upd-a>summary .ph::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--gold,#e6c36a);border-bottom:2px solid var(--gold,#e6c36a);transform:rotate(45deg);transition:transform .15s;flex:none}
+.upd-a[open]>summary .ph::after{transform:rotate(-135deg)}
+.upd-a>summary:hover .upd-t{color:var(--gold,#e6c36a)}
+.upd-a .upd-n{font-size:12px;color:var(--muted)}
 .upd-a .ph{gap:10px}
 .upd-d{font-family:var(--f-num);font-size:16px;color:var(--gold)}
 .upd-t{font-weight:600}
@@ -1652,8 +1661,9 @@ function renderRecords(){const el=$("#recList");if(!el)return;if(state.cur&&stat
 
 /* ---------- 업데이트 노트 (updates.js) ---------- */
 function renderUpdates(){const el=$("#updList");if(!el)return;const U=window.UPDATES||[];
-  el.innerHTML=U.map((u,i)=>`<article class="panel upd-a"><div class="ph">${u.ver?`<span class="upd-v">v${esc(u.ver)}</span>`:""}<span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span></div>
-   <ul class="upd-l">${(u.items||[]).map(it=>Array.isArray(it)?`<li>${esc(it[0])}${it.length>1?`<ul>${it.slice(1).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</li>`:`<li>${esc(it)}</li>`).join("")}</ul></article>`).join("");
+  // 버전마다 접었다 펼 수 있는 카드, 2열 배치. 가장 최신만 펼친 상태로 시작
+  el.innerHTML=U.map((u,i)=>`<details class="panel upd-a"${i===0?" open":""}><summary><div class="ph">${u.ver?`<span class="upd-v">v${esc(u.ver)}</span>`:""}<span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span><span class="upd-n">${(u.items||[]).length}건</span></div></summary>
+   <ul class="upd-l">${(u.items||[]).map(it=>Array.isArray(it)?`<li>${esc(it[0])}${it.length>1?`<ul>${it.slice(1).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</li>`:`<li>${esc(it)}</li>`).join("")}</ul></details>`).join("");
   // 최신 업데이트를 아직 안 봤으면 탭에 점 표시
   const latest=(U[0]||{}).ver||(U[0]||{}).date;let seen=null;try{seen=localStorage.getItem("mp-upd-seen")}catch(e){}
   const tab=$("#updTab");if(tab)tab.classList.toggle("dot",!!latest&&seen!==latest&&location.hash!=="#updates");
