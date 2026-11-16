@@ -352,6 +352,7 @@ input[type=search],input[type=text],input[type=number],select,textarea{backgroun
 /* tooltip */
 #tip{background:var(--tipbg);color:#eef2f5;border:1px solid rgba(255,255,255,.14);border-radius:2px;padding:12px 14px;max-width:380px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #tip .th b{font-size:18px;margin-right:4px}
+.upd-v{font-weight:800;color:var(--gold,#e6c36a);margin-right:8px;font-size:15px;letter-spacing:.02em}
 #tip .chip.tipTrial{color:#14110a;background:#e6c36a;border-color:#e6c36a;font-weight:700}#tip .tipTrialTxt{font-size:12px;color:#e6c36a}
 #tip .chip{background:rgba(255,255,255,.06);color:#d9dee3;border-color:rgba(255,255,255,.18)}
 #tip .chip.el{color:#fff}
@@ -1590,10 +1591,10 @@ function renderRecords(){const el=$("#recList");if(!el)return;if(state.cur&&stat
 
 /* ---------- 업데이트 노트 (updates.js) ---------- */
 function renderUpdates(){const el=$("#updList");if(!el)return;const U=window.UPDATES||[];
-  el.innerHTML=U.map((u,i)=>`<article class="panel upd-a"><div class="ph"><span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span></div>
+  el.innerHTML=U.map((u,i)=>`<article class="panel upd-a"><div class="ph">${u.ver?`<span class="upd-v">v${esc(u.ver)}</span>`:""}<span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span></div>
    <ul class="upd-l">${(u.items||[]).map(it=>Array.isArray(it)?`<li>${esc(it[0])}${it.length>1?`<ul>${it.slice(1).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</li>`:`<li>${esc(it)}</li>`).join("")}</ul></article>`).join("");
   // 최신 업데이트를 아직 안 봤으면 탭에 점 표시
-  const latest=(U[0]||{}).date;let seen=null;try{seen=localStorage.getItem("mp-upd-seen")}catch(e){}
+  const latest=(U[0]||{}).ver||(U[0]||{}).date;let seen=null;try{seen=localStorage.getItem("mp-upd-seen")}catch(e){}
   const tab=$("#updTab");if(tab)tab.classList.toggle("dot",!!latest&&seen!==latest&&location.hash!=="#updates");
   if(location.hash==="#updates"&&latest){try{localStorage.setItem("mp-upd-seen",latest)}catch(e){}}}
 window.addEventListener("hashchange",()=>{if(location.hash==="#updates")renderUpdates()});
