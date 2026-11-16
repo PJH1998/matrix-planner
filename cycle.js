@@ -52,7 +52,7 @@ window.MATRIX_CYCLE={
   {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"합일 대응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
   {id:"tune",name:"강화: 조화도 파괴",type:"조화 밀집",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"해킹 이탈 부여 시 해당 공명자 피해 +30% (30초)",dmg:30,cond:"hack"}]}
  ],
- vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling"],
+ vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling","lily"],
  emergency:{id:"lynae",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
  dmgBonus:{roccia:20,brant:25,cantarella:25,camellya:25,phoebe:20,carlotta:25,zhezhi:20,yinlin:20,jinhsi:25,changli:25,jiyan:25,xiangliyao:25},
  source:"Game8, TOPUPlive의 3.7 종말 매트릭스 공략 (2026년 10월 기준)",
