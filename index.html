@@ -402,11 +402,12 @@ th{font-family:var(--f-num);background:var(--strip)}
 .rcard .rwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:10.5px;font-weight:600;background:#14181c;color:#e6c36a;border-radius:2px;padding:0 3px;line-height:1.35}
 .prof{padding:0;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:#10151a;color:#eef2f5;width:min(1480px,97vw);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .prof::backdrop{background:rgba(4,7,10,.66);backdrop-filter:blur(3px)}
-.pf{display:grid;grid-template-columns:minmax(200px,300px) minmax(0,1fr);min-height:min(820px,90vh)}
-.pf-main{display:flex;flex-direction:column;min-width:0}
+.pf{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);grid-template-rows:auto 1fr;min-height:min(820px,90vh)}
+.pf-s{grid-column:1/-1}
+.pf-l .face{min-height:300px}
 .pf-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 @media (max-width:900px){.pf-row2{grid-template-columns:1fr}}
-@media (max-width:1200px){.pf{grid-template-columns:minmax(160px,220px) minmax(0,1fr)}}
+@media (max-width:1200px){.pf{grid-template-columns:minmax(200px,280px) minmax(0,1fr)}}
 .pf-l{position:relative;border-right:1px solid rgba(255,255,255,.1)}
 .pf-l .face{position:relative;width:100%;height:100%}
 .pf-l .elb{position:absolute;left:12px;top:12px;width:44px;height:44px}
@@ -497,7 +498,9 @@ th{font-family:var(--f-num);background:var(--strip)}
 .ec-sub.none span{color:#56616d}
 .sti{width:18px;height:18px;flex:none;opacity:.85;display:inline-block}
 .ec-sub.off span,.ec-sub.off .sti{opacity:.4}
-.t1 b,.t2 b{color:#8f99a3!important}.t3 b,.t4 b{color:#e9edf1!important}.t5 b,.t6 b{color:#8fd19e!important}.t7 b{color:#8cb8ff!important}.t8 b{color:#f3c86b!important}
+.t1 b,.t2 b{color:#7d8791!important}.t3 b,.t4 b{color:#ffffff!important}.t5 b,.t6 b{color:#6fe08a!important}.t7 b{color:#ffd23f!important}.t8 b{color:#ff5c5c!important}
+.t5 b,.t6 b,.t7 b,.t8 b{font-weight:700!important}
+.ec-sub span{color:#b6bfc8}
 .etier{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px;font-size:12px;color:#8d98a3}
 .etier i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .ecard.empty{border:1.5px dashed #34404c;background:transparent;align-items:center;justify-content:center;text-align:center;color:#8d98a3;min-height:250px;cursor:pointer;gap:6px}
@@ -1456,7 +1459,7 @@ function echoHTML(id){
       <div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
       ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
       <div class="ec-subs">${subs}</div>${msg}</div>`};
-  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#8f99a3"></i>1~2</span><span><i style="background:#e9edf1"></i>3~4</span><span><i style="background:#8fd19e"></i>5~6</span><span><i style="background:#8cb8ff"></i>7</span><span><i style="background:#f3c86b"></i>8 (최대)</span><span>· 흐린 줄은 이 공명자에게 효과 없는 부옵</span></div>`;
+  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 흐린 줄은 이 공명자에게 효과 없는 부옵</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 5세트 / 3+2세트로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=eb.screen;
@@ -1579,7 +1582,6 @@ function renderProfile(){
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
   $("#prof").innerHTML=`<form method="dialog" class="pf">
    <div class="pf-l"><div class="face${cardUrl(id)?" pic":""}${gameImg.card.has(id)?" tall":""}" style="--ec:var(--${c.el})${cardUrl(id)?`;--pic:url('${cardUrl(id)}')`:""}"><span class="elb"><img src="icons/el-${c.el}.png" alt=""></span></div></div>
-   <div class="pf-main">
    <div class="pf-r">
     <div class="pf-h"><h3>${esc(c.name)}</h3><span class="chip el" style="--ec:var(--${c.el})">${EL[c.el]}</span><span class="chip">${c.rar}★</span><span class="chip">${ROLE[c.role]||""}</span><span class="chip">${WTYPE[t]||""}</span>
       <button class="x" value="close" aria-label="닫기">✕</button></div>
@@ -1603,7 +1605,7 @@ function renderProfile(){
     </div>
    </div>
    <div class="pf-s${g.trial?" pf-dim":""}">${statsHTML(id)}<input type="file" accept="image/*" id="pfEFile" multiple hidden></div>
-   </div></form>`;
+   </form>`;
 }
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
