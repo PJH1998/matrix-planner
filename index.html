@@ -503,7 +503,7 @@ th{font-family:var(--f-num);background:var(--strip)}
 .seg2 button{border:0;background:none;color:#9aa6b1;padding:5px 12px;border-radius:8px;font-size:13.5px;cursor:pointer}
 .seg2 button[aria-pressed="true"]{background:#2a2a22;color:#f3e3b5}
 .esel{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.28);border-radius:10px;padding:4px 10px 4px 5px}
-.esel img{width:28px;height:28px;border-radius:50%;background:#1b232d}
+.esel img{width:30px;height:30px;border-radius:50%;background:#1b232d;padding:2px}
 .esel select{background:none;border:0;color:#e9edf1;font-size:14px;max-width:260px;font-family:inherit}
 .esel em{font-style:normal;color:#9aa6b1;font-size:13px}
 .ecostc{margin-left:auto;color:#9aa6b1;font-size:13px}.ecostc.bad{color:#f2a982}
@@ -556,6 +556,7 @@ th{font-family:var(--f-num);background:var(--strip)}
 .ebar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#d9bf7a;border-radius:2px}
 .es-note{grid-column:1/-1;font-size:12.5px;color:#9aa6b1;line-height:1.6}
 .es-note.warn{color:#f2a982}
+.es-note .esi{width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:4px;background:#1b232d}
 .estat-msg{font-size:12.5px;color:#e3c983}
 .skill{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .skill select{width:auto;padding:4px 8px;color:var(--fg);background:var(--panel-2);border-color:color-mix(in srgb,var(--gold) 45%,var(--line));font-weight:600}
@@ -1525,7 +1526,7 @@ function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)retur
     ${bar("크리 피해",X.cd,cdRef,"%",false,`기준 ${cdRef}%${gd.cd?" (공식 가이드 추천)":""}`)}
     ${bar(`${EL[c.el]} 피해`,X.el,elRefOf(id),"%",false,`기준 ${elRefOf(id)}%`)}
     ${bar("공명 효율",X.er,erm.min,"%",erLow,`최소 ${erm.min}%${erm.src==="guide"?" (공식 가이드)":erm.est?" (추정)":" (이잘키)"}`)}
-    <div class="es-note">${eb.sets.map(x=>`${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")})`:""}`).join(" · ")}${fx.length?` · 조건부 효과(유지율 반영): ${fx.join(", ")}`:""}${Object.entries(X.types).filter(([k,v])=>v>0).length?` · 피해 보너스: ${Object.entries(X.types).filter(([k,v])=>v>0).map(([k,v])=>`${EchoDB.LABEL[k]} ${v.toFixed(1)}%`).join(", ")}`:""}</div>
+    <div class="es-note">${eb.sets.map(x=>`<img class="esi" src="${setIconUrl(x.name)}" alt="" onerror="this.remove()">${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")})`:""}`).join(" · ")}${fx.length?` · 조건부 효과(유지율 반영): ${fx.join(", ")}`:""}${Object.entries(X.types).filter(([k,v])=>v>0).length?` · 피해 보너스: ${Object.entries(X.types).filter(([k,v])=>v>0).map(([k,v])=>`${EchoDB.LABEL[k]} ${v.toFixed(1)}%`).join(", ")}`:""}</div>
     ${erm.note||erm.adjText?`<div class="es-note">공명 효율 최소치 ${erm.min}%: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
     ${erLow?`<div class="es-note warn">공명 효율이 최소치보다 ${(erm.min-X.er).toFixed(1)}% 낮아 사이클이 밀릴 수 있어요. 다른 칸의 부옵, 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도에는 반영하지 않음)</div>`:""}
     ${echoSlots(id).filter(Boolean).length<5?`<div class="es-note">에코 ${echoSlots(id).filter(Boolean).length}/5 — 빈 칸은 스탯 0으로 계산합니다.</div>`:""}</div>`}
