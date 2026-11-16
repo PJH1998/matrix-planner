@@ -121,6 +121,8 @@
       (e.subs||[]).forEach(s=>addKey(S,s.k,+s.v||0,null,o.el))});
     const act=activeFx(setCounts(E));
     act.filter(a=>a.p2).forEach(a=>Object.entries(a.p2).forEach(([k,v])=>{if(k!=="elem")addKey(S,k,v,a.p2.elem,o.el)}));
+    // 스탯 화면에 보이는 값(조건부 효과 전) — 공식 추천 스탯과 비교할 때 쓴다
+    {const T=finish(JSON.parse(JSON.stringify(S)),o,B[1]+(W?W[0]:0));S.screen={atk:T.atk,hp:T.hp,def:T.def,cr:T.cr,cd:T.cd,er:T.er,heal:T.heal,el:T.el,types:Object.assign({},T.types)}}
     S.fx=[];
     act.filter(a=>a.fx&&a.fx.to!=="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:a.fx.to||"self"});if(m>0)addKey(S,a.fx.k,a.fx.v*m,a.fx.elem,o.el)});
     act.filter(a=>a.fx&&a.fx.to==="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:"next"})});

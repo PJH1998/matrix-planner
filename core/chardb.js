@@ -45,7 +45,11 @@
     base:id=>raw(id).base||null,
     ijk:id=>raw(id).ijk||null,
     // 공명 효율 최소치 {min, est}. 표에 없으면 역할별 기본값(메인 120 / 서브 125 / 서포터 200, 추정)
-    erMin:id=>{const v=raw(id).er;if(v!=null)return {min:+v,est:false};const c=cur(id)||raw(id);return {min:({dps:120,sub:125,support:200})[c.role]||120,est:true}},
+    // 공명 효율 최소치 {min, src}: 공식 공략 사이트 추천 → 이잘키 표 → 역할별 기본값(메인 120 / 서브 125 / 서포터 200, 추정)
+    erMin:id=>{const g=raw(id).guide;if(g&&g.er!=null)return {min:+g.er,src:"guide"};const v=raw(id).er;if(v!=null)return {min:+v,src:"ijk"};
+      const c=cur(id)||raw(id);return {min:({dps:120,sub:125,support:200})[c.role]||120,src:"est",est:true}},
+    guide:id=>raw(id).guide||null,          // 공식 공략 사이트 추천 스탯 {cr, cd, er, atk, hp, def, heal, el, skill, gt:[초과 조건 키], src}
+    gb:id=>raw(id).gb,
     scale:id=>{const c=cur(id);return (c&&c.statScale)||raw(id).statScale||"atk"},
     nodes:id=>raw(id).nodes||{},
     sets:id=>raw(id).sets||[],

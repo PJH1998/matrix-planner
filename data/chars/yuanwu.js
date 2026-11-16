@@ -14,6 +14,9 @@ MP.addChar({
 
   // 90레벨 기본 [HP, 공격력, 방어력]
   base:[8525,225,1638],
+  // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
+  guide:{def:3500,er:110,cr:70,cd:210,src:13029},
+  gb:1303,
   // 고유 스탯 노드 합계
   nodes:{el:12,"def%":15.2},
 

@@ -151,6 +151,8 @@ core/echodb.js       EchoDB — 에코 중개자: 캡처 글자 해석·숫자 �
 | 종말 매트릭스 보스·파워 서킷 정보 | Game8, TOPUPlive 공략 |
 | 라운드별 보스 HP 배율 (예측치) | 커뮤니티 측정값 |
 | 공명자 기본 스탯, 무기 기본 공격력·부옵션 | [encore.moe](https://encore.moe/) |
+| 공명자별 추천 스탯(크리티컬·크리티컬 피해·공명 효율 등) | 명조 공식 공략 사이트 [wuwaguide.kurogames.com](https://wuwaguide.kurogames.com/ko/) 「원스톱 육성 가이드」 |
+| 에코 부옵 수치별 확률 | 명조 한국 확률 공시(상품 정보 제공) |
 | 공명자별 기준 스탯(이 정도면 잘 키웠다) | 아카라이브 명조 채널 위키 「[이정도면 잘키웠다표](https://arca.live/w/wutheringwaves/%EC%9D%B4%EC%A0%95%EB%8F%84%EB%A9%B4%20%EC%9E%98%ED%82%A4%EC%9B%A0%EB%8B%A4%ED%91%9C)」 (CC BY-SA 4.0) |
 
 수치는 각 사이트의 계산을 바탕으로 이 사이트가 다시 가공한 값이며, 실제 게임 성능과 다를 수 있습니다.

@@ -18,6 +18,9 @@ MP.addChar({
   base:[10825,413,1259],
   // '이 정도면 잘 키웠다' 기준 스탯
   ijk:{main:["atk",2200],cr:70,cd:260,el:2,cfg:"속속",node:0},
+  // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
+  guide:{cr:70,cd:275,skill:20,src:13011},
+  gb:1304,
   // 고유 스탯 노드 합계
   nodes:{cr:8,"atk%":12},
   // 주력 에코 세트 [세트, 개수, …]

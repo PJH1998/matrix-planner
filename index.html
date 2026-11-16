@@ -466,6 +466,10 @@ th{font-family:var(--f-num);background:var(--strip)}
 .esum .en.off{color:#9ba7b3}
 .esum .ebad{color:#ff9b7a}
 .esum .en.ewarn{color:#ffb38a}
+.esum .en.gl{color:#cfd4d9;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.gch{font-size:11.5px;padding:0 6px;border:1px solid}
+.gch.ok{color:#9fd8a8;border-color:rgba(159,216,168,.5)}
+.gch.no{color:#ffb38a;border-color:rgba(255,179,138,.5)}
 .eslots{display:flex;flex-direction:column;gap:6px}
 .eslot{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);padding:6px 8px;font-size:12.5px;color:#dfe4e8}
 .eslot.empty{border-style:dashed;color:#9ba7b3;cursor:pointer;text-align:center;padding:10px 8px}
@@ -1385,19 +1389,24 @@ const fmtV=(k,v)=>`${+(+v).toFixed(1)}${EchoDB.PCT_KEYS.has(k)?"%":""}`;
 const echoLab=(k,elem)=>k==="el"&&elem?`${EL[elem]} 피해`:k==="atk%"?"공격력%":k==="hp%"?"HP%":k==="def%"?"방어력%":EchoDB.LABEL[k]||k;
 function echoHTML(id){
   const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const sf=n?statFactor(id):null;const eb=n?echoBuild(id):null;const sc=scaleOf(id);
-  const ref=echoRef(id);const erm=CharDB.erMin(id);const erLow=!!eb&&eb.er+0.05<erm.min;
-  const sum=eb?`<div class="esum"><div class="eh"><span>에코 반영 스탯</span><span>스탯 배율 ${sf?(sf.f*100).toFixed(0)+"%":"–"}</span></div>
-     <span>${sc==="hp"?"HP":"공격력"}</span><b>${Math.round(sc==="hp"?eb.hp:eb.atk).toLocaleString()}</b>
-     <span>크리티컬 / 크리티컬 피해</span><b>${eb.cr.toFixed(1)}% / ${eb.cd.toFixed(1)}%</b>
-     <span>${EL[c.el]} 피해</span><b>${eb.el.toFixed(1)}%</b>
-     ${Object.entries(eb.types).filter(([k,v])=>v>0).map(([k,v])=>`<span>${EchoDB.LABEL[k]}</span><b>${v.toFixed(1)}%</b>`).join("")}
-     <span>공명 효율 / 최소${erm.est?"(추정)":""}</span><b${erLow?' class="ebad"':''}>${eb.er.toFixed(1)}% / ${erm.min}%</b>
-     ${erLow?`<div class="en ewarn">공명 효율이 최소치보다 ${(erm.min-eb.er).toFixed(1)}% 낮습니다. 사이클이 밀릴 수 있어요. 다른 칸의 부옵이나 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도 계산에는 반영하지 않습니다)</div>`:""}
+  const ref=echoRef(id);const erm=CharDB.erMin(id);const erLow=!!eb&&eb.screen.er+0.05<erm.min;
+  const gd=CharDB.guide(id);const GL={cr:"크리티컬",cd:"크리티컬 피해",er:"공명 효율",atk:"공격력",hp:"HP",def:"방어력",heal:"치료 효과",el:`${EL[c.el]} 피해`,skill:"공명 스킬 피해"};
+  const gv=k=>!eb?null:k==="skill"?(eb.screen.types.skill||0):eb.screen[k];
+  const gchips=gd&&eb?Object.keys(GL).filter(k=>gd[k]!=null).map(k=>{const v=gv(k),gt=(gd.gt||[]).includes(k);const ok=v!=null&&(gt?v>gd[k]:v+0.05>=gd[k]);
+     const pct=!["atk","hp","def"].includes(k);return `<span class="gch ${ok?"ok":"no"}" title="공식 추천 ${gt?">":"≥"} ${gd[k]}${pct?"%":""} · 지금 ${pct?v.toFixed(1)+"%":Math.round(v).toLocaleString()}">${ok?"✓":"✗"} ${GL[k]} ${gt?">":"≥"}${gd[k]}${pct?"%":""}</span>`}).join(""):"";
+  const sum=eb?`<div class="esum"><div class="eh"><span>에코 반영 스탯 (스탯 화면 기준)</span><span>스탯 배율 ${sf?(sf.f*100).toFixed(0)+"%":"–"}</span></div>
+     <span>${sc==="hp"?"HP":"공격력"}</span><b>${Math.round(sc==="hp"?eb.screen.hp:eb.screen.atk).toLocaleString()}</b>
+     <span>크리티컬 / 크리티컬 피해</span><b>${eb.screen.cr.toFixed(1)}% / ${eb.screen.cd.toFixed(1)}%</b>
+     <span>${EL[c.el]} 피해</span><b>${eb.screen.el.toFixed(1)}%</b>
+     ${Object.entries(eb.screen.types).filter(([k,v])=>v>0).map(([k,v])=>`<span>${EchoDB.LABEL[k]}</span><b>${v.toFixed(1)}%</b>`).join("")}
+     <span>공명 효율 / 최소${erm.est?"(추정)":""}</span><b${erLow?' class="ebad"':''}>${eb.screen.er.toFixed(1)}% / ${erm.min}%</b>
+     ${gchips?`<div class="en gl">공식 가이드 추천 스탯(스탯 화면 기준): ${gchips}</div>`:""}
+     ${erLow?`<div class="en ewarn">공명 효율이 ${erm.src==="guide"?"공식 가이드 추천":"최소"}치보다 ${(erm.min-eb.screen.er).toFixed(1)}% 낮습니다. 사이클이 밀릴 수 있어요. 다른 칸의 부옵이나 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도 계산에는 반영하지 않습니다)</div>`:""}
      <div class="en">세트: ${eb.sets.map(x=>`${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")} 적용)`:""}`).join(", ")||"없음"}</div>
-     ${eb.fx.length?`<div class="en">조건부 효과(평균 유지율 반영): ${eb.fx.map(f=>`${echoLab(f.k,f.elem)} ${f.to==="next"?"→ 다음 캐릭터 ":f.to==="party"?"(파티) ":""}+${+f.eff.toFixed(1)}${f.eff<=0?" (조건 안 맞음)":""}`).join(", ")}</div>`:""}
+     ${eb.fx.length?`<div class="en">강도 계산에는 조건부 효과(평균 유지율 반영)도 더합니다: ${eb.fx.map(f=>`${echoLab(f.k,f.elem)} ${f.to==="next"?"→ 다음 캐릭터 ":f.to==="party"?"(파티) ":""}+${+f.eff.toFixed(1)}${f.eff<=0?" (조건 안 맞음)":""}`).join(", ")}</div>`:""}
      ${n<5?`<div class="en off">에코 ${n}/5 — 5개를 모두 넣어야 정확합니다. 빈 칸은 스탯 0으로 계산합니다.</div>`:""}
      ${c.role==="support"?`<div class="en off">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.</div>`:""}
-     <div class="en off">기준(이잘키·기준 세트): ${sc==="hp"?"HP":"공격력"} ${Math.round(sc==="hp"?ref.hp:ref.atk).toLocaleString()} · 크리 ${ref.cr.toFixed(1)}% · 크피 ${ref.cd.toFixed(1)}% · 속성 ${ref.el.toFixed(1)}%. 위 수치는 스탯 화면과 달리 조건부 효과까지 더한 값입니다.</div></div>`
+     <div class="en off">기준(이잘키·기준 세트): ${sc==="hp"?"HP":"공격력"} ${Math.round(sc==="hp"?ref.hp:ref.atk).toLocaleString()} · 크리 ${ref.cr.toFixed(1)}% · 크피 ${ref.cd.toFixed(1)}% · 속성 ${ref.el.toFixed(1)}%(조건부 효과 포함).</div></div>`
     :`${c.role==="support"?`<p class="sbnote">서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과(예: 떠오르는 구름)만 반영합니다.</p>`:""}<p class="sbnote">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 칸마다 고르세요(기본: 이 공명자의 주력 세트). 2세트 고정 효과와 5세트 조건부 효과까지 반영합니다.</p>`;
   const slot=(e,i)=>{const msg=echoMsg[id+":"+i]?`<div class="emsg">${esc(echoMsg[id+":"+i])}</div>`:"";
     if(!e)return `<div class="eslot empty${echoSel===i?" sel":""}" data-eslot="${i}">에코 ${i+1} — 캡처 붙여넣기(Ctrl+V) · 끌어다 놓기 · 눌러서 선택${msg}</div>`;

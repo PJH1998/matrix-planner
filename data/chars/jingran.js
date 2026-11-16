@@ -18,6 +18,9 @@ MP.addChar({
   ijk:{main:["hp",50000],cr:45.5,cd:300,el:0,cfg:"44111",node:0},
   // 공명 효율 최소치(%) — 못 채우면 사이클이 밀린다 · 120~125
   er:120,
+  // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
+  guide:{hp:50000,atk:3000,cr:50,cd:300,er:120,src:13150},
+  gb:1212,
   // 공격력 대신 비례하는 주 스탯
   statScale:"hp",
   // 고유 스탯 노드 합계

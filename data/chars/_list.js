@@ -18,7 +18,9 @@
      base                       90레벨 기본 [HP, 공격력, 방어력] (encore.moe)
      ijk                        '이 정도면 잘 키웠다' 기준 스탯 {main:[atk|hp, 값], cr, cd, el(3코 속성 개수), cfg, node}
                                 출처: 아카라이브 명조 채널 위키 「이정도면 잘키웠다표」 (CC BY-SA 4.0), 2026-11-14 판
-     er                         공명 효율 최소치(%) — 못 채우면 사이클이 밀린다. 출처: 위 위키 표. 없으면 역할별 기본값(추정)
+     guide, gb                  공식 공략 사이트(wuwaguide.kurogames.com, 「원스톱 육성 가이드」) 추천 스탯 · 게임 내 공명자 번호
+                                {cr, cd, er, atk, hp, def, heal, el, skill} Lv.90 스탯 화면 기준. gt: '초과'(>) 조건인 항목, src: 공략 id
+     er                         공명 효율 최소치(%) — 못 채우면 사이클이 밀린다. 출처: 위 위키 표. 공식 추천(guide.er)이 있으면 그쪽이 우선
      statScale                  공격력 대신 비례하는 주 스탯(hp)
      nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)
      wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)

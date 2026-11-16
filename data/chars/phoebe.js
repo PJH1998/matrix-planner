@@ -20,6 +20,9 @@ MP.addChar({
   ijk:{main:["atk",2200],cr:70,cd:280,el:2,cfg:"속속",node:0},
   // 공명 효율 최소치(%) — 못 채우면 사이클이 밀린다
   er:120,
+  // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
+  guide:{cr:70,cd:240,src:13003},
+  gb:1506,
   // 고유 스탯 노드 합계
   nodes:{cd:16,"atk%":12},
   // 주력 에코 세트 [세트, 개수, …]
