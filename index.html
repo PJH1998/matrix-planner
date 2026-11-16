@@ -662,6 +662,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 <script src="cycle.js"></script>
 <script src="weapons.js"></script>
 <script src="updates.js"></script>
+<script src="teams.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -1617,65 +1618,44 @@ $("#btnClear").addEventListener("click",e=>{
   clearArm=false;e.target.textContent="전체 비우기";
   state.teams.forEach(t=>{t.slots=[null,null,null];t.buff=null;t.example=false});persist();rerenderPlan();
 });
-/* ---------- 파티 자동 추천 ----------
-   0) 서포터 없는 정석 파티(NO_SUPPORT, 예: 플로로바·칸타렐라·로코코)는 셋 다 있으면 먼저 그대로 묶는다.
-   0-1) 정석 딜러 조합(COMBOS의 딜러 2명)은 갈라지지 않게 먼저 묶는다.
-   1) 딜러 조합: 보유한 메인 딜러 + 다른 딜러 2인 조합의 강도를 모두 계산해 센 조합부터 고른다(공명자 중복 없이, 배치 횟수 안에서).
-      조합마다 서포터 대신 딜러를 하나 더 넣은 3인(예: 플로로바·칸타렐라·로코코)이 더 세면 그대로 서포터 없는 파티로 확정한다.
-   2) 서포터: 센 파티부터 차례로, 남은 5성 서포터 중 그 파티를 가장 세게 만드는 서포터를 넣는다. 5성이 다 떨어지면 4성.
-      배치 2회 서포터는 두 파티까지 들어간다. 서포터가 모자라면 남은 딜러로 채운다.
-   3) 강화 효과는 파티마다 추천 효과로, 파티 순서는 '추천 순서로 정렬'과 같은 방식으로 정한다. 방랑자는 속성과 관계없이 1명만. */
-// 서포터 없이 완성되는 정석 파티. 셋 다 보유하고 배치 횟수가 남아 있으면 자동 추천에서 먼저 그대로 묶는다.
-const NO_SUPPORT=[["phrolova","cantarella","roccia"],["cartethyia","ciaccona","rover_a"]];
+/* ---------- 파티 자동 추천 (조합 데이터: teams.js) ----------
+   1) 최우선 조합(TEAM_PRESETS)을 순서대로, 셋 다 쓸 수 있으면 그대로 묶는다. (예: 히유키·루실라·수수, 여우의 별자리·쇄명·릴리)
+   2) 나머지는 '메인 딜러 + 두 명' 후보 파티를 만들고 추천 점수 = 강도 × (1 + 0.4 × 궁합 합) × 0.6^(다른 메인 딜러의 정석 파트너를 데려온 수)로 줄 세워
+      센 파티부터 공명자가 겹치지 않게(배치 횟수 안에서) 고른다. 메인 딜러를 모두 쓰려고 하지 않는다 — 조합이 우선.
+      궁합(PAIR_W)은 메인 딜러별 파트너 가중치. 방랑자는 속성과 관계없이 1명만.
+   3) 강화 효과·파티 순서를 정한 뒤, 예상 점수가 MIN_POINTS(1000점) 미만인 파티는 뺀다. */
+const PAIR_W=window.PAIR_W||{}, TEAM_PRESETS=window.TEAM_PRESETS||[], MIN_POINTS=window.MIN_POINTS||1000;
+function affinity(main,ids){const t=PAIR_W[main]||{};return ids.filter(x=>x!==main).reduce((a,x)=>a+(t[x]||((PAIR_W[x]||{})[main]||0)*.5),0)}
 function recommendTeams(){
-  const own=chars.filter(c=>state.owned[c.id]);
+  const own=chars.filter(c=>state.owned[c.id]).map(c=>c.id);
   const key=id=>id.startsWith("rover_")?"rover":id;
-  const left={};own.forEach(c=>{const k=key(c.id);left[k]=k==="rover"?1:Math.max(left[k]||0,vigorOf(c.id))});
+  const left={};own.forEach(id=>{const k=key(id);left[k]=k==="rover"?1:Math.max(left[k]||0,vigorOf(id))});
   const can=id=>left[key(id)]>0, use=id=>{left[key(id)]--};
+  const okTrio=ids=>new Set(ids.map(key)).size===ids.length;
   const val=ids=>teamCalc({slots:ids.slice(),buff:null}).base;
-  const sups=own.filter(c=>c.role==="support").map(c=>c.id), dps=own.filter(c=>c.role!=="support").map(c=>c.id);
-  const bestSupVal=ids=>Math.max(0,...sups.map(s=>val([...ids,s])));
-  // 1) 2인 딜러 조합 후보
-  const pairs=[];
-  dps.forEach(a=>{if(charMap[a].role!=="dps")return;dps.forEach(b=>{if(a===b||key(a)===key(b))return;
-    if(charMap[b].role==="dps"&&a>b&&pairs.some(p=>p.a===b&&p.b===a))return;pairs.push({a,b,v:val([a,b])})})});
-  // 2인 강도만으로는 세 번째 자리와의 궁합(서포터·딜러 3인 조합)이 안 보이므로, 상위 후보는 '가장 좋은 세 번째 공명자'까지 넣은 강도로 다시 줄 세운다
-  pairs.sort((x,y)=>y.v-x.v);
-  const inCombo=(a,b)=>COMBOS.some(c=>c.ids.includes(a)&&c.ids.includes(b));
-  pairs.forEach((p,i)=>{if(i<220||inCombo(p.a,p.b)){let m=bestSupVal([p.a,p.b]);dps.forEach(c=>{if(c!==p.a&&c!==p.b&&key(c)!==key(p.a)&&key(c)!==key(p.b))m=Math.max(m,val([p.a,p.b,c]))});p.full=m}else p.full=p.v*1.3});
-  pairs.sort((x,y)=>y.full-x.full);
-  const cores=[];
-  NO_SUPPORT.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))){ids.forEach(use);cores.push({ids:ids.slice(),v:val(ids),full:true})}});
-  // 정석 딜러 조합(COMBOS의 딜러 2명, 예: 아우구스타·유노, 여우의 별자리·쇄명)은 갈라지지 않게 먼저 묶는다. 센 조합부터.
-  const fixed=COMBOS.map(c=>c.ids.filter(id=>charMap[id]&&charMap[id].role!=="support")).filter(ids=>ids.length===2)
-    .filter(ids=>ids.every(id=>state.owned[id])).map(ids=>{const p=pairs.find(p=>(p.a===ids[0]&&p.b===ids[1])||(p.a===ids[1]&&p.b===ids[0]));return p||{a:ids[0],b:ids[1],v:val(ids),full:val(ids)*1.3}})
-    .sort((x,y)=>(y.full||y.v)-(x.full||x.v));
-  pairs.unshift(...fixed);
-  const reserved=new Set(fixed.flatMap(p=>[p.a,p.b])); // 아직 차례가 안 온 정석 조합 멤버는 다른 파티의 세 번째 자리로 빼 가지 않는다
-  for(const p of pairs){if(!can(p.a)||!can(p.b))continue;
-    use(p.a);use(p.b);reserved.delete(p.a);reserved.delete(p.b);
-    // 세 번째 딜러는 서브 딜러 중에서만 고른다 (메인 딜러는 자기 파티를 따로 꾸리도록)
-    let third=null,tv=0;dps.forEach(c=>{if(c===p.a||c===p.b||!can(c)||reserved.has(c)||charMap[c].role==="dps"||key(c)===key(p.a)||key(c)===key(p.b))return;const v=val([p.a,p.b,c]);if(v>tv){tv=v;third=c}});
-    if(third&&tv>=bestSupVal([p.a,p.b])){use(third);cores.push({ids:[p.a,p.b,third],v:tv,full:true})}
-    else cores.push({ids:[p.a,p.b],v:p.v,full:false});
-  }
-  // 2) 서포터: 센 파티부터 5성 → 4성
-  cores.filter(c=>!c.full).sort((x,y)=>y.v-x.v).forEach(c=>{
-    const pick=rar=>{let b=null,bv=-1;sups.forEach(s=>{if(!can(s)||charMap[s].rar!==rar||c.ids.includes(s))return;const v=val([...c.ids,s]);if(v>bv){bv=v;b=s}});return b};
-    // 정석 조합에 서포터가 정해져 있으면(예: 청초·데니아 → 모니에) 그 서포터를 먼저
-    const want=COMBOS.find(cb=>c.ids.every(id=>cb.ids.includes(id))&&cb.ids.some(id=>charMap[id]&&charMap[id].role==="support"));
-    let s=want?want.ids.find(id=>charMap[id]&&charMap[id].role==="support"&&state.owned[id]&&can(id)):null;
-    s=s||pick(5)||pick(4);
-    if(!s){let bv=-1;dps.forEach(d=>{if(!can(d)||c.ids.some(x=>key(x)===key(d)))return;const v=val([...c.ids,d]);if(v>bv){bv=v;s=d}})}
-    if(s){use(s);c.ids.push(s)}
-    c.v=val(c.ids);});
-  // 남은 공명자로 만들 수 있는 3인 파티 (딜러 1명 이상)
-  for(;;){const rest=own.map(c=>c.id).filter(can);const d=rest.filter(id=>charMap[id].role!=="support").sort((a,b)=>charScore(b)-charScore(a));
-    if(!d.length||rest.length<3)break;const ids=[d[0]];use(d[0]);
-    for(let k=0;k<2;k++){let b=null,bv=-1;own.map(c=>c.id).forEach(x=>{if(!can(x)||ids.some(y=>key(y)===key(x)))return;const v=val([...ids,x]);if(v>bv){bv=v;b=x}});if(!b)break;use(b);ids.push(b)}
-    if(ids.length<3){break}cores.push({ids,v:val(ids),full:true});}
-  const teams=cores.filter(c=>c.ids.length===3).map(c=>{const t={slots:c.ids.slice(),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
-  return teams;
+  const picked=[];
+  // 1) 최우선 조합
+  TEAM_PRESETS.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))&&okTrio(ids)){ids.forEach(use);picked.push(ids.slice())}});
+  // 2) 후보 파티: 메인 딜러마다 궁합 파트너 + 2인 강도 상위 14명 중 두 명
+  const mains=own.filter(id=>charMap[id].role==="dps");
+  const cands=[];
+  mains.forEach(m=>{
+    const others=own.filter(x=>x!==m&&key(x)!==key(m));
+    const top=others.map(x=>[x,val([m,x])]).sort((a,b)=>b[1]-a[1]).slice(0,14).map(x=>x[0]);
+    const pool=[...new Set([...top,...Object.keys(PAIR_W[m]||{}).filter(x=>others.includes(x))])];
+    for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){const ids=[m,pool[i],pool[j]];if(!okTrio(ids))continue;
+      // 메인 딜러 셋, 또는 궁합 표에 없는 메인 딜러 둘이 한 파티에 들어가는 조합은 만들지 않는다 (여우의 별자리·쇄명처럼 표에 있으면 허용)
+      const ds=ids.filter(x=>charMap[x].role==="dps");
+      if(ds.length>=3)continue;
+      if(ds.length===2&&!((PAIR_W[ds[0]]||{})[ds[1]]||(PAIR_W[ds[1]]||{})[ds[0]]))continue;
+      const v=val(ids);const mm=mainDps({slots:ids});
+      // 다른 메인 딜러의 정석 파트너(궁합 1)를 데려오면 감점 — 정석 조합이 갈라지지 않게
+      const steal=ids.filter(x=>x!==mm&&mains.some(m2=>m2!==mm&&!ids.includes(m2)&&(PAIR_W[m2]||{})[x]===1&&!((PAIR_W[mm]||{})[x]>=1))).length;
+      cands.push({ids,v,score:v*(1+0.4*affinity(mm,ids))*Math.pow(0.6,steal)})}
+  });
+  cands.sort((a,b)=>b.score-a.score);
+  for(const c of cands){if(c.ids.every(can)){c.ids.forEach(use);picked.push(c.ids)}}
+  return picked.map(ids=>{const t={slots:ids.slice(),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
 }
 let undoTeams=null;
 $("#btnAuto").addEventListener("click",()=>{
@@ -1684,8 +1664,10 @@ $("#btnAuto").addEventListener("click",()=>{
   if(!teams.length){flash("추천할 수 있는 파티가 없습니다.");return}
   undoTeams=JSON.parse(JSON.stringify(state.teams));
   state.teams=teams;state.teams=bestOrder();
+  // 예상 점수가 MIN_POINTS 미만인 파티는 빼고 다시 정렬 (뺀 만큼 뒤 파티 점수가 달라지므로 두어 번 반복)
+  let cut=0;for(let k=0;k<3;k++){const r=simulate(state.teams);const keep=state.teams.filter((t,i)=>r.res[i].pts>=MIN_POINTS);if(keep.length===state.teams.length)break;cut+=state.teams.length-keep.length;state.teams=keep;state.teams=bestOrder()}
   persist();rerenderPlan();$("#btnUndo").hidden=false;
-  flash(`파티 ${teams.length}개를 자동으로 짰습니다`);
+  flash(`파티 ${state.teams.length}개를 자동으로 짰습니다${cut?` (예상 ${MIN_POINTS}점 미만 ${cut}개 제외)`:""}`);
   console.log("recommend ms",Math.round(performance.now()-t0));
 });
 $("#btnUndo").addEventListener("click",()=>{if(!undoTeams)return;state.teams=undoTeams;undoTeams=null;$("#btnUndo").hidden=true;persist();rerenderPlan();flash("자동 추천 전으로 되돌렸습니다.")});
