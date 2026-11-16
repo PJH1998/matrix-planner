@@ -774,6 +774,7 @@ const SYN={
 const COMBOS=[
  {ids:["qingxiao","denia","mornye"],name:"조화 밀집"},
  {ids:["hsin","suoming"],name:"합일"},
+ {ids:["augusta","iuno"],name:"아우구스타 정석"},
  {ids:["lucy","rebecca"],name:"해킹"},
  {ids:["cartethyia","ciaccona","rover_a"],name:"풍식"},
  {ids:["zani","phoebe"],name:"광학"},
@@ -1618,6 +1619,7 @@ $("#btnClear").addEventListener("click",e=>{
 });
 /* ---------- 파티 자동 추천 ----------
    0) 서포터 없는 정석 파티(NO_SUPPORT, 예: 플로로바·칸타렐라·로코코)는 셋 다 있으면 먼저 그대로 묶는다.
+   0-1) 정석 딜러 조합(COMBOS의 딜러 2명)은 갈라지지 않게 먼저 묶는다.
    1) 딜러 조합: 보유한 메인 딜러 + 다른 딜러 2인 조합의 강도를 모두 계산해 센 조합부터 고른다(공명자 중복 없이, 배치 횟수 안에서).
       조합마다 서포터 대신 딜러를 하나 더 넣은 3인(예: 플로로바·칸타렐라·로코코)이 더 세면 그대로 서포터 없는 파티로 확정한다.
    2) 서포터: 센 파티부터 차례로, 남은 5성 서포터 중 그 파티를 가장 세게 만드는 서포터를 넣는다. 5성이 다 떨어지면 4성.
@@ -1644,16 +1646,26 @@ function recommendTeams(){
   pairs.sort((x,y)=>y.full-x.full);
   const cores=[];
   NO_SUPPORT.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))){ids.forEach(use);cores.push({ids:ids.slice(),v:val(ids),full:true})}});
+  // 정석 딜러 조합(COMBOS의 딜러 2명, 예: 아우구스타·유노, 여우의 별자리·쇄명)은 갈라지지 않게 먼저 묶는다. 센 조합부터.
+  const fixed=COMBOS.map(c=>c.ids.filter(id=>charMap[id]&&charMap[id].role!=="support")).filter(ids=>ids.length===2)
+    .filter(ids=>ids.every(id=>state.owned[id])).map(ids=>{const p=pairs.find(p=>(p.a===ids[0]&&p.b===ids[1])||(p.a===ids[1]&&p.b===ids[0]));return p||{a:ids[0],b:ids[1],v:val(ids),full:val(ids)*1.3}})
+    .sort((x,y)=>(y.full||y.v)-(x.full||x.v));
+  pairs.unshift(...fixed);
+  const reserved=new Set(fixed.flatMap(p=>[p.a,p.b])); // 아직 차례가 안 온 정석 조합 멤버는 다른 파티의 세 번째 자리로 빼 가지 않는다
   for(const p of pairs){if(!can(p.a)||!can(p.b))continue;
-    use(p.a);use(p.b);
-    let third=null,tv=0;dps.forEach(c=>{if(c===p.a||c===p.b||!can(c)||key(c)===key(p.a)||key(c)===key(p.b))return;const v=val([p.a,p.b,c]);if(v>tv){tv=v;third=c}});
+    use(p.a);use(p.b);reserved.delete(p.a);reserved.delete(p.b);
+    // 세 번째 딜러는 서브 딜러 중에서만 고른다 (메인 딜러는 자기 파티를 따로 꾸리도록)
+    let third=null,tv=0;dps.forEach(c=>{if(c===p.a||c===p.b||!can(c)||reserved.has(c)||charMap[c].role==="dps"||key(c)===key(p.a)||key(c)===key(p.b))return;const v=val([p.a,p.b,c]);if(v>tv){tv=v;third=c}});
     if(third&&tv>=bestSupVal([p.a,p.b])){use(third);cores.push({ids:[p.a,p.b,third],v:tv,full:true})}
     else cores.push({ids:[p.a,p.b],v:p.v,full:false});
   }
   // 2) 서포터: 센 파티부터 5성 → 4성
   cores.filter(c=>!c.full).sort((x,y)=>y.v-x.v).forEach(c=>{
     const pick=rar=>{let b=null,bv=-1;sups.forEach(s=>{if(!can(s)||charMap[s].rar!==rar||c.ids.includes(s))return;const v=val([...c.ids,s]);if(v>bv){bv=v;b=s}});return b};
-    let s=pick(5)||pick(4);
+    // 정석 조합에 서포터가 정해져 있으면(예: 청초·데니아 → 모니에) 그 서포터를 먼저
+    const want=COMBOS.find(cb=>c.ids.every(id=>cb.ids.includes(id))&&cb.ids.some(id=>charMap[id]&&charMap[id].role==="support"));
+    let s=want?want.ids.find(id=>charMap[id]&&charMap[id].role==="support"&&state.owned[id]&&can(id)):null;
+    s=s||pick(5)||pick(4);
     if(!s){let bv=-1;dps.forEach(d=>{if(!can(d)||c.ids.some(x=>key(x)===key(d)))return;const v=val([...c.ids,d]);if(v>bv){bv=v;s=d}})}
     if(s){use(s);c.ids.push(s)}
     c.v=val(c.ids);});
