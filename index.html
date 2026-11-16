@@ -391,7 +391,12 @@ th{font-family:var(--f-num);background:var(--strip)}
 .pcard.r4 .pstar{color:#c99bff}
 .pcard .pinfo{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:flex-end;gap:10px}
 .pcard .ptxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pcard .ptxt b{font-size:19px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.pcard .ptxt b{display:flex;align-items:center;gap:6px;font-size:19px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);min-width:0}
+.pcard .ptxt .pnm{font-size:19px;color:#fff;font-family:var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (max-width:560px){.pcard .ptxt .pnm{font-size:16px}}
+.pfav{flex:none;border:0;font-family:"Segoe UI Symbol","Noto Sans KR",sans-serif;background:rgba(0,0,0,.35);color:#d5dbe0;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pfav:hover{color:#ff7a9a}.pfav.on{color:#ff5c7f;background:rgba(255,92,127,.18)}
+.rcard .rfav{position:absolute;right:6px;top:6px;z-index:3;color:#ff5c7f;font-size:15px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .pcard .ptxt span{font-size:13.5px;color:#d5dbe0;font-family:var(--f-num),var(--f-body)}
 .pcard .ptxt em{font-style:normal;color:#e6c36a}
 .pcard .pwep{position:relative;flex:none;width:52px;height:52px;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
@@ -867,7 +872,7 @@ function normalize(s){
   if(!s||typeof s!=="object") return d;
   const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
     teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:(s.sortV>=2&&typeof s.rosterSort==="string")?s.rosterSort:"new",rosterView:s.rosterView==="profile"?"profile":"icon",sortV:2}; // sortV 2: 보유 캐릭터 기본 정렬을 출시순으로 바꾸며 한 번 초기화
+    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:(s.sortV>=2&&typeof s.rosterSort==="string")?s.rosterSort:"new",rosterView:s.rosterView==="profile"?"profile":"icon",fav:s.fav&&typeof s.fav==="object"?s.fav:{},sortV:2}; // sortV 2: 보유 캐릭터 기본 정렬을 출시순으로 바꾸며 한 번 초기화
   return o;
 }
 function derive(){
@@ -1427,6 +1432,7 @@ function renderRoster(){
   $("#rElFilter").innerHTML=`<button data-el="" aria-pressed="${!ui.rel}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.rel===e}"><img class="eli" src="icons/el-${e}.png" alt=""></button>`).join("");
   const list=chars.filter(c=>(!q||c.name.includes(q))&&(!ui.rel||c.el===ui.rel));
   sortChars(list,state.rosterSort||"new",true);$("#rosterSort").value=state.rosterSort||"new";
+  const fav=state.fav||{};list.sort((a,b)=>(+!!fav[b.id])-(+!!fav[a.id])); // 즐겨찾기는 어떤 정렬이든 맨 앞 (안정 정렬이라 그 안의 순서는 유지)
   $("#ownCount").textContent=`보유 ${chars.filter(c=>state.owned[c.id]).length} / ${chars.length}`;
   const pm=state.rosterView==="profile";$("#rgrid").classList.toggle("pmode",pm);
   document.querySelectorAll("[data-rview]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rview===(pm?"profile":"icon"))));
@@ -1435,7 +1441,7 @@ function renderRoster(){
     const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);
     const extra=(g.trial?`<span class="rlv rtr" title="체험 세팅 (육성 안 함)">체험</span>`:`<span class="rlv"><small>Lv.</small>${g.lv??90}</span>`)+`<span class="rch" title="공명 체인">${+g.chain||0}<small>돌파</small></span>`+
       (wp.w?`<span class="rwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:"")+
-      (on?"":`<span class="roff">미보유</span>`);
+      (on?"":`<span class="roff">미보유</span>`)+((state.fav||{})[c.id]?`<span class="rfav" title="즐겨찾기">♥</span>`:"");
     return `<div class="tok rcard ${on?"":"off"}" data-id="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)} 설정${on?"":" (미보유)"}">${tokenHTML(c,extra)}</div>`;
   }).join("")||`<p class="hint">조건에 맞는 공명자가 없습니다.</p>`;
 }
@@ -1445,7 +1451,7 @@ function profCardHTML(c){const g=state.growth[c.id]||{};const on=!!state.owned[c
     ${pic?`<div class="pimg" style="background-image:url('${pic}')"></div>`:""}<div class="pgrad"></div>
     <img class="pel" src="icons/el-${c.el}.png" alt="${EL[c.el]}"><span class="pstar">${"★".repeat(c.rar)}</span>
     ${on?"":`<span class="poff">미보유</span>`}
-    <div class="pinfo"><div class="ptxt"><b>${esc(c.name)}</b><span>${g.trial?"체험 세팅":`Lv.${g.lv??90}`} · <em>${+g.chain||0}돌파</em></span></div>
+    <div class="pinfo"><div class="ptxt"><b><span class="pnm">${esc(c.name)}</span><button type="button" class="pfav${(state.fav||{})[c.id]?" on":""}" data-fav="${c.id}" aria-pressed="${!!(state.fav||{})[c.id]}" aria-label="${esc(c.name)} 즐겨찾기" title="즐겨찾기 — 어떤 정렬이든 맨 앞에 보여요">${(state.fav||{})[c.id]?"♥":"♡"}</button></b><span>${g.trial?"체험 세팅":`Lv.${g.lv??90}`} · <em>${+g.chain||0}돌파</em></span></div>
       ${wp.w?`<span class="pwep q${wp.w.q}" title="${esc(wp.w.name)} R${wp.ref}"><img src="${weaponIcon(wp.w)}" alt="" onerror="this.remove()"><b>R${wp.ref}</b></span>`:""}</div></div>`}
 function toggleOwned(id){const on=!state.owned[id];state.owned[id]=on;
   if(!on) state.teams.forEach(t=>t.slots=t.slots.map(s=>s===id?null:s));
@@ -1972,7 +1978,8 @@ $("#btnSort").addEventListener("click",()=>{
 // roster
 $("#rq").addEventListener("input",e=>{ui.rq=e.target.value;renderRoster()});
 $("#rElFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.rel=b.dataset.el||null;renderRoster()});
-$("#rgrid").addEventListener("click",e=>{const tk=e.target.closest(".rcard");if(tk)openProfile(tk.dataset.id)});
+$("#rgrid").addEventListener("click",e=>{const fv=e.target.closest("[data-fav]");if(fv){e.stopPropagation();const id=fv.dataset.fav;state.fav=state.fav||{};if(state.fav[id])delete state.fav[id];else state.fav[id]=true;persist();renderRoster();return}
+  const tk=e.target.closest(".rcard");if(tk)openProfile(tk.dataset.id)});
 $("#rgrid").addEventListener("keydown",e=>{const tk=e.target.closest(".rcard");if(tk&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProfile(tk.dataset.id)}});
 RIGHT_ACTS.push(["#rgrid .rcard",tk=>toggleOwned(tk.dataset.id)]);
 let rlp=null,rlpFired=false;
