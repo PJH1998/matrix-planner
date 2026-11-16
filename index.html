@@ -947,13 +947,20 @@ const NEEDS={jinhsi:{m:"coord",mul:0.85,txt:"협동 공격 파트너 없음"}};
    · 수수 공명 해방(천리강산): 암흑 효과 소모 후 인멸 피해가 방어력 6%·인멸 저항 12% 무시 → 암흑 파티의 인멸 공명자 +15%
                               이상 효과 스택 최대치 +3 → 이상 효과 피해 비중 × 30% (치사의 같은 효과와는 중첩 안 됨)
    · 릴리 빛바랜 꿈결: 합일 대응 가능 시 합일 버프 1스택당 공격력(최대 4스택) → 합일 공명자 +14%
-                       에코 어빌리티 크리티컬·크리티컬 피해 증가 → 에코 피해 비중 × 12% */
+                       에코 어빌리티 크리티컬·크리티컬 피해 증가 → 에코 피해 비중 × 12%
+   · 모니에 간섭 표기: 조화 파동·밀집 간섭 상태 목표에게 파티 피해 증가(최대 40%, 공명 효율 비례) → 조화 파티 +20%
+   · 복령 뇌법: 변주 두 번 뒤 파티 공명 스킬 피해 보너스 +25% → 공명 스킬 비중 × 25% ÷ 1.9
+   · 감심 반주: 다음 캐릭터 공명 해방 피해 +38% → 메인 딜러 해방 비중 × 38% ÷ 1.9
+   그 밖의 서포터(파수인·벨리나·설지)는 조건 없는 파티 버프라 AMP에 이미 포함. 유호(협동 공격 +100%)는 협동 공격 피해 비중 데이터가 없어 반영하지 않음 */
 const SUP_COND={
  suisui:(x,ids)=>{let a=0;const t=[];
    if(ids.some(y=>hasM(y,["bane"]))&&charMap[x].el==="havoc"){a+=0.15;t.push("암흑: 인멸 저항 무시")}
    const sh=((DMG_PROFILE[x]||{}).other||0)/100;
    if(sh>0&&!ids.includes("chisa")&&ids.some(y=>hasM(y,["frost","burn","erosion","frazzle","flare"]))){a+=sh*0.3;t.push("이상 효과 스택 +3")}
    return {a,t}},
+ mornye:(x,ids)=>ids.some(y=>y!=="mornye"&&hasM(y,["tuneD","tuneW"]))?{a:0.20,t:["조화 간섭 표기: 피해 증가"]}:{a:0,t:[]},
+ buling:x=>{const sh=((DMG_PROFILE[x]||{}).skill||0)/100;return sh>0.05?{a:sh*0.25/BONUS_BASE,t:["공명 스킬 피해 보너스 +25%"]}:{a:0,t:[]}},
+ jianxin:(x,ids,main)=>{if(x!==main)return {a:0,t:[]};const sh=((DMG_PROFILE[x]||{}).lib||0)/100;return sh>0.05?{a:sh*0.38/BONUS_BASE,t:["반주: 공명 해방 피해 +38%"]}:{a:0,t:[]}},
  lily:(x,ids)=>{let a=0;const t=[];
    if(hasM(x,["unison"])&&ids.filter(y=>hasM(y,["unison"])).length>=2){a+=0.14;t.push("합일: 공격력")}
    const e=((DMG_PROFILE[x]||{}).echo||0)/100;if(e>0.05){a+=e*0.12;t.push("에코 크리티컬")}
@@ -1069,7 +1076,7 @@ function teamCalc(t){
   const main=mainDps(t);r.main=main;
   const wOf=id=>id===main?ROLE_W.main:(ROLE_W[charMap[id].role]||0.5);
   const om=outroMap(ids,main,wOf);r.gain=om.gain;r.links=om.links;
-  ids.forEach(g=>{const f=SUP_COND[g];if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
+  ids.forEach(g=>{const f=SUP_COND[g];if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids,main);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
   const noSup=!ids.some(id=>charMap[id].role==="support");
   let dmg=0,dmgC=0;
   ids.forEach(id=>{let w=wOf(id);
@@ -1218,7 +1225,7 @@ function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null
 /* 피해 보정 (실측): 강도 38.7 파티가 1R 지옥불 기사 HP 74.0%, 다음 57.9 파티가 남은 26.0% + 봉정계유 100% + 크라운리스 41.8%
    → 파티 피해(보스 HP 단위) = (강도 / 44.85)^2. 강도는 더하기로 쌓지만 실제 피해는 곱으로 커지기 때문에 제곱에 가깝다.
    실측은 매우 잘하는 유저 기준이라 숙련도 설정으로 낮출 수 있다. */
-const S_REF=38.3, DMG_EXP=1.17; // 2026-11-16 재보정: 상위권 영상 14개 파티 강도-피해 회귀(피해 = (강도/38.3)^1.17, 라운드 점수 배율 분리·에이메스 3체인 반영)
+const S_REF=37.8, DMG_EXP=1.07; // 2026-11-16 재보정: 상위권 영상 14개 파티 강도-피해 회귀(피해 = (강도/37.8)^1.07, 라운드 점수 배율 분리·에이메스 3체인·서포터 조건부 효과 반영)
 // 숙련 = 퀵스왑 + 4해방(실측 기준) / 보통 = 평범한 321 사이클 / 뉴비 = 321 사이클도 잘 못 굴림. 보통·뉴비 배율은 추정치
 // (저장 키 top/good/normal은 예전 설정과 호환되도록 그대로 둔다)
 const SKILL_LV={top:{label:"숙련",mul:1},good:{label:"보통",mul:0.8},normal:{label:"뉴비",mul:0.65}};
