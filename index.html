@@ -507,6 +507,10 @@ table.rt{min-width:0}
 .upd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 @media (max-width:900px){.upd{grid-template-columns:1fr}}
 .upd-a{margin:0}
+.upd-next{margin-top:18px;border-style:dashed}
+.upd-next .upd-g{padding:0 18px 4px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px}
+@media (max-width:900px){.upd-next .upd-g{grid-template-columns:1fr}}
+.upd-next .upd-l{margin:6px 0 8px;padding:0 0 0 18px}
 .upd-a>summary{list-style:none;cursor:pointer;user-select:none}
 .upd-a>summary::-webkit-details-marker{display:none}
 .upd-a>summary .ph{display:flex;align-items:center;flex-wrap:wrap}
@@ -637,6 +641,7 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 <section class="view" id="v-updates">
   <div class="roster-h"><h2>업데이트 노트</h2></div>
   <div id="updList" class="upd"></div>
+  <div id="updNext"></div>
 </section>
 
 <!-- DATA -->
@@ -1665,6 +1670,8 @@ function renderUpdates(){const el=$("#updList");if(!el)return;const U=window.UPD
   // 버전마다 접었다 펼 수 있는 카드, 2열 배치. 가장 최신만 펼친 상태로 시작
   el.innerHTML=U.map((u,i)=>`<details class="panel upd-a"${i===0?" open":""}><summary><div class="ph">${u.ver?`<span class="upd-v">v${esc(u.ver)}</span>`:""}<span class="upd-d">${esc(u.date)}</span>${i===0?`<span class="chip syn star">NEW</span>`:""}<span class="upd-t">${esc(u.title||"")}</span><span class="upd-n">${(u.items||[]).length}건</span></div></summary>
    <ul class="upd-l">${(u.items||[]).map(it=>Array.isArray(it)?`<li>${esc(it[0])}${it.length>1?`<ul>${it.slice(1).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</li>`:`<li>${esc(it)}</li>`).join("")}</ul></details>`).join("");
+  const nx=$("#updNext"),N=window.UPCOMING||[];
+  if(nx)nx.innerHTML=N.length?`<section class="panel upd-next"><div class="ph"><span class="upd-v">예정</span><span class="upd-t">업데이트 예정</span><span class="upd-n">준비 중인 기능이며 내용은 바뀔 수 있습니다</span></div><div class="upd-g">${N.map(n=>`<div><div class="upd-t" style="margin-top:10px">${esc(n.title)}</div><ul class="upd-l">${(n.items||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div></section>`:"";
   // 최신 업데이트를 아직 안 봤으면 탭에 점 표시
   const latest=(U[0]||{}).ver||(U[0]||{}).date;let seen=null;try{seen=localStorage.getItem("mp-upd-seen")}catch(e){}
   const tab=$("#updTab");if(tab)tab.classList.toggle("dot",!!latest&&seen!==latest&&location.hash!=="#updates");
