@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Build portrait index
         run: node scripts/build-portrait-index.mjs
       - name: Collect site files
@@ -40,6 +43,10 @@ jobs:
           restore-keys: assets-
       - name: Fetch game images from encore.moe
         run: node scripts/fetch-assets.mjs _site/img .asset-cache
+      - name: Smooth profile card images
+        run: |
+          python -m pip install Pillow==11.3.0
+          python scripts/process-card-images.py _site/img/card
       - name: Publish images to img-cache branch
         run: |
           cd _site/img
