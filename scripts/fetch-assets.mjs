@@ -3,10 +3,15 @@
 //   출력: <출력>/char/{id}.webp (정사각형 얼굴), <출력>/card/{id}.webp (편성용 세로 카드),
 //         <출력>/weapon/{무기 id}.webp, <출력>/index.json (받은 파일 목록)
 // 캐시 폴더에 이미 있는 파일은 다시 받지 않는다. 일부가 실패해도 배포는 계속한다(사이트가 기존 이미지로 대체).
+//
+// 목록만 쓰기: node scripts/fetch-assets.mjs --manifest <파일>
+//   이미지를 받지 않고, 받을 이미지를 정하는 값(공명자 eid · 무기 아이콘 · 세트 아이콘)만 JSON으로 쓴다.
+//   배포 워크플로가 이 파일을 해시해 이미지 캐시 키로 쓴다. 수치만 고친 배포에서는 캐시가 유지된다.
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 
+const MANIFEST = process.argv[2] === '--manifest' ? (process.argv[3] || '.image-manifest.json') : null;
 const OUT = process.argv[2] || '_site/img';
 const CACHE = process.argv[3] || '.asset-cache';
 const API = 'https://api-v2.encore.moe/api/ko/character/';
@@ -51,6 +56,18 @@ const CHAR_EID = Object.fromEntries(MP.CHAR_LIST.map((id) => [id, MP._chars[id] 
 const WEAPONS = ctx.window.WEAPONS || [];
 run('data/echoes.js');
 const SET_ICON = MP.ECHO_SET_ICON || {};
+
+if (MANIFEST) {
+  const byFirst = (a, b) => String(a[0]).localeCompare(String(b[0]));
+  const manifest = {
+    char: Object.entries(CHAR_EID).sort(byFirst),
+    weapon: WEAPONS.map(([wid, , , , icon]) => [wid, icon || null]).sort(byFirst),
+    set: Object.values(SET_ICON).map(([sid, icon]) => [sid, icon]).sort(byFirst),
+  };
+  fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
+  console.log(`image manifest: char ${manifest.char.length}, weapon ${manifest.weapon.length}, set ${manifest.set.length} → ${MANIFEST}`);
+  process.exit(0);
+}
 
 const charFails = await pool(Object.entries(CHAR_EID), 4, async ([id, eid]) => {
   const sq = path.join(CACHE, 'char', `${id}.webp`);
