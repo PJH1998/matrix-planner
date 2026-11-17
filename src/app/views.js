@@ -11,7 +11,7 @@ function renderFilter(){
   const box=$("#elFilter");
   box.innerHTML=`<button data-el="" aria-pressed="${!ui.el}">전체</button>`+EL_ORDER.map(e=>`<button data-el="${e}" class="eb" title="${EL[e]}" aria-label="${EL[e]}" aria-pressed="${ui.el===e}">${UIIcon.element(e,{className:"eli"})}</button>`).join("");
 }
-// 공명자 정렬: rar 5성 먼저(같으면 속성 순) / desc·asc 강함순(캐릭터 점수) / name 이름순. ownedFirst면 보유 공명자를 앞에
+// 공명자 정렬: rar 5성 먼저(같으면 속성 순) / desc·asc 강함순(공명력·협주력) / name 이름순. ownedFirst면 보유 공명자를 앞에
 // 출시 순서는 공명자 파일의 release (클수록 최근). 실제 배너 순서 기준 (1.0 초기 캐릭터는 초상화 번호)
 // (3.0 린네→모니에, 3.1 에이메스→루크, 3.2 시그리카, 3.3 히유키→데니아, 3.4 루시·레베카→루실라). 신캐는 숫자를 이어서 추가
 function sortChars(list,mode,ownedFirst){const sc={};const S=id=>sc[id]??(sc[id]=charScore(id));
@@ -63,7 +63,7 @@ function tipHTML(id){
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
   const trial=state.owned[id]&&isTrial(id);
   return `<div class="th"><b>${esc(c.name)}</b><span class="elx" style="--ec:var(--${c.el})">${UIIcon.element(c.el)}${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span>${trial?`<span class="chip tipTrial">체험 세팅</span>`:""}</div>
-  ${trial?`<div class="tr"><p class="tipTrialTxt">육성하지 않은 체험 세팅으로 계산 중 (90레벨 · 상시 무기 R1 · 스킬 8레벨 · 약한 에코)</p></div>`:""}
+  ${trial?`<div class="tr"><p class="tipTrialTxt">육성하지 않은 체험 세팅으로 계산 중 (90레벨 · 상시 무기 R1 · 공식 가이드 추천 스탯)</p></div>`:""}
   <div class="tr"><span class="tl"><span>반주 스킬</span><span>${S.p?"파티 전체":"다음 캐릭터"}</span></span><p>${esc(S.o||"정보 없음").replace(/(\d+(?:\.\d+)?%)/g,"<em>$1</em>")}</p>${ob.length?`<div class="tc">${ob.map(x=>`<span class="chip g">${esc(x)} ↑</span>`).join("")}</div>`:""}</div>
   ${(S.w||[]).length?`<div class="tr"><span class="tl">주력 피해</span><div class="tc">${S.w.map(x=>`<span class="chip">${DT[x]}</span>`).join("")}</div></div>`:""}
   ${(S.m||[]).length?`<div class="tr"><span class="tl">메커니즘</span><div class="tc">${S.m.map(x=>`<span class="chip syn">${MT[x]}</span>`).join("")}</div></div>`:""}`;
@@ -190,7 +190,13 @@ function toggleOwned(id){const on=appMediator.characters.toggleOwned(id);
 /* ---------- profile: stats ---------- */
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
 function statSum(id){const c=charMap[id];if(c.role==="support"){const p=echoCalculator.supportProgress(id);return `지원 기준 ${p.met}/${p.total} 충족`}
-  const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:"입력 전 (레벨 기준으로 계산)"}
+  const g=state.growth[id]||{},src=g.trial?"체험 세팅":echoesOf(id).length?"에코 세팅 사용 중":g.stats?"직접 입력":"에코 미입력 · 체험 세팅으로 계산";return `공명력 ${charScore(id).toFixed(0)} (${src})`}
+// 개인 점수 이름: 딜러 공명력 / 서포터 협주력. 표시 꼬리표: 체험 · 에코 미입력
+function scoreName(id){return charMap[id]&&charMap[id].role==="support"?"협주력":"공명력"}
+function scoreTag(id){const g=state.growth[id]||{};if(g.trial)return "체험";return noEchoInput(id)?"체험 세팅":""}
+// 에코도 스탯 직접 입력도 없는 보유 공명자 → 체험 세팅 기준 스탯으로 계산 중
+function noEchoInput(id){const g=state.growth[id]||{};return !g.trial&&!echoesOf(id).length&&!g.stats}
+function trialChainNote(id){const ch=CharDB.trialSpec(id).chain;return ch==null?" · 공명 체인은 지금 설정":` · ${ch}체인`}
 
 /* ---------- profile: 에코 세팅 ----------
    에코 5칸(카드) + 세트 구성(5세트 / 3+2세트 / 데이터가 지원하는 1+2+2세트) + 요약 줄. */
@@ -358,8 +364,9 @@ function renderProfile(){
       <button class="x" value="close" aria-label="닫기">✕</button></div>
     <div class="pf-toggles"><label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
     <label class="pf-own" title="육성하지 않은 공명자는 매트릭스에서 게임이 주는 체험 세팅으로 씁니다"><input type="checkbox" class="sw" id="pfTrial" ${g.trial?"checked":""}> 체험 세팅 (육성 안 함)</label>
-    <span class="pf-own" style="margin-left:auto">캐릭터 점수 <b id="pfScore" style="color:#e6c36a;font-family:var(--f-num);margin-left:4px">${charScore(id).toFixed(1)}</b></span></div>
-    ${g.trial?`<p class="pf-trial">매트릭스 체험 세팅으로 계산합니다: <b>90레벨 · ${wp.w?esc(wp.w.name):"상시 무기"} R1 · 스킬 8레벨 · 약한 에코</b>. 공명 체인만 지금 설정을 따릅니다. 스킬·에코 손실은 예측치(×${TRIAL_MUL})입니다.</p>`:""}
+    <span class="pf-own" style="margin-left:auto" title="${c.role==="support"?"기준 세팅(지원 기준 충족 · 0체인 · 추천 무기)으로 주는 버프 = 100":"이잘키 기준 스탯의 피해 기대값 = 100"}">${scoreName(id)} <b id="pfScore" style="color:#e6c36a;font-family:var(--f-num);margin-left:4px">${charScore(id).toFixed(1)}</b><small id="pfScoreTag" class="pf-stag">${scoreTag(id)}</small></span></div>
+    <p class="pf-trial" id="pfNoEcho" ${noEchoInput(id)?"":"hidden"}>에코를 입력하지 않아 <b>체험 세팅(공식 가이드 추천 스탯)</b>으로 계산합니다. 에코를 입력하면 더 정확해집니다.</p>
+    ${g.trial?`<p class="pf-trial">매트릭스 체험 세팅으로 계산합니다: <b>90레벨 · ${wp.w?esc(wp.w.name):"상시 무기"} R1 · 공식 가이드 추천 스탯</b>${trialChainNote(id)}. 계산 기준 탭에서 자세히 볼 수 있습니다.</p>`:""}
     <div class="pf-row2">
      <div class="${g.trial?"pf-hide":""}"><div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>
       <div class="pf-lv"><input type="range" min="1" max="90" value="${lv}" id="pfLv" aria-label="레벨"><input type="number" min="1" max="90" value="${lv}" id="pfLvN" aria-label="레벨 숫자"></div></div>
@@ -420,7 +427,7 @@ function renderInvest(){const body=$("#invBody");if(!body)return;
     const r=withGrowth(id,k.patch,()=>({tot:inTeam.has(id)?totalNow():base,cs:charScore(id)}));
     const dT=r.tot-base,dC=cs?(r.cs/cs-1)*100:0;rows.push({id,k,dT,dC,eff:inTeam.has(id)?dT/k.cost*10:null,effC:dC/k.cost*10,inTeam:inTeam.has(id)});});});
   invRows=rows;drawInvest();}
-// 정렬: 예상 총점 변화(dT) · 캐릭터 점수(dC) · 10연차당(eff). 편성 밖 공명자는 총점 기준 정렬에서 항상 뒤로
+// 정렬: 예상 총점 변화(dT) · 개인 점수(dC) · 10연차당(eff). 편성 밖 공명자는 총점 기준 정렬에서 항상 뒤로
 let invRows=[];const invSort={k:"eff",dir:-1};
 function drawInvest(){const body=$("#invBody");const base=totalNow();const rows=invRows.slice();const {k,dir}=invSort;
   const val=r=>k==="dT"?(r.inTeam?r.dT:null):k==="dC"?r.dC:(r.eff!=null?r.eff:null);

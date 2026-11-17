@@ -7,6 +7,8 @@ MP.addChar({
   syn:{o:"파티 전체 피해 +15%, 피격 회피 보조 (30초)",ob:["all"],p:1,w:[],m:[]},
   // 파티 딜증(%)
   amp:15,
+  // 0~6체인 버프 배율(서포터 버프에 곱한다). 체인이 버프를 올리지 않으면 모두 1
+  buffChain:[1,1,1,1,1,1,1],
   // 공명 해방 영역 2·3단계: 전투 중 고유 스킬 공효 +10%를 적용한다.
   // 에코 액티브의 공효는 에코 종류·발동 상태를 저장하지 않아 별도로 더하지 않는다.
   supCond(x,ids,main,C){const er=C.stat("shorekeeper","er")+10,cr=Math.min(12.5,er*0.05),cd=Math.min(25,er*0.1);
@@ -24,6 +26,7 @@ MP.addChar({
   guide:{er:230,gt:["er", "cd"],cd:190,src:13008},
   supportTargets:{hp:20000,er:240},
   defaultWeaponId:21050036,
+  teamWeaponBuff:{21050036:[{atk:14}]},
   supportWeapons:[[21050036,1,100]],
   statScale:"hp",
   gb:1505,

@@ -16,7 +16,7 @@
       mains.forEach(main=>Object.entries(this.db.pairs(main)).forEach(([id,weight])=>{if(weight>=1&&state.owned[id]&&map[id]&&!isSupport(id)&&key(id)!==key(main))pairs.push({ids:[main,id],v:val([main,id])})}));
       pairs.sort((a,b)=>b.v-a.v).forEach(pair=>{if(pair.ids.every(can)){pair.ids.forEach(use);cores.push(pair.ids)}});
       const synergizes=(main,id)=>pairWeight(main,id)>0||this.teams.outroGain(id,main,[main,id])>=.05||this.teams.outroGain(main,id,[main,id])>=.05;
-      mains.filter(can).sort((a,b)=>this.characters.score(b)-this.characters.score(a)).forEach(main=>{if(!can(main))return;
+      mains.filter(can).sort((a,b)=>this.characters.damage(b)-this.characters.damage(a)).forEach(main=>{if(!can(main))return;
         const options=own.filter(id=>id!==main&&can(id)&&!isSupport(id)&&key(id)!==key(main)&&(role(id)!=="dps"||pairWeight(main,id)>0)&&synergizes(main,id))
           .map(id=>({id,score:val([main,id])*(1+.4*pairWeight(main,id))})).sort((a,b)=>b.score-a.score);
         if(options.length){use(main);use(options[0].id);cores.push([main,options[0].id])}});
@@ -24,7 +24,7 @@
         const main=this.teams.mainDps({slots:core}),fav=supports.filter(id=>pairWeight(main,id)>0).sort((a,b)=>pairWeight(main,b)-pairWeight(main,a)||val([...core,b])-val([...core,a])),best=list=>list.sort((a,b)=>val([...core,b])-val([...core,a]))[0];
         const support=fav[0]||best(supports.filter(id=>map[id].rar===5))||best(supports);if(support){use(support);core.push(support)}});
       cores.filter(core=>core.length<3).forEach(core=>{const option=own.filter(id=>can(id)&&!core.map(key).includes(key(id))&&role(id)!=="dps").sort((a,b)=>val([...core,b])-val([...core,a]))[0];if(option){use(option);core.push(option)}});
-      mains.filter(can).sort((a,b)=>this.characters.score(b)-this.characters.score(a)).forEach(main=>{if(!can(main))return;
+      mains.filter(can).sort((a,b)=>this.characters.damage(b)-this.characters.damage(a)).forEach(main=>{if(!can(main))return;
         const support=own.filter(id=>isSupport(id)&&can(id)).sort((a,b)=>val([main,b])-val([main,a]))[0];if(!support)return;
         const option=own.filter(id=>can(id)&&id!==main&&id!==support&&key(id)!==key(main)&&role(id)!=="dps"&&!isSupport(id)&&synergizes(main,id)).sort((a,b)=>val([main,support,b])-val([main,support,a]))[0];
         if(!option)return;const ids=[main,option,support];if(okIds(ids)){ids.forEach(use);cores.push(ids)}});

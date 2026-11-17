@@ -5,7 +5,7 @@
     constructor({state,charMap,charDb,weapons,weaponTypes,weaponStats,weaponSheetFx}){
       this.state=state;this.charMap=charMap;this.db=charDb;this.types=weaponTypes||{};this.stats=weaponStats||{};this.sheetEffects=weaponSheetFx||{};
       this.map={};(weapons||[]).forEach(([id,name,type,q,icon])=>this.map[id]={id,name,type,q,icon});
-      this.refStep={5:3,4:2,3:1.5};this.trialMul=.82;this.cache={};
+      this.refStep={5:3,4:2,3:1.5};this.cache={};
     }
     reset(){this.cache={}}
     perfList(cid){if(this.cache[cid])return this.cache[cid];const support=this.charMap()[cid]?.role==="support";
@@ -26,7 +26,7 @@
       const l=this.perfList(cid).filter(x=>this.map[x.id].q===4);if(l.length)return l[l.length-1].id;
       const w=Object.values(this.map).find(x=>x.type===type&&x.q===4);return w?w.id:null}
     weaponOf(cid){const growth=this.state().growth[cid]||{};
-      if(growth.trial){const id=this.trialWeapon(cid),w=this.map[id]||null;return {w,ref:1,pct:w?this.weaponPct(cid,id,1):null,custom:false,trial:true}}
+      if(growth.trial){const sig=this.db.trialSpec(cid).weapon==="signature"&&this.db.defaultWeaponId(cid),id=sig&&this.map[sig]?sig:this.trialWeapon(cid),w=this.map[id]||null;return {w,ref:1,pct:w?this.weaponPct(cid,id,1):null,custom:false,trial:true}}
       const id=growth.wid&&this.map[growth.wid]?growth.wid:this.defaultWeapon(cid),w=this.map[id]||null;
       const ref=Math.max(1,Math.min(5,isFinite(+growth.ref||0)?(+growth.ref||(w&&w.q<5?5:1)):1));
       return {w,ref,pct:w?this.weaponPct(cid,id,ref):null,custom:!!(growth.wid&&this.map[growth.wid])}}

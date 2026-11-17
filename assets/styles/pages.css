@@ -27,3 +27,8 @@ textarea{min-height:360px;font-family:var(--f-mono);font-size:14px;line-height:1
 .theme{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px}
 .theme:hover{border-color:var(--fg)}
 
+/* 계산 기준 */
+#v-method .prose{max-width:none}
+#v-method .prose p{margin:0}
+#v-method .prose ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+#v-method .prose a{color:var(--fg)}

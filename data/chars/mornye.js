@@ -7,6 +7,8 @@ MP.addChar({
   syn:{o:"파티 전체 피해 +25% (30초)",ob:["all"],p:1,w:[],m:["tuneW","tuneD"]},
   // 파티 딜증(%)
   amp:25,
+  // 0~6체인 버프 배율(서포터 버프에 곱한다). 체인이 버프를 올리지 않으면 모두 1
+  buffChain:[1,1,1,1,1,1,1],
   // 간섭 표기: 공효 100% 초과분 1%당 피해 보너스 0.25%, 최대 40%.
   supCond(x,ids,main,C){const er=C.stat("mornye","er"),bonus=Math.min(40,Math.max(0,er-100)*0.25);
     return bonus>0&&(C.chain("mornye")>=1||ids.some(y=>y!=="mornye"&&C.has(y,["tuneD","tuneW"])))?{a:bonus/100/C.BONUS_BASE,t:[`조화 간섭 표기: 피해 보너스 +${bonus.toFixed(1)}%`]}:{a:0,t:[]}},
@@ -20,6 +22,7 @@ MP.addChar({
   guide:{heal:48.4,def:3200,hp:19935,er:260,src:13135},
   supportTargets:{def:3200,er:260},
   defaultWeaponId:21010066,
+  teamWeaponBuff:{21010066:[{cd:20}]},
   supportWeapons:[[21010066,1,100]],
   statScale:"def",
   gb:1209,

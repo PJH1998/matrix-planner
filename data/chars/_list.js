@@ -11,6 +11,11 @@
      outro {v, cond}            반주 버프 수치(%). cond: 파티에 메커니즘 m이 있으면 v 대신 cond.v (to:1이면 받는 쪽 본인이 m을 가져야 함)
      profile                    피해 비중(%) — Prydwen Calculations Damage Profile. other = 이상 효과·조화도 파괴 등
      dps, chain                 S0 기본 DPS, 0~6체인 DPS 배율 (Prydwen Calculations, 2026-11)
+     rot, dpsTeam               Prydwen 한 바퀴 시간(초) · dps를 잴 때 함께 넣은 파티원 id 목록(빈 목록 = 혼자 잰 값). 같은 자료 시점
+                                dps × rot = 한 바퀴 피해량. dpsTeam의 버프는 우리 계산식으로 빼서 버프 전 피해로 되돌린다
+     chainStats                 체인으로 오르는 상시 스탯 [{chain: 단계, 스탯 키: 값}] — 파티에 넣고 필드에 꺼내면 스탯 화면에 보이는 값.
+                                최종 스탯(공명력)에 더하고, 체인 배율에서는 그 몫을 나눠서 뺀다
+     buffChain                  서포터 0~6체인 버프 배율(amp·supCond에 곱함). 없으면 공통표. supCond가 C.chain을 직접 쓰면 모두 1
      amp                        서포터(·일부 서브)의 파티 딜증(%) 추정치
      supCond(x, ids, main, C)   서포터 조건부 보정. 파티 ids의 공명자 x가 받는 추가 피해 {a, t}.
                                 다른 공명자 정보는 C(중개자 컨텍스트)로만 읽는다: C.el(id) · C.has(id, 메커니즘[]) · C.share(id, 피해유형) · C.BONUS_BASE
@@ -29,6 +34,8 @@
      wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)
      defaultWeaponId            기본 장착 추천 무기 id. 서포터는 전용 무기 또는 지원 운용 추천 무기
      supportWeapons             수치 근거가 있는 지원 무기 효율만 기재. 개인 피해용 weapons와 분리
+     teamWeaponBuff             무기가 파티 전원(장착자 포함)에게 주는 명시된 버프 {무기 id: [{atk|cd|echo: %, has?: [메커니즘]}]}
+                                atk 공격력 · cd 크리티컬 피해 · echo 에코 피해 보너스. has가 있으면 그 메커니즘을 가진 공명자만 받는다
      pairs                      자동 추천 궁합 {상대 id: 가중치} (1 = 정석 파트너, 0.5~0.8 = 무난한 대체)
    ===================================================================== */
 (function(g){

@@ -90,9 +90,9 @@ const weaponCalculator=new window.MP.WeaponCalculator({state:calculationContext.
   weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS,weaponSheetFx:window.WEAPON_SHEET_FX});
 const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator});
 const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
-  cycle:calculationContext.cycle,charDb:CharDB,weapons:weaponCalculator,echoes:echoCalculator});
+  cycle:calculationContext.cycle,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator,echoes:echoCalculator});
 
-const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types,TRIAL_MUL=weaponCalculator.trialMul;
+const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types;
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
 const weaponIcon=w=>gameImg.weapon.has(w.id)?`img/weapon/${w.id}.webp`:WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
 const perfList=id=>weaponCalculator.perfList(id),weaponPct=(id,wid,ref)=>weaponCalculator.weaponPct(id,wid,ref);
@@ -106,7 +106,7 @@ const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=
 const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);
 const echoBuild=(id,list)=>echoCalculator.build(id,list),sheetStats=id=>echoCalculator.sheetStats(id),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
 
-const CHAIN_MUL=characterCalculator.chain,ROLE_W=characterCalculator.roleWeight,BONUS_BASE=characterCalculator.bonusBase,MAIN_SUB_RATIO=characterCalculator.mainSubRatio;
+const CHAIN_MUL=characterCalculator.chain,BONUS_BASE=characterCalculator.bonusBase;
 const NOSYN_W=characterCalculator.noSynergyWeight,NOSYN_MIN=characterCalculator.noSynergyMin,SYN_BONUS=characterCalculator.synergyBonus;
 const dpsFactor=id=>characterCalculator.dpsFactor(id),chainMul=id=>characterCalculator.chainMul(id),charScore=id=>characterCalculator.score(id),ampOf=id=>characterCalculator.amp(id);
 const SUP_CTX=characterCalculator.supportContext();

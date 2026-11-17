@@ -18,13 +18,14 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><svg class="hex" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28 9.5v13L16 29.5 4 22.5v-13Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9 22 12.5v7L16 23l-6-3.5v-7Z" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".7"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg><h1>매트릭스 플래너</h1><small id="cycleTag">ENDSTATE MATRIX</small><span class="left" id="cycleLeft"></span></div>
+  <div class="brand"><svg class="hex" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5 28 9.5v13L16 29.5 4 22.5v-13Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9 22 12.5v7L16 23l-6-3.5v-7Z" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".7"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg><h1>매트릭스 플래너</h1><span class="ver" id="appVer"></span><small id="cycleTag">ENDSTATE MATRIX</small><span class="left" id="cycleLeft"></span></div>
   <nav class="tabs" aria-label="페이지">
     <a href="#plan" data-v="plan">배치</a>
     <a href="#roster" data-v="roster">보유 캐릭터</a>
     <a href="#cycle" data-v="cycle" id="cycleTab" hidden>주기 설정</a>
     <a href="#invest" data-v="invest">투자 효율</a>
     <a href="#records" data-v="records">기록</a>
+    <a href="#method" data-v="method">계산 기준</a>
     <a href="#updates" data-v="updates" id="updTab">업데이트</a>
     <a href="#data" data-v="data">데이터</a>
   </nav>
@@ -119,8 +120,8 @@
     <label class="sortl">대상 <select id="invScope" class="sortsel"><option value="team">편성된 공명자</option><option value="owned">보유 공명자 전체</option></select></label>
   </div>
   <div class="disc" role="note"><b>참고용 추천입니다.</b> 이 화면의 수치는 이 사이트가 Prydwen 계산과 몇 가지 가정으로 만든 <b>추정치</b>이며, 실제 게임 성능·확률과 다를 수 있습니다. 뽑기나 재화 사용은 반드시 본인 판단으로 결정하세요.</div>
-  <p class="hint">지금 편성과 성장도를 기준으로, 공명 체인 +1 · 더 좋은 무기 · 무기 재련 +1을 했을 때 <b>예상 총점</b>이 얼마나 오르는지와 <b>10연차당 효율</b>을 보여 줍니다. 편성에 없는 공명자는 캐릭터 점수 변화만 보여 줍니다.</p>
-  <div class="rtable-wrap"><table class="inv"><thead><tr><th>#</th><th>공명자</th><th>투자</th><th><button type="button" class="thsort" data-k="dT">예상 총점 변화<i></i></button></th><th><button type="button" class="thsort" data-k="dC">캐릭터 점수<i></i></button></th><th>예상 비용</th><th><button type="button" class="thsort" data-k="eff">10연차당<i></i></button></th></tr></thead><tbody id="invBody"></tbody></table></div>
+  <p class="hint">지금 편성과 성장도를 기준으로, 공명 체인 +1 · 더 좋은 무기 · 무기 재련 +1을 했을 때 <b>예상 총점</b>이 얼마나 오르는지와 <b>10연차당 효율</b>을 보여 줍니다. 편성에 없는 공명자는 개인 점수(공명력·협주력) 변화만 보여 줍니다.</p>
+  <div class="rtable-wrap"><table class="inv"><thead><tr><th>#</th><th>공명자</th><th>투자</th><th><button type="button" class="thsort" data-k="dT">예상 총점 변화<i></i></button></th><th><button type="button" class="thsort" data-k="dC">개인 점수<i></i></button></th><th>예상 비용</th><th><button type="button" class="thsort" data-k="eff">10연차당<i></i></button></th></tr></thead><tbody id="invBody"></tbody></table></div>
   <div class="disc foot" role="note">⚠ 위 결과는 <b>추천일 뿐</b>입니다. 예상 비용은 한정 캐릭터 1명 ≈ 95연차, 전용 무기 1개 ≈ 70연차로 잡은 평균값이며, 실제 뽑기 결과는 운에 따라 크게 달라집니다. 이 사이트는 비영리 팬 도구이며 결과에 대해 책임지지 않습니다.</div>
 </section>
 
@@ -132,6 +133,47 @@
   </div>
   <p class="hint">주기가 바뀌면 지난 주기의 마지막 편성과 예상 점수가 자동으로 기록됩니다. 실제 점수를 입력해 두면 예상과 비교할 수 있습니다. 기록은 이 브라우저에만 저장됩니다.</p>
   <div id="recList"></div>
+</section>
+
+<!-- METHOD -->
+<section class="view" id="v-method">
+  <div class="roster-h"><h2>계산 기준</h2></div>
+  <div class="disc" role="note">모든 수치는 이 사이트가 공개 자료로 만든 <b>추정치</b>입니다. 실제 게임 성능과 다를 수 있습니다.</div>
+  <div class="two method">
+    <div class="panel"><div class="ph">공명력 · 딜러 점수</div><div class="card-b prose">
+      <p><b>공명력 = 내 최종 스탯의 피해 기대값 ÷ 이잘키 기준 스탯의 피해 기대값 × 100</b></p>
+      <p>100이면 「이 정도면 잘 키웠다」 기준과 같습니다. 피해 기대값은 주 스탯(공격력·HP·방어력) × 크리티컬 기대값 × 피해 보너스입니다.</p>
+      <p>최종 스탯 = 기본 스탯 + 무기(기본 공격력·부옵) + 고유 노드 + 에코(주옵·부옵·세트 효과) + 공명 체인 상시 스탯. 파티에 넣고 필드에 꺼낸 상태의 정보창 값입니다.</p>
+      <ul><li><b>에코 미입력:</b> 체험 세팅 기준(공식 가이드 추천 스탯)으로 계산합니다. 무기와 공명 체인은 내 설정을 따릅니다. 에코를 입력하면 더 정확해집니다.</li>
+        <li><b>스탯 직접 입력:</b> 게임 정보창 수치를 그대로 씁니다.</li>
+        <li><b>체험 세팅:</b> 공식 가이드 추천 스탯으로 계산합니다(없는 항목은 이잘키 기준).</li></ul>
+    </div></div>
+    <div class="panel"><div class="ph">협주력 · 서포터 점수</div><div class="card-b prose">
+      <p><b>협주력 = 내 세팅으로 주는 버프 ÷ 기준 세팅으로 주는 버프 × 100</b></p>
+      <p>버프는 정석 파트너 딜러가 받는 값으로 잽니다. 기준 세팅은 지원 기준 스탯 충족 · 0체인 · 추천 무기입니다.</p>
+      <p>버프 = 반주 버프 + 파티 딜증 + 조건부 버프(공명 효율 연동 등) + 무기 파티 버프 + 에코 세트 차이. 공명 체인을 올리면 버프에 체인 배율이 곱해집니다.</p>
+      <p>공명 효율이 모자라도 점수를 깎지 않고 <b>경고만</b> 합니다. 사이클이 꼬이는 문제라서입니다. 공명 효율만큼 버프가 커지는 서포터(모니에·수수·릴리·파수인)는 그 수치만 반영합니다.</p>
+    </div></div>
+    <div class="panel"><div class="ph">개인 피해 · 딜러</div><div class="card-b prose">
+      <p><b>한 바퀴 피해 = 기본 DPS × 한 바퀴 시간</b> (Prydwen 자료). 이 DPS에는 Prydwen이 함께 넣은 파티원 버프가 들어 있어서, 이 사이트 계산식으로 그 버프를 빼고 씁니다.</p>
+      <p>개인 피해 = 한 바퀴 피해 × 공명력 × 무기 패시브 × 공명 체인 배율 × 레벨 × 주기 보정</p>
+      <ul><li>무기의 공격력·부옵은 공명력에, 패시브는 무기 패시브 계수에 들어갑니다.</li>
+        <li>공명 체인 배율은 Prydwen 자료에서 상시 체인 스탯 몫을 뺀 값입니다(그 몫은 공명력에 들어갑니다).</li></ul>
+    </div></div>
+    <div class="panel"><div class="ph">파티 강도 · 보스 진행</div><div class="card-b prose">
+      <p><b>파티 강도 = Σ(딜러 한 바퀴 피해 × (1 + 받는 버프)) ÷ (딜러 한 바퀴 시간 합 + 서포터 1명당 7초)</b> × 파티 딜증 × 시너지 × 파워 서킷</p>
+      <ul><li>메인·서브 딜러는 1:1로 더합니다. 메인 딜러는 파티에서 개인 피해가 가장 큰 딜러입니다.</li>
+        <li>시너지는 같은 메커니즘·정해진 조합일 때 더하는 보너스입니다(최대 30%).</li>
+        <li>보스 진행은 파티 강도로 보스에게 주는 피해를 예측합니다. 라운드별 보스 HP 배율과 점수 배율은 <b>예측치</b>입니다.</li>
+        <li>공명 효율 최소치를 못 채운 공명자는 경고만 하고 강도에는 반영하지 않습니다.</li></ul>
+    </div></div>
+  </div>
+  <div class="panel" style="margin-top:16px"><div class="ph">자료 출처</div><div class="card-b prose">
+    <ul><li>기본 DPS · 한 바퀴 시간 · 공명 체인 배율 · 무기 성능 · 피해 비중: <a href="https://www.prydwen.gg/wuthering-waves/characters" target="_blank" rel="noopener">Prydwen</a> Calculations·Build 탭 (2026년 11월)</li>
+      <li>기준 스탯 · 공명 효율 최소치 · 주력 에코 세트: 아카라이브 명조 채널 위키 「<a href="https://arca.live/w/wutheringwaves/%EC%9D%B4%EC%A0%95%EB%8F%84%EB%A9%B4%20%EC%9E%98%ED%82%A4%EC%9B%A0%EB%8B%A4%ED%91%9C" target="_blank" rel="noopener">이정도면 잘키웠다표</a>」 (CC BY-SA 4.0)</li>
+      <li>추천 스탯 · 체험 세팅 기준: 명조 공식 공략 사이트 <a href="https://wuwaguide.kurogames.com/ko/" target="_blank" rel="noopener">wuwaguide.kurogames.com</a></li>
+      <li>기본 스탯 · 스킬 설명 · 무기 정보 · 체인 상시 스탯: <a href="https://encore.moe/" target="_blank" rel="noopener">encore.moe</a></li></ul>
+  </div></div>
 </section>
 
 <!-- UPDATES -->
@@ -193,6 +235,8 @@
 <script src="src/mediators/AppMediator.js"></script>
 <script src="src/services/WeaponCalculator.js"></script>
 <script src="src/services/EchoCalculator.js"></script>
+<script src="src/services/DealerCalculator.js"></script>
+<script src="src/services/SupportCalculator.js"></script>
 <script src="src/services/CharacterCalculator.js"></script>
 <script src="src/services/TeamCalculator.js"></script>
 <script src="src/services/RecommendationService.js"></script>
@@ -204,6 +248,7 @@
 <script src="data/weapons.js"></script>
 <script src="data/echoes.js"></script>
 <script src="data/teams.js"></script>
+<script src="data/trial.js"></script>
 <script src="data/chars/_list.js"></script>
 <script src="core/chardb.js"></script>
 <script src="core/bossdb.js"></script>

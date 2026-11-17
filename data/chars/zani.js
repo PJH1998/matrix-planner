@@ -11,8 +11,12 @@ MP.addChar({
   profile:{basic:1.1,heavy:68.9,skill:6.6,lib:13.4,intro:1.3,outro:7.3,echo:1.4},
   // S0 기본 DPS
   dps:92760,
+  // Prydwen 한 바퀴 시간(초) · DPS를 잴 때 함께 넣은 파티원(빈 목록 = 혼자 잰 값)
+  rot:12.64, dpsTeam:["phoebe","shorekeeper"],
   // 0~6체인 DPS 배율
   chain:[1,1.213,1.42,1.558,1.676,1.722,2.098],
+  // 공명 체인으로 오르는 상시 스탯(파티에 넣고 필드에 꺼내면 스탯 화면에 보이는 값) — 최종 스탯에 더한다
+  chainStats:[{chain:2,cr:20}],
 
   // 90레벨 기본 [HP, 공격력, 방어력]
   base:[10775,438,1137],

@@ -11,10 +11,11 @@ test("기본 캐릭터 데이터와 대표 강도 결과를 고정한다", () =>
   const app = loadCurrentApp();
 
   assert.equal(app.defaults().length, 61);
-  closeTo(app.charScore("hiyuki"), 24.53671935741852);
-  closeTo(app.charScore("cantarella"), 10.7757309240752);
-  closeTo(app.charScore("shorekeeper"), 14);
-  closeTo(app.charScore("jinhsi"), 20.73074553444892);
+  // 1.3.3: 딜러 점수 = 공명력, 서포터 점수 = 협주력(기준 세팅 = 100). 에코 미입력은 체험 세팅 기준 스탯
+  closeTo(app.charScore("hiyuki"), 95.43983369313185);
+  closeTo(app.charScore("cantarella"), 86.11000380911887);
+  closeTo(app.charScore("shorekeeper"), 97.87094737992825);
+  closeTo(app.charScore("jinhsi"), 103.73421121593287);
 
   assert.deepEqual(app.reference("hiyuki"), {
     sets: [["소리 없이 내려앉은 기도의 눈", 5]],
@@ -30,10 +31,10 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const app = loadCurrentApp();
   const teams = app.state().teams.slice(0, 4);
   const expected = [
-    ["camellya", 34.380284147988995, 44.84040671627511],
-    ["qingxiao", 75.33065376847804, 94.16331721059755],
-    ["jingran", 62.55804829902035, 69.95459127620904],
-    ["hsin", 74.83198996779488, 114.85260245008205],
+    ["camellya", 27.944933011231065, 36.97499186422595],
+    ["qingxiao", 66.23832843723189, 82.79791054653985],
+    ["jingran", 63.59063742236907, 71.16518308957548],
+    ["hsin", 70.21280676197273, 108.82985048105773],
   ];
 
   teams.forEach((team, index) => {
@@ -44,8 +45,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.972692104553951);
-  closeTo(simulation.total, 43991.44975594108);
+  closeTo(simulation.progress, 6.765934362208769);
+  closeTo(simulation.total, 42079.30246529725);
   assert.equal(simulation.bad, 0);
 });
 
@@ -72,7 +73,7 @@ test("에코 5세트의 스탯과 강도 환산 결과를 고정한다", () => {
   closeTo(build.el, 79);
   assert.deepEqual(build.sets, [{ name: set, c: 5, on: [2, 5] }]);
   closeTo(factor.f, 1.0618522907147732);
-  closeTo(app.charScore("hiyuki"), 26.054371656300372);
+  closeTo(app.charScore("hiyuki"), 106.18522907147731);
 });
 
 test("기존 저장 데이터의 정규화 규칙을 고정한다", () => {
@@ -99,9 +100,9 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:negative",
     "aemeath/lynae/mornye:negative", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
-    "zani/phoebe/shorekeeper:negative", "jingran/lynae/verina:tune", "sigrika/qiuyuan/lily:basic",
-    "lucy/rebecca/verina:tune", "carlotta/zhezhi/buling:negative", "xiangliyao/yinlin/buling:negative",
-    "camellya/sanhua/baizhi:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/jianxin:general",
+    "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "lucy/rebecca/verina:tune",
+    "jinhsi/zhezhi/shorekeeper:general", "zani/phoebe/baizhi:negative", "camellya/sanhua/baizhi:general",
+    "xiangliyao/yinlin/buling:negative", "jiyan/mortefi/jianxin:general", "carlotta/lumi/buling:negative",
   ]);
 });
 
@@ -137,7 +138,7 @@ test("루시와 레베카의 1+2+2 에코 세트를 순서대로 배정한다", 
     [expected.a, 1, "heavy", 31.5],
   ]);
   closeTo(app.echoFactor("lucy").f, 0.5174585734842625);
-  closeTo(app.charScore("lucy"), 9.102381612909657);
+  closeTo(app.charScore("lucy"), 51.74585734842624);
 });
 
 test("비전투 최종 스탯에 장착 무기 부옵을 포함하고 조건부 세트 효과는 배율에서 제외한다", () => {
@@ -218,7 +219,8 @@ test("모니에·수수·파수인 버프와 브렌트 전투 공격력이 입�
   const shoreTeam = ["augusta", "iuno", "shorekeeper"];
   assert.ok(buff("shorekeeper", 240, shoreTeam, "augusta") > buff("shorekeeper", 100, shoreTeam, "augusta"));
 
-  const brant = er => {app.reset({ growth: { brant: { stats: { atk: 2000, cr: 70, cd: 210, er } } } });return app.charScore("brant")};
+  // 브렌트의 공효 → 공격력 전환은 전투 중 효과라 공명력이 아니라 개인 피해에 들어간다
+  const brant = er => {app.reset({ growth: { brant: { stats: { atk: 2000, cr: 70, cd: 210, er } } } });return app.damage("brant")};
   assert.ok(brant(280) > brant(150));
 });
 
@@ -277,4 +279,55 @@ test("복링 2체인과 도기 5체인 구름 세트의 공효 기준을 낮춘�
   app.reset({ growth: { taoqi: { chain: 5, echoSet: { mode: "5", a: "떠오르는 구름" } } } });
   assert.equal(app.supportProgress("taoqi").targets.er, 100);
   assert.equal(app.usefulStat("taoqi", "er"), false);
+});
+
+test("상시 체인 스탯은 최종 스탯에 더하고 체인 배율에서는 그 몫을 뺀다", () => {
+  const app = loadCurrentApp();
+  const base = app.finalStats("qingxiao").cr;
+  app.reset({ growth: { qingxiao: { chain: 1 } } });
+  closeTo(app.finalStats("qingxiao").cr, base + 16);
+  // 청초는 이잘키 기준 크리티컬이 100%라 기준 스탯에서 1체인 크리티컬 몫이 0 → Prydwen 배율 그대로
+  closeTo(app.chainRemain("qingxiao"), 1.151);
+  // 데니아 1체인 크리티컬 피해 +30%는 기준 스탯에서도 피해를 올리므로 Prydwen 배율보다 작게 남는다
+  app.reset({ growth: { denia: { chain: 1 } } });
+  assert.ok(app.chainRemain("denia") < 1.068);
+  // 스탯 직접 입력은 게임 화면 값이라 체인 스탯을 더하지 않는다
+  app.reset({ growth: { qingxiao: { chain: 1, stats: { atk: 2400, cr: 80, cd: 230 } } } });
+  closeTo(app.finalStats("qingxiao").cr, 80);
+});
+
+test("서포터 체인은 버프력에 곱하고, 협주력은 기준 세팅이 100이다", () => {
+  const app = loadCurrentApp();
+  const team = { slots: ["jiyan", "verina", null], buff: null };
+  app.reset({ growth: { verina: { stats: { atk: 2500, er: 220 } } } });
+  const amp0 = app.teamCalc(team).amp;
+  closeTo(app.charScore("verina"), 100);
+  app.reset({ growth: { verina: { chain: 6, stats: { atk: 2500, er: 220 } } } });
+  assert.ok(amp0 > 0);
+  closeTo(app.teamCalc(team).amp, amp0 * 1.2);
+  closeTo(app.charScore("verina"), 120, 1e-6);
+  // 파수인·모니에는 supCond가 체인을 직접 읽으므로 buffChain = 1
+  app.reset({ growth: { mornye: { stats: { er: 260 } } } });
+  const m0 = app.charScore("mornye");
+  app.reset({ growth: { mornye: { chain: 6, stats: { er: 260 } } } });
+  assert.ok(app.charScore("mornye") >= m0);
+});
+
+test("에코 미입력과 체험 세팅은 공식 가이드 스탯을 쓴다", () => {
+  const app = loadCurrentApp();
+  // 에코도 스탯 직접 입력도 없으면 체험 세팅 기준 스탯(무기·체인은 사용자 설정)
+  closeTo(app.finalStats("jiyan").atk, 2200);
+  closeTo(app.finalStats("jiyan").cr, 70);
+  app.reset({ growth: { jiyan: { trial: true } } });
+  const sheet = app.finalStats("jiyan");
+  closeTo(sheet.atk, 2200);
+  closeTo(sheet.cr, 70);
+  closeTo(sheet.cd, 260);
+  assert.ok(app.charScore("jiyan") > 80);
+  // 가이드에 공격력이 없는 공명자는 이잘키 기준 공격력으로 채운다
+  app.reset({ growth: { zani: { trial: true } } });
+  closeTo(app.finalStats("zani").atk, 2100);
+  // 혼자 잰 dps는 버프를 되돌리지 않는다
+  closeTo(app.refBuff("yuanwu"), 1);
+  assert.ok(app.refBuff("aemeath") > 1);
 });
