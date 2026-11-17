@@ -53,15 +53,14 @@
           const line=result.setx.find(x=>x.from===giver&&x.to===receiver);if(line){line.e+=amount;if(sign>0&&!line.t.includes(effect.set))line.t.push(effect.set)}else result.setx.push({from:giver,to:receiver,e:amount,t:sign>0?[effect.set]:[]})}));
         add(this.echoDb.teamFx(echoes,context),1);add(this.echoDb.refTeamFx(this.echoDb.refCounts(giver),context),-1)});
       ids.forEach(giver=>{const weapon=this.characters.weapons.weaponOf(giver).w?.id;
-        // 지원 무기의 명시된 팀 버프만 반영한다. 장착자의 스킬로 회복해야 발동하는 교향곡은 해당 공명자만 적용.
-        const atk=weapon===21050096&&giver==="suisui"?20:weapon===21050036&&["shorekeeper","baizhi"].includes(giver)?14:0;
-        const cd=weapon===21010066&&giver==="mornye"?20:0,lullaby=weapon===21030076&&giver==="lily";
-        if(!atk&&!cd&&!lullaby)return;
-        ids.forEach(receiver=>{let amount=atk/100/this.atkBase;
-          if(cd){const crit=this.characters.supportContext().combatCrit(receiver),cr=Math.min(100,Math.max(0,crit.cr))/100;
-            amount+=(cr*cd/100)/(1+cr*(crit.cd/100-1))}
-          if(lullaby){amount+=.24*this.typeShare(receiver,"echo")/this.characters.bonusBase;
-            if(this.db.has(receiver,["unison"]))amount+=.16/this.atkBase}
+        // 지원 무기의 명시된 팀 버프만 반영한다(공명자 파일의 teamWeaponBuff). 장착자의 스킬로 회복해야 발동하는 교향곡은 해당 공명자 파일에만 적는다.
+        const buffs=weapon?this.db.teamWeaponBuff(giver,weapon):null;if(!buffs)return;
+        ids.forEach(receiver=>{let amount=0;
+          buffs.forEach(buff=>{if(buff.has&&!this.db.has(receiver,buff.has))return;
+            if(buff.atk)amount+=buff.atk/100/this.atkBase;
+            if(buff.cd){const crit=this.characters.supportContext().combatCrit(receiver),cr=Math.min(100,Math.max(0,crit.cr))/100;
+              amount+=(cr*buff.cd/100)/(1+cr*(crit.cd/100-1))}
+            if(buff.echo)amount+=buff.echo/100*this.typeShare(receiver,"echo")/this.characters.bonusBase});
           outro.gain[receiver]+=amount;result.weaponx.push({from:giver,to:receiver,e:amount,weapon})})});
       const noSupport=!ids.some(id=>map[id].role==="support");let damage=0,circuitDamage=0;
       ids.forEach(id=>{let weight=weightOf(id);const ampIn=ids.filter(x=>x!==id&&map[x].role!=="support").reduce((sum,x)=>sum+this.characters.amp(x),0)/100;

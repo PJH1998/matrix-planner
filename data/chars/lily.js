@@ -21,6 +21,7 @@ MP.addChar({
   guide:{er:260,hp:40000,src:13153},
   supportTargets:{hp:40000,er:260},
   defaultWeaponId:21030076,
+  teamWeaponBuff:{21030076:[{echo:24},{atk:16,has:["unison"]}]},
   supportWeapons:[[21030076,1,100]],
   statScale:"hp",
   gb:1512,

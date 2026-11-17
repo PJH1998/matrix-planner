@@ -24,6 +24,7 @@ MP.addChar({
   guide:{er:230,gt:["er", "cd"],cd:190,src:13008},
   supportTargets:{hp:20000,er:240},
   defaultWeaponId:21050036,
+  teamWeaponBuff:{21050036:[{atk:14}]},
   supportWeapons:[[21050036,1,100]],
   statScale:"hp",
   gb:1505,

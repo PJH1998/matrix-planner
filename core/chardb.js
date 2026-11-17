@@ -64,6 +64,7 @@
     weaponPerf:id=>raw(id).weapons||[],
     supportWeaponPerf:id=>raw(id).supportWeapons||[],
     defaultWeaponId:id=>raw(id).defaultWeaponId||null,
+    teamWeaponBuff:(id,wid)=>(raw(id).teamWeaponBuff||{})[wid]||null,
     /* 기타 */
     release:id=>raw(id).release,
     eid:id=>raw(id).eid,

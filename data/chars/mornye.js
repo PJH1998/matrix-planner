@@ -20,6 +20,7 @@ MP.addChar({
   guide:{heal:48.4,def:3200,hp:19935,er:260,src:13135},
   supportTargets:{def:3200,er:260},
   defaultWeaponId:21010066,
+  teamWeaponBuff:{21010066:[{cd:20}]},
   supportWeapons:[[21010066,1,100]],
   statScale:"def",
   gb:1209,

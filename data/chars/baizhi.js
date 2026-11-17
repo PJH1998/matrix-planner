@@ -14,6 +14,7 @@ MP.addChar({
   guide:{er:220,heal:48,hp:30000,src:13020},
   supportTargets:{hp:30000,er:220},
   defaultWeaponId:21050036,
+  teamWeaponBuff:{21050036:[{atk:14}]},
   statScale:"hp",
   gb:1103,
   // 고유 스탯 노드 합계
