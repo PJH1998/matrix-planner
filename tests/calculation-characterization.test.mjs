@@ -13,7 +13,7 @@ test("기본 캐릭터 데이터와 대표 강도 결과를 고정한다", () =>
   assert.equal(app.defaults().length, 61);
   closeTo(app.charScore("hiyuki"), 24.53671935741852);
   closeTo(app.charScore("cantarella"), 10.7757309240752);
-  closeTo(app.charScore("shorekeeper"), 11.9);
+  closeTo(app.charScore("shorekeeper"), 14);
   closeTo(app.charScore("jinhsi"), 20.73074553444892);
 
   assert.deepEqual(app.reference("hiyuki"), {
@@ -30,10 +30,10 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const app = loadCurrentApp();
   const teams = app.state().teams.slice(0, 4);
   const expected = [
-    ["camellya", 33.80698414798899, 44.15244671627511],
-    ["qingxiao", 71.61895644780418, 89.5236955597552],
-    ["jingran", 58.91348702419128, 65.88332199011603],
-    ["hsin", 71.0035356543491, 109.1522702642411],
+    ["camellya", 34.380284147988995, 44.84040671627511],
+    ["qingxiao", 75.33065376847804, 94.16331721059755],
+    ["jingran", 62.55804829902035, 69.95459127620904],
+    ["hsin", 74.83198996779488, 114.85260245008205],
   ];
 
   teams.forEach((team, index) => {
@@ -44,8 +44,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.801195750239694);
-  closeTo(simulation.total, 42405.40859715426);
+  closeTo(simulation.progress, 6.972692104553951);
+  closeTo(simulation.total, 43991.44975594108);
   assert.equal(simulation.bad, 0);
 });
 
@@ -101,7 +101,7 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
     "zani/phoebe/shorekeeper:negative", "jingran/lynae/verina:tune", "sigrika/qiuyuan/lily:basic",
     "lucy/rebecca/verina:tune", "carlotta/zhezhi/buling:negative", "xiangliyao/yinlin/buling:negative",
-    "camellya/sanhua/jianxin:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/baizhi:general",
+    "camellya/sanhua/baizhi:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/jianxin:general",
   ]);
 });
 
@@ -220,4 +220,51 @@ test("모니에·수수·파수인 버프와 브렌트 전투 공격력이 입�
 
   const brant = er => {app.reset({ growth: { brant: { stats: { atk: 2000, cr: 70, cd: 210, er } } } });return app.charScore("brant")};
   assert.ok(brant(280) > brant(150));
+});
+
+test("서포터 10명의 지원 기준과 기본 무기를 캐릭터별로 구분한다", () => {
+  const app = loadCurrentApp();
+  const cases = {
+    baizhi: [{ hp: 30000, er: 220 }, 21050036],
+    buling: [{ atk: 2400, er: 160 }, 21050024],
+    jianxin: [{ er: 134 }, 21040023],
+    lily: [{ hp: 40000, er: 260 }, 21030076],
+    mornye: [{ def: 3200, er: 260 }, 21010066],
+    shorekeeper: [{ hp: 20000, er: 240 }, 21050036],
+    suisui: [{ hp: 40000, er: 260 }, 21050096],
+    taoqi: [{ def: 4000, er: 126 }, 21010024],
+    verina: [{ atk: 2500, er: 220 }, 21050024],
+    youhu: [{ er: 100 }, 21040024],
+  };
+  for (const [id, [targets, weapon]] of Object.entries(cases)) {
+    assert.deepEqual(app.supportTargets(id), targets, id);
+    assert.equal(app.weapon(id).w?.id, weapon, id);
+    assert.equal(app.supportProgress(id).total, Object.keys(targets).length, id);
+  }
+  assert.equal(app.usefulStat("jianxin", "cr"), false);
+  assert.equal(app.usefulStat("youhu", "cd"), false);
+  assert.equal(app.usefulStat("verina", "atk%"), true);
+  assert.equal(app.usefulStat("buling", "atk%"), true);
+  assert.equal(app.weapon("jianxin").pct, null);
+  assert.equal(app.weapon("taoqi").pct, null);
+  assert.equal(app.weapon("shorekeeper").pct, 100);
+});
+
+test("서포터 전용 무기의 명시된 팀 버프는 장착했을 때만 적용한다", () => {
+  const app = loadCurrentApp();
+  for (const [support, otherWeapon] of [
+    ["shorekeeper", 21050024],
+    ["mornye", 21010024],
+    ["suisui", 21050024],
+    ["lily", 21030024],
+  ]) {
+    const team = { slots: ["hiyuki", "lucilla", support], buff: null };
+    const withSignature = app.teamCalc(team);
+    assert.ok(withSignature.weaponx.some(x => x.from === support), support);
+    app.reset({ growth: { [support]: { wid: otherWeapon } } });
+    const withoutSignature = app.teamCalc(team);
+    assert.equal(withoutSignature.weaponx.length, 0, support);
+    assert.ok(withSignature.total > withoutSignature.total, support);
+    app.reset();
+  }
 });

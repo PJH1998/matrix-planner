@@ -22,6 +22,9 @@ MP.addChar({
   erNote:"'오류' 메인 에코면 230",
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{er:230,gt:["er", "cd"],cd:190,src:13008},
+  supportTargets:{hp:20000,er:240},
+  defaultWeaponId:21050036,
+  supportWeapons:[[21050036,1,100]],
   statScale:"hp",
   gb:1505,
   // 고유 스탯 노드 합계

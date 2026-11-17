@@ -189,7 +189,8 @@ function toggleOwned(id){const on=appMediator.characters.toggleOwned(id);
 
 /* ---------- profile: stats ---------- */
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
-function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
+function statSum(id){const c=charMap[id];if(c.role==="support"){const p=echoCalculator.supportProgress(id);return `지원 기준 ${p.met}/${p.total} 충족`}
+  const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:"입력 전 (레벨 기준으로 계산)"}
 
 /* ---------- profile: 에코 세팅 ----------
    에코 5칸(카드) + 세트 구성(5세트 / 3+2세트 / 데이터가 지원하는 1+2+2세트) + 요약 줄. */
@@ -227,9 +228,10 @@ function echoHTML(id){
       ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
       <div class="ec-subs">${subs}</div>${msg}</div>`};
   const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음</span></div>`;
-  return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
+  return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 지원 기준은 비전투 최종 스탯으로 확인하며, 공명 효율에 연동된 파티 버프와 에코 세트 효과는 파티 계산에 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=sheetStats(id);
+  const support=c.role==="support",sp=support?echoCalculator.supportProgress(id):null;
   const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
   {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
   const erLow=X.er+0.05<erm.min;
@@ -238,15 +240,17 @@ function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)retur
   const mainV=X[sc],mainRef=gd[sc]||I.main[1],mainLabel=sc==="hp"?"HP":sc==="def"?"방어력":"공격력";
   const crRef=gd.cr||I.cr,cdRef=gd.cd||I.cd;
   const fx=eb.fx.filter(f=>f.to!=="next"&&f.eff>0).map(f=>`${echoLab(f.k,f.elem)} +${+f.eff.toFixed(1)}`);
-  return `<div class="esum2"><div class="es-score"><span>스탯 배율</span><b>${sf?(sf.f*100).toFixed(0)+"%":"–"}</b></div>
+  const supportRows=sp?Object.entries(sp.targets).map(([k,ref])=>bar(({hp:"HP",def:"방어력",atk:"공격력",er:"공명 효율"})[k]||k,X[k],ref,k==="er"?"%":"",X[k]+.05<ref,`지원 기준 ${ref}${k==="er"?"%":""}`)).join(""):"";
+  return `<div class="esum2">${support?`<div class="es-score"><span>지원 기준</span><b>${sp.met}/${sp.total} 충족</b></div>${supportRows}`:`
+    <div class="es-score"><span>스탯 배율</span><b>${sf?(sf.f*100).toFixed(0)+"%":"–"}</b></div>
     ${bar(mainLabel,mainV,mainRef,"",false,`기준 ${Math.round(mainRef).toLocaleString()}`)}
     ${bar("크리티컬",X.cr,crRef,"%",false,`기준 ${crRef}%${gd.cr?" (공식 가이드 추천)":""}`)}
     ${bar("크리 피해",X.cd,cdRef,"%",false,`기준 ${cdRef}%${gd.cd?" (공식 가이드 추천)":""}`)}
     ${bar(`${EL[c.el]} 피해`,X.el,elRefOf(id),"%",false,`기준 ${elRefOf(id)}%`)}
-    ${bar("공명 효율",X.er,erm.min,"%",erLow,`최소 ${erm.min}%${erm.src==="guide"?" (공식 가이드)":erm.est?" (추정)":" (이잘키)"}`)}
+    ${bar("공명 효율",X.er,erm.min,"%",erLow,`최소 ${erm.min}%${erm.src==="guide"?" (공식 가이드)":erm.est?" (추정)":" (이잘키)"}`)}`}
     <div class="es-note">${eb.sets.map(x=>`<img class="esi" src="${setIconUrl(x.name)}" alt="" onerror="this.remove()">${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")})`:""}`).join(" · ")}${fx.length?` · 조건부 효과(유지율 반영): ${fx.join(", ")}`:""}${Object.entries(X.types).filter(([k,v])=>v>0).length?` · 피해 보너스: ${Object.entries(X.types).filter(([k,v])=>v>0).map(([k,v])=>`${EchoDB.LABEL[k]} ${v.toFixed(1)}%`).join(", ")}`:""}</div>
-    ${erm.note||erm.adjText?`<div class="es-note">공명 효율 최소치 ${erm.min}%: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
-    ${erLow?`<div class="es-note warn">공명 효율이 최소치보다 ${(erm.min-X.er).toFixed(1)}% 낮아 사이클이 밀릴 수 있어요. 다른 칸의 부옵, 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도에는 반영하지 않음)</div>`:""}
+    ${!support&&(erm.note||erm.adjText)?`<div class="es-note">공명 효율 최소치 ${erm.min}%: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
+    ${!support&&erLow?`<div class="es-note warn">공명 효율이 최소치보다 ${(erm.min-X.er).toFixed(1)}% 낮아 사이클이 밀릴 수 있어요. 다른 칸의 부옵, 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도에는 반영하지 않음)</div>`:""}
     ${echoSlots(id).filter(Boolean).length<5?`<div class="es-note">에코 ${echoSlots(id).filter(Boolean).length}/5 — 빈 칸은 스탯 0으로 계산합니다.</div>`:""}</div>`}
 function echoEditHTML(e,i){const M=(EchoDB.mainStats(e.cost)||{}).main||{};
   const mainOpts=Object.keys(M).map(k=>`<option value="${k}"${k===e.main.k?" selected":""}>${esc(k==="el"?"속성 피해":echoLab(k)+(EchoDB.PCT_KEYS.has(k)&&["atk%","hp%","def%"].includes(k)?"%":""))}</option>`).join("");
@@ -282,18 +286,18 @@ async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
-  const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},mainRef=gd[sc]||I.main[1];
-  const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:k===sc?`${mainRef}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
+  const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},targets=CharDB.supportTargets(id)||{},mainRef=gd[sc]||I.main[1];
+  const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:c.role==="support"?targets[k]!=null?`${targets[k]}`:"–":k===sc?`${mainRef}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
   const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);
   const tab=pfTab(id);
   return `<div class="ptabs" role="tablist"><button type="button" data-ptab="echo" aria-pressed="${tab==="echo"}">에코 세팅</button><button type="button" data-ptab="stat" aria-pressed="${tab==="stat"}">스탯 직접 입력</button></div>
    ${tab==="echo"?echoHTML(id):`<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
    <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
-    <p class="sbnote">기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${mainRef.toLocaleString()} · 크리티컬 ${gd.cr||I.cr}% · 크리티컬 피해 ${gd.cd||I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 비전투 캐릭터 정보창의 최종 스탯을 입력하면 이 기준과 비교해 강도에 반영합니다.</p>
+    <p class="sbnote">${c.role==="support"?`지원 기준: ${Object.entries(targets).map(([k,v])=>`${({hp:"HP",def:"방어력",atk:"공격력",er:"공명 효율"})[k]} ${v.toLocaleString()}${k==="er"?"%":""}`).join(" · ")}<br>비전투 최종 스탯의 기준 충족 여부를 표시합니다. 지원에 쓰는 공격력·HP·방어력은 해당 캐릭터의 회복·보호막에 도움이 됩니다. 크리티컬은 지원 기준에 넣지 않습니다.`:`기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${mainRef.toLocaleString()} · 크리티컬 ${gd.cr||I.cr}% · 크리티컬 피해 ${gd.cd||I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 비전투 캐릭터 정보창의 최종 스탯을 입력하면 이 기준과 비교해 강도에 반영합니다.`}</p>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
-   <p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>
+    ${c.role==="support"?"":`<p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>`}
    <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/st-${c.el}.png`:`icons/st-${k}.png`)).join("")}</div>
    <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`}`;
 }
@@ -363,9 +367,9 @@ function renderProfile(){
       <div class="seg" id="pfCh">${[0,1,2,3,4,5,6].map(n=>`<button type="button" data-v="${n}" aria-pressed="${ch===n}">${n}</button>`).join("")}</div></div>
     </div>
     <div class="${g.trial?"pf-hide":""}">
-    <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · 성능 ${wp.pct.toFixed(1)}%`:""}</b></div>
+    <div class="pf-sec"><span>무기</span><b>${wp.w?esc(wp.w.name):"없음"}${wp.pct!=null?` · ${c.role==="support"&&perfList(id).length===1?"추천 기준":"성능"} ${wp.pct.toFixed(1)}%`:""}</b></div>
     <div class="wgrid" id="pfW">${ws.map(w=>{const e=pmap[w.id];const sel=wp.w&&wp.w.id===w.id;
-      return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음(추정)"}">
+      return `<button type="button" class="wt q${w.q}" data-w="${w.id}" aria-pressed="${sel}" title="${esc(w.name)}${e?` · ${c.role==="support"&&perfList(id).length===1?"추천 기준 ":""}${e.p.toFixed(1)}% (R${e.r} 기준)`:" · 성능 데이터 없음"}">
         <span class="wi">${UIIcon.weapon(weaponIcon(w))}</span>
         <span class="wn">${esc(w.name)}</span><span class="wp">${e?e.p.toFixed(0)+"%":"–"}</span>${top&&top.id===w.id?`<span class="wbest">추천</span>`:""}</button>`}).join("")}</div>
     <div class="seg" id="pfR" style="max-width:420px">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>

@@ -51,6 +51,7 @@
       if(r.guide&&r.guide.er!=null)return Object.assign({min:+r.guide.er,src:"guide"},ex);
       const c=cur(id)||r;return Object.assign({min:({dps:120,sub:125,support:200})[c.role]||120,src:"est",est:true},ex)},
     guide:id=>raw(id).guide||null,          // 공식 공략 사이트 추천 스탯 {cr, cd, er, atk, hp, def, heal, el, skill, gt:[초과 조건 키], src}
+    supportTargets:id=>raw(id).supportTargets||null,
     gb:id=>raw(id).gb,
     scale:id=>{const c=cur(id);return (c&&c.statScale)||raw(id).statScale||"atk"},
     nodes:id=>raw(id).nodes||{},
@@ -60,6 +61,8 @@
     /* 무기 */
     wtype:id=>{const c=cur(id);return (c&&c.wtype)||raw(id).wtype||null},
     weaponPerf:id=>raw(id).weapons||[],
+    supportWeaponPerf:id=>raw(id).supportWeapons||[],
+    defaultWeaponId:id=>raw(id).defaultWeaponId||null,
     /* 기타 */
     release:id=>raw(id).release,
     eid:id=>raw(id).eid,

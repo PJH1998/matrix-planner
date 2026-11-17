@@ -23,8 +23,11 @@
      er, erNote, erAdj          공명 효율 최소치(%) — 못 채우면 사이클이 밀린다. 출처: 위 위키 표(없으면 공식 추천 guide.er → 역할별 기본값)
                                 erNote: 돌파·조합에 따른 차이(표시용), erAdj: 자동 보정 [{set, n, d}] — 해당 세트를 n개 이상 끼면 최소치 + d
      statScale                  주 스탯(atk|hp|def). 딜러 피해 배율과 서포터 유효 옵션·요약 표시에 사용
+     supportTargets             서포터의 비전투 최종 스탯 지원 기준 {atk|hp|def|er: 값}. 개인 피해용 크리티컬은 제외
      nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)
      wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)
+     defaultWeaponId            기본 장착 추천 무기 id. 서포터는 전용 무기 또는 지원 운용 추천 무기
+     supportWeapons             수치 근거가 있는 지원 무기 효율만 기재. 개인 피해용 weapons와 분리
      pairs                      자동 추천 궁합 {상대 id: 가중치} (1 = 정석 파트너, 0.5~0.8 = 무난한 대체)
    ===================================================================== */
 (function(g){

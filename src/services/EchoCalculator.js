@@ -47,13 +47,16 @@
       return this.echoDb.refBuild(Object.assign(this.context(id),{ijk,elRef:this.elRefOf(id),typeRef:this.typeRef,typeKeys:this.bonusKeysOf(id).filter(k=>k!=="el"),base:this.db.base(id)||[11000,400,1150],weaponAtk:weapon?weapon[0]:0,counts:this.echoDb.refCounts(id)}))}
     factor(id){const build=this.build(id);if(!build)return null;const sheet=build.screen,scale=this.scaleOf(id),weights=this.dmgWeights(id),f=this.clamp(this.echoDb.dmg(sheet,scale,weights)/this.refDmg(id),.4,2);
       return {f,sc:scale,crit:1+Math.min(sheet.cr,100)/100*(sheet.cd/100-1),bonus:sheet.el,echo:build}}
+    supportProgress(id){const targets=this.db.supportTargets(id)||{},sheet=this.sheetStats(id),keys=Object.keys(targets);
+      return {met:keys.filter(k=>sheet[k]+.05>=targets[k]).length,total:keys.length,targets,sheet}}
     usefulStat(id,k){const c=this.charMap()[id];if(!c)return false;const scale=this.scaleOf(id);
       if(c.role!=="support"){if(k==="cr"||k==="cd"||k==="er")return true;if(k==="atk%"||k==="atk")return scale==="atk";if(k==="hp%"||k==="hp")return scale==="hp";if(k==="def%"||k==="def")return scale==="def";if(["basic","heavy","skill","lib"].includes(k))return this.db.share(id,k)>=.08;return false}
       const guide=this.db.guide(id)||{},base=k.endsWith("%")?k.slice(0,-1):k;
-      if(k==="er")return this.sheetStats(id).er+.05<Math.max(this.db.erMin(id).min,this.db.erBuffCap(id)||0);
-      if(["atk","hp","def"].includes(base))return base===scale;
-      if(k==="heal"||k==="cr"||k==="cd")return guide[k]!=null;
-      return guide[k]!=null}
+      const targets=this.db.supportTargets(id)||{};
+      if(k==="er")return targets.er!=null&&this.sheetStats(id).er+.05<Math.max(targets.er,this.db.erBuffCap(id)||0);
+      if(["atk","hp","def"].includes(base))return base===scale||targets[base]!=null;
+      if(k==="heal")return guide.heal!=null;
+      return false}
     statFactor(id){const c=this.charMap()[id];if(!c||c.role==="support")return null;const ef=this.factor(id);if(ef)return ef;
       const stats=(this.state().growth[id]||{}).stats;if(!stats)return null;const scale=this.scaleOf(id),main=+stats[scale],cr=+stats.cr,cd=+stats.cd;if(!main||!cr||!cd)return null;
       const bonuses=stats.b||{},has=k=>bonuses[k]!=null&&bonuses[k]!=="",el=has("el")?+bonuses.el:this.elRefOf(id),keys=this.bonusKeysOf(id).filter(k=>k!=="el"),profile=this.db.profile(id)||{};

@@ -18,6 +18,8 @@ MP.addChar({
   base:[14113,338,1124],
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{cr:60,cd:200,er:134,src:13030},
+  supportTargets:{er:134},
+  defaultWeaponId:21040023,
   gb:1405,
   // 고유 스탯 노드 합계
   nodes:{cr:8,"atk%":12},

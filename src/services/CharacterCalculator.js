@@ -25,7 +25,8 @@
         if(k==="er"&&growth.stats?.er==null&&!this.echoes.echoesOf(id).length)return this.db.guide(id)?.er||this.db.erMin(id).min;
         return this.echoes.sheetStats(id)[k]||0},
       chain:id=>+((this.state().growth[id]||{}).chain)||0,combatCrit:id=>{const growth=this.state().growth[id]||{},sheet=this.echoes.sheetStats(id),guide=this.db.guide(id)||{};
-        return {cr:growth.stats||this.echoes.echoesOf(id).length?sheet.cr:(guide.cr||70),cd:growth.stats||this.echoes.echoesOf(id).length?sheet.cd:(guide.cd||250)}},BONUS_BASE:this.bonusBase,ATK_BASE:2}}
+        const echoes=this.echoes.echoesOf(id).length;
+        return {cr:echoes||growth.stats?.cr!=null?sheet.cr:(guide.cr||70),cd:echoes||growth.stats?.cd!=null?sheet.cd:(guide.cd||250)}},BONUS_BASE:this.bonusBase,ATK_BASE:2}}
   }
   g.MP.CharacterCalculator=CharacterCalculator;
 })(typeof window!=="undefined"?window:globalThis);

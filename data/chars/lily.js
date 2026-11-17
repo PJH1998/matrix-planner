@@ -19,6 +19,9 @@ MP.addChar({
   base:[16713,288,1100],
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{er:260,hp:40000,src:13153},
+  supportTargets:{hp:40000,er:260},
+  defaultWeaponId:21030076,
+  supportWeapons:[[21030076,1,100]],
   statScale:"hp",
   gb:1512,
   // 고유 스탯 노드 합계

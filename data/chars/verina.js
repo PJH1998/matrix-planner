@@ -14,6 +14,8 @@ MP.addChar({
   er:220,
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{atk:2500,heal:48,er:210,src:13015},
+  supportTargets:{atk:2500,er:220},
+  defaultWeaponId:21050024,
   gb:1503,
   // 고유 스탯 노드 합계
   nodes:{heal:12,"atk%":12},
