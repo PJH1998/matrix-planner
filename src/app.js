@@ -1,6 +1,6 @@
 "use strict";
 /* ---------- routing ---------- */
-const VIEWS=["plan","roster","invest","records","updates","cycle","data"];
+const VIEWS=["plan","roster","invest","records","method","updates","cycle","data"];
 document.getElementById("cycleTab").hidden=!IS_ADMIN;
 function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));

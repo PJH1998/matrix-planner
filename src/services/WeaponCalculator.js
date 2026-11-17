@@ -5,7 +5,7 @@
     constructor({state,charMap,charDb,weapons,weaponTypes,weaponStats,weaponSheetFx}){
       this.state=state;this.charMap=charMap;this.db=charDb;this.types=weaponTypes||{};this.stats=weaponStats||{};this.sheetEffects=weaponSheetFx||{};
       this.map={};(weapons||[]).forEach(([id,name,type,q,icon])=>this.map[id]={id,name,type,q,icon});
-      this.refStep={5:3,4:2,3:1.5};this.trialMul=.82;this.cache={};
+      this.refStep={5:3,4:2,3:1.5};this.cache={};
     }
     reset(){this.cache={}}
     perfList(cid){if(this.cache[cid])return this.cache[cid];const support=this.charMap()[cid]?.role==="support";

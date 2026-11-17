@@ -92,7 +92,7 @@ const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.stat
 const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
   cycle:calculationContext.cycle,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator,echoes:echoCalculator});
 
-const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types,TRIAL_MUL=weaponCalculator.trialMul;
+const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types;
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
 const weaponIcon=w=>gameImg.weapon.has(w.id)?`img/weapon/${w.id}.webp`:WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
 const perfList=id=>weaponCalculator.perfList(id),weaponPct=(id,wid,ref)=>weaponCalculator.weaponPct(id,wid,ref);
