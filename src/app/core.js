@@ -87,7 +87,7 @@ function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(sam
    계산식은 서비스에 모으고, 아래 별칭은 기존 화면 렌더링과 이벤트 코드의 호출 규약을 유지한다. */
 const calculationContext={state:()=>state,chars:()=>chars,charMap:()=>charMap,cycle:()=>cycle};
 const weaponCalculator=new window.MP.WeaponCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,
-  weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS});
+  weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS,weaponSheetFx:window.WEAPON_SHEET_FX});
 const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator});
 const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
   cycle:calculationContext.cycle,charDb:CharDB,weapons:weaponCalculator,echoes:echoCalculator});
@@ -104,7 +104,7 @@ const echoSetOf=id=>echoCalculator.setOf(id),echoSetModes=id=>echoCalculator.mod
 const elRefOf=id=>echoCalculator.elRefOf(id),statsWithWeapon=(id,wid)=>echoCalculator.statsWithWeapon(id,wid);
 const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=id=>echoCalculator.refDmg(id),weaponStatRatio=(id,wid)=>echoCalculator.weaponStatRatio(id,wid);
 const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);
-const echoBuild=(id,list)=>echoCalculator.build(id,list),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
+const echoBuild=(id,list)=>echoCalculator.build(id,list),sheetStats=id=>echoCalculator.sheetStats(id),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
 
 const CHAIN_MUL=characterCalculator.chain,ROLE_W=characterCalculator.roleWeight,BONUS_BASE=characterCalculator.bonusBase,MAIN_SUB_RATIO=characterCalculator.mainSubRatio;
 const NOSYN_W=characterCalculator.noSynergyWeight,NOSYN_MIN=characterCalculator.noSynergyMin,SYN_BONUS=characterCalculator.synergyBonus;

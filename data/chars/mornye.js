@@ -16,6 +16,7 @@ MP.addChar({
   er:240,
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{heal:48.4,def:3200,hp:19935,er:260,src:13135},
+  statScale:"def",
   gb:1209,
   // 고유 스탯 노드 합계
   nodes:{heal:12,"def%":15.2},

@@ -17,8 +17,8 @@
       if(weapon.pct!=null)score=(score+4)*(stats&&weapon.w?this.clamp(weapon.pct/100/this.echoes.weaponStatRatio(id,weapon.w.id),.5,1.3):weapon.pct/100);else score+=4;
       score*=this.dpsFactor(id);score*=stats?stats.f:.5+.5*(level/90);score*=c.role==="support"&&!this.db.hasChainData(id)?1:this.chainMul(id);if(trial)score*=this.weapons.trialMul;
       const bonus=(this.cycle().dmgBonus||{})[id];if(bonus)score*=1+bonus/100;return score}
-    amp(id){const c=this.charMap()[id];if(!c)return 0;const amp=this.db.amp(id),chain=this.clamp(Math.round(+((this.state().growth[id]||{}).chain)||0),0,6);return amp*this.chain.support[chain]}
-    supportContext(){return {el:id=>(this.charMap()[id]||{}).el,has:(id,ms)=>this.db.has(id,ms),share:(id,k)=>this.db.share(id,k),BONUS_BASE:this.bonusBase}}
+    amp(id){return this.charMap()[id]?this.db.amp(id):0}
+    supportContext(){return {el:id=>(this.charMap()[id]||{}).el,has:(id,ms)=>this.db.has(id,ms),share:(id,k)=>this.db.share(id,k),stat:(id,k)=>this.echoes.sheetStats(id)[k]||0,BONUS_BASE:this.bonusBase,ATK_BASE:2}}
   }
   g.MP.CharacterCalculator=CharacterCalculator;
 })(typeof window!=="undefined"?window:globalThis);

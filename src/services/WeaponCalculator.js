@@ -2,8 +2,8 @@
   /* 공명자별 최고 무기를 100%로 정규화한다. 목록에 없는 무기는 같은 등급의 최저값을
      기준으로 보수적으로 추정하며, 체험 세팅은 게임의 기본 지급 무기를 선택한다. */
   class WeaponCalculator{
-    constructor({state,charMap,charDb,weapons,weaponTypes,weaponStats}){
-      this.state=state;this.charMap=charMap;this.db=charDb;this.types=weaponTypes||{};this.stats=weaponStats||{};
+    constructor({state,charMap,charDb,weapons,weaponTypes,weaponStats,weaponSheetFx}){
+      this.state=state;this.charMap=charMap;this.db=charDb;this.types=weaponTypes||{};this.stats=weaponStats||{};this.sheetEffects=weaponSheetFx||{};
       this.map={};(weapons||[]).forEach(([id,name,type,q,icon])=>this.map[id]={id,name,type,q,icon});
       this.refStep={5:3,4:2,3:1.5};this.trialMul=.82;this.cache={};
     }
@@ -29,6 +29,8 @@
       return {w,ref,pct:w?this.weaponPct(cid,id,ref):null,custom:!!(growth.wid&&this.map[growth.wid])}}
     bestWeaponId(cid){const l=this.perfList(cid);return l.length?l[0].id:this.defaultWeapon(cid)}
     stat(id){return this.stats[id]||null}
+    sheetFx(id,ref){const fx=this.sheetEffects[id]||{},rank=Math.max(1,Math.min(5,+ref||1))-1,out={};
+      Object.entries(fx).forEach(([k,v])=>out[k]=Array.isArray(v)?v[rank]:v);return out}
   }
   g.MP.WeaponCalculator=WeaponCalculator;
 })(typeof window!=="undefined"?window:globalThis);

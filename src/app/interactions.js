@@ -197,6 +197,7 @@ $("#rgrid").addEventListener("touchstart",e=>{const tk=e.target.closest(".rcard"
 $("#prof").addEventListener("click",e=>{
   const d=$("#prof");if(e.target===d){d.close();return}
   if(e.target.id==="pfPick"){$("#pfFile").click();return}
+  if(e.target.id==="pfEOpen"){$("#pfEFile").click();return}
   if(e.target.id==="pfStClear"){const g=state.growth[profId]||{};delete g.stats;return setGrowth(profId,{})}
   const pt=e.target.closest("[data-ptab]");if(pt){pfTabSel=pt.dataset.ptab;return renderProfile()}
   if(e.target.id==="pfEClear"){Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
@@ -206,7 +207,7 @@ $("#prof").addEventListener("click",e=>{
   const cp=e.target.closest("[data-ecap]");if(cp){echoSel=+cp.dataset.ecap;$("#pfEFile").click();return}
   const sm=e.target.closest("[data-esmode]");if(sm){const S=echoSetOf(profId);return saveEchoSet(profId,{mode:sm.dataset.esmode,b:S.b||S.a})}
   const es=e.target.closest(".ecard");if(es&&!e.target.closest("select,input,button")){const i=+es.dataset.eslot;
-    if(es.classList.contains("empty")){echoSel=i;renderProfile();$("#pfEFile").click();return}
+    if(es.classList.contains("empty")){echoSel=i;renderProfile();return}
     echoSel=echoSel===i?null:i;return renderProfile()}
   const ch=e.target.closest("#pfCh button");if(ch)return setGrowth(profId,{chain:+ch.dataset.v});
   const r=e.target.closest("#pfR button");if(r)return setGrowth(profId,{ref:+r.dataset.v});

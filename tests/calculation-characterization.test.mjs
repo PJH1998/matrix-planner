@@ -71,8 +71,8 @@ test("에코 5세트의 스탯과 강도 환산 결과를 고정한다", () => {
   closeTo(build.er, 120);
   closeTo(build.el, 79);
   assert.deepEqual(build.sets, [{ name: set, c: 5, on: [2, 5] }]);
-  closeTo(factor.f, 1.014231562628518);
-  closeTo(app.charScore("hiyuki"), 24.885915215651995);
+  closeTo(factor.f, 1.0618522907147732);
+  closeTo(app.charScore("hiyuki"), 26.054371656300372);
 });
 
 test("기존 저장 데이터의 정규화 규칙을 고정한다", () => {
@@ -136,6 +136,61 @@ test("루시와 레베카의 1+2+2 에코 세트를 순서대로 배정한다", 
     [expected.a, 1, "basic", 31.5],
     [expected.a, 1, "heavy", 31.5],
   ]);
-  closeTo(app.echoFactor("lucy").f, 0.5296079417908597);
-  closeTo(app.charScore("lucy"), 9.31609570008344);
+  closeTo(app.echoFactor("lucy").f, 0.5174585734842625);
+  closeTo(app.charScore("lucy"), 9.102381612909657);
+});
+
+test("비전투 최종 스탯에 장착 무기 부옵을 포함하고 조건부 세트 효과는 배율에서 제외한다", () => {
+  const app = loadCurrentApp();
+  const echoes = [
+    { cost: 4, main: { k: "heal", v: 26 }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 1, main: { k: "hp%", v: 18 }, subs: [] },
+    { cost: 1, main: { k: "hp%", v: 18 }, subs: [] },
+  ];
+  app.reset({ growth: { lily: { wid: 21030076, echoSet: { mode: "5", a: "추억에 붉게 물든 꽃" }, echoes } } });
+
+  const sheet = app.sheetStats("lily");
+  closeTo(sheet.er, 177.04);
+  closeTo(sheet.hp, 31300.8);
+  assert.equal(sheet.atk, 1051);
+
+  const lucy = loadCurrentApp();
+  lucy.reset({ growth: { lucy: { echoes: [
+    { cost: 4, main: { k: "cr", v: 22 }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 1, main: { k: "atk%", v: 18 }, subs: [] },
+    { cost: 1, main: { k: "atk%", v: 18 }, subs: [] },
+  ] } } });
+  assert.ok(lucy.echoBuild("lucy").fx.some(effect => effect.eff > 0));
+  closeTo(lucy.echoFactor("lucy").f, 0.5174585734842625);
+});
+
+test("서포터 유효 옵션과 릴리 공효 190~260 구간을 실제 최종 공효로 판정한다", () => {
+  const app = loadCurrentApp();
+  const echoes = er => [
+    { cost: 4, main: { k: "heal", v: 26 }, subs: er ? [{ k: "er", v: er }] : [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 1, main: { k: "hp%", v: 18 }, subs: [] },
+    { cost: 1, main: { k: "hp%", v: 18 }, subs: [] },
+  ];
+  const team = { slots: ["hsin", "suoming", "lily"], buff: null };
+
+  app.reset({ growth: { lily: { wid: 21030076, echoes: echoes(0) } } });
+  closeTo(app.sheetStats("lily").er, 177.04);
+  assert.equal(app.teamCalc(team).supx.length, 0);
+  assert.equal(app.usefulStat("lily", "er"), true);
+  assert.equal(app.usefulStat("lily", "hp%"), true);
+  assert.equal(app.usefulStat("lily", "cr"), false);
+
+  app.reset({ growth: { lily: { wid: 21030076, echoes: echoes(82.96) } } });
+  closeTo(app.sheetStats("lily").er, 260);
+  assert.deepEqual(app.teamCalc(team).supx.map(x => x.e), [0.28, 0.28]);
+  assert.equal(app.usefulStat("lily", "er"), false);
+  assert.equal(app.usefulStat("mornye", "def%"), true);
+  assert.equal(app.usefulStat("mornye", "hp%"), false);
+  assert.equal(app.usefulStat("baizhi", "hp%"), true);
 });

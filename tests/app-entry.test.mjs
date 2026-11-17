@@ -36,3 +36,12 @@ test("CSS 변수에 넣는 캐릭터 이미지는 페이지 기준 절대 URL을
   assert.match(source,/const picUrl=id=>assetUrl\(/);
   assert.match(source,/const cardUrl=id=>gameImg\.card\.has\(id\)\?assetUrl\(/);
 });
+
+test("에코 빈칸 선택과 이미지 파일 불러오기를 분리한다",()=>{
+  const views=fs.readFileSync(path.join(root,"src/app/views.js"),"utf8");
+  const interactions=fs.readFileSync(path.join(root,"src/app/interactions.js"),"utf8");
+  assert.ok(views.includes('id="pfEOpen"'));
+  assert.ok(interactions.includes('if(e.target.id==="pfEOpen"){$("#pfEFile").click();return}'));
+  assert.ok(interactions.includes('if(es.classList.contains("empty")){echoSel=i;renderProfile();return}'));
+  assert.equal(interactions.includes('echoSel=i;renderProfile();$("#pfEFile").click()'),false);
+});

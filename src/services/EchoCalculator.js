@@ -35,12 +35,25 @@
     dmgWeights(id){const profile=this.db.profile(id),weights={};if(profile)this.echoDb.DMG_TYPES.forEach(k=>{if(profile[k])weights[k]=profile[k]});
       if(!Object.keys(weights).length)(this.db.syn(id).w||[]).forEach(k=>{if(this.echoDb.DMG_TYPES.includes(k))weights[k]=1});if(!Object.keys(weights).length)weights.basic=1;return weights}
     context(id){return {el:(this.charMap()[id]||{}).el,has:ms=>this.db.has(id,ms),share:k=>this.db.share(id,k)}}
+    sheetStats(id){const echoes=this.echoesOf(id),growth=this.state().growth[id]||{};
+      if(!echoes.length&&growth.stats){const st=growth.stats,b=st.b||{},base=this.sheetBuild(id,[]).screen,out=Object.assign({},base);
+        ["atk","hp","def","cr","cd","er"].forEach(k=>{if(st[k]!=null&&st[k]!=="")out[k]=+st[k]});out.types=Object.assign({},base.types,b);if(b.el!=null)out.el=+b.el;return out}
+      return this.sheetBuild(id,echoes).screen}
+    sheetBuild(id,echoes){const weapon=this.weapons.weaponOf(id);
+      return this.echoDb.build(Object.assign(this.context(id),{base:this.db.base(id)||[11000,400,1150],nodes:this.db.nodes(id),weapon:weapon.w?this.weapons.stat(weapon.w.id):null,sheetFx:weapon.w?this.weapons.sheetFx(weapon.w.id,weapon.ref):null,echoes:echoes||[]}))}
     build(id,list){const echoes=list||this.echoesOf(id);if(!echoes.length)return null;const weapon=this.weapons.weaponOf(id);
-      return this.echoDb.build(Object.assign(this.context(id),{base:this.db.base(id)||[11000,400,1150],nodes:this.db.nodes(id),weapon:weapon.w?this.weapons.stat(weapon.w.id):null,echoes}))}
+      return this.echoDb.build(Object.assign(this.context(id),{base:this.db.base(id)||[11000,400,1150],nodes:this.db.nodes(id),weapon:weapon.w?this.weapons.stat(weapon.w.id):null,sheetFx:weapon.w?this.weapons.sheetFx(weapon.w.id,weapon.ref):null,echoes}))}
     reference(id){const ijk=this.ijkOf(id),weapon=this.weapons.stat(this.weapons.bestWeaponId(id));
       return this.echoDb.refBuild(Object.assign(this.context(id),{ijk,elRef:this.elRefOf(id),typeRef:this.typeRef,typeKeys:this.bonusKeysOf(id).filter(k=>k!=="el"),base:this.db.base(id)||[11000,400,1150],weaponAtk:weapon?weapon[0]:0,counts:this.echoDb.refCounts(id)}))}
-    factor(id){const build=this.build(id);if(!build)return null;const scale=this.scaleOf(id),weights=this.dmgWeights(id),f=this.clamp(this.echoDb.dmg(build,scale,weights)/this.echoDb.dmg(this.reference(id),scale,weights),.4,2);
-      return {f,sc:scale,crit:1+Math.min(build.cr,100)/100*(build.cd/100-1),bonus:build.el,echo:build}}
+    factor(id){const build=this.build(id);if(!build)return null;const sheet=build.screen,scale=this.scaleOf(id),weights=this.dmgWeights(id),f=this.clamp(this.echoDb.dmg(sheet,scale,weights)/this.refDmg(id),.4,2);
+      return {f,sc:scale,crit:1+Math.min(sheet.cr,100)/100*(sheet.cd/100-1),bonus:sheet.el,echo:build}}
+    usefulStat(id,k){const c=this.charMap()[id];if(!c)return false;const scale=this.scaleOf(id);
+      if(c.role!=="support"){if(k==="cr"||k==="cd"||k==="er")return true;if(k==="atk%"||k==="atk")return scale==="atk";if(k==="hp%"||k==="hp")return scale==="hp";if(k==="def%"||k==="def")return scale==="def";if(["basic","heavy","skill","lib"].includes(k))return this.db.share(id,k)>=.08;return false}
+      const guide=this.db.guide(id)||{},base=k.endsWith("%")?k.slice(0,-1):k;
+      if(k==="er")return this.sheetStats(id).er+.05<this.db.erMin(id).min;
+      if(["atk","hp","def"].includes(base))return base===scale;
+      if(k==="heal"||k==="cr"||k==="cd")return guide[k]!=null;
+      return guide[k]!=null}
     statFactor(id){const c=this.charMap()[id];if(!c||c.role==="support")return null;const ef=this.factor(id);if(ef)return ef;
       const stats=(this.state().growth[id]||{}).stats;if(!stats)return null;const scale=this.scaleOf(id),main=+stats[scale],cr=+stats.cr,cd=+stats.cd;if(!main||!cr||!cd)return null;
       const bonuses=stats.b||{},has=k=>bonuses[k]!=null&&bonuses[k]!=="",el=has("el")?+bonuses.el:this.elRefOf(id),keys=this.bonusKeysOf(id).filter(k=>k!=="el"),profile=this.db.profile(id)||{};

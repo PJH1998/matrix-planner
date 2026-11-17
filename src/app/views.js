@@ -204,9 +204,7 @@ const ST_ICON=new Set(["atk","hp","def","er","cr","cd","basic","heavy","skill","
 const statIcon=(k,elem)=>{const n=({"atk%":"atk","hp%":"hp","def%":"def",el:elem})[k]||k;return ST_ICON.has(n)?`<img class="sti" src="icons/st-${n}.png" alt="">`:`<i class="sti"></i>`};
 const setIconUrl=name=>{const x=EchoDB.setIcon(name);if(!x)return "";return gameImg.set&&gameImg.set.has(x[0])?`img/set/${x[0]}.webp`:`https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconElementAttri/${x[1]}.webp`};
 // 이 공명자에게 쓸모 있는 부옵인지 (흐리게 표시할지 판단)
-function subUseful(id,k){const sc=scaleOf(id);if(k==="cr"||k==="cd"||k==="er")return true;
-  if(k==="atk%"||k==="atk")return sc==="atk";if(k==="hp%"||k==="hp")return sc==="hp";if(k==="def%"||k==="def")return sc==="def";
-  if(["basic","heavy","skill","lib"].includes(k))return CharDB.share(id,k)>=0.08;return false}
+function subUseful(id,k){return echoCalculator.usefulStat(id,k)}
 function echoHTML(id){
   const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const S=echoSetOf(id);const modes=echoSetModes(id);const sets=EchoDB.setNames();
   const cost=E.reduce((a,e)=>a+(e?+e.cost:0),0);
@@ -215,9 +213,9 @@ function echoHTML(id){
     <label class="esel"><img src="${setIconUrl(S.a)}" alt="" onerror="this.style.visibility='hidden'"><select data-eseta aria-label="첫 번째 세트">${opt(S.a)}</select><em>×${S.mode==="5"?5:S.mode==="32"?3:1}</em></label>
     ${S.mode!=="5"?`<label class="esel"><img src="${setIconUrl(S.b)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetb aria-label="두 번째 세트">${opt(S.b)}</select><em>×2</em></label>`:""}
     ${S.mode==="122"?`<label class="esel"><img src="${setIconUrl(S.c)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetc aria-label="세 번째 세트">${opt(S.c)}</select><em>×2</em></label>`:""}
-    <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><span class="estat-msg" id="pfEOcr"></span></div>`;
+    <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><button type="button" class="btn ghost eopen" id="pfEOpen">이미지 불러오기</button><span class="estat-msg" id="pfEOcr"></span></div>`;
   const card=(e,i)=>{const m=echoMsg[id+":"+i];const msg=m?`<div class="ec-msg${/실패/.test(m)?" err":""}">${esc(m)}</div>`:"";const sel=echoSel===i?" sel":"";
-    if(!e)return `<div class="ecard empty${sel}" data-eslot="${i}"><div class="ec-plus">+</div><div>캡처 붙여넣기</div><small>Ctrl+V · 끌어다 놓기 · 눌러서 선택</small><button type="button" class="ec-b" data-enew="${i}">직접 입력</button>${msg}</div>`;
+    if(!e)return `<div class="ecard empty${sel}" data-eslot="${i}"><div class="ec-plus">+</div><div>입력할 칸 선택</div><small>선택 후 Ctrl+V · 끌어다 놓기</small><button type="button" class="ec-b" data-enew="${i}">직접 입력</button>${msg}</div>`;
     const ed=echoEdit===i;const F=EchoDB.FIXED[e.cost];
     const head=`<div class="ec-h"><select class="ec-cost" data-ecost="${i}" aria-label="코스트">${[4,3,1].map(x=>`<option value="${x}"${x===+e.cost?" selected":""}>${x}코</option>`).join("")}</select><span class="ec-sp"></span>
       <button type="button" class="ec-b" data-ecap="${i}" title="캡처로 다시 읽기">캡처</button><button type="button" class="ec-b" data-eedit="${i}">${ed?"완료":"수정"}</button><button type="button" class="ec-b" data-edel="${i}" title="지우기" aria-label="에코 ${i+1} 지우기">✕</button></div>`;
@@ -231,17 +229,17 @@ function echoHTML(id){
   const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
-function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=eb.screen;
+function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=sheetStats(id);
   const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
   {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
   const erLow=X.er+0.05<erm.min;
   // 막대: 금색 눈금 = 기준(공식 가이드 추천 → 이잘키). 눈금은 막대의 77% 위치
   const bar=(label,v,ref,unit,warn,tip)=>{const w=ref?Math.min(100,v/ref*77):0;return `<div class="es-st${warn?" warn":""}" title="${esc(tip||"")}"><span>${label}<b>${unit==="%"?v.toFixed(1)+"%":Math.round(v).toLocaleString()}</b></span><div class="ebar"><i style="width:${w}%"></i>${ref?`<u style="left:77%"></u>`:""}</div></div>`};
-  const mainV=sc==="hp"?X.hp:X.atk,mainRef=sc==="hp"?(gd.hp||I.main[1]):(gd.atk||I.main[1]);
+  const mainV=X[sc],mainRef=gd[sc]||I.main[1],mainLabel=sc==="hp"?"HP":sc==="def"?"방어력":"공격력";
   const crRef=gd.cr||I.cr,cdRef=gd.cd||I.cd;
   const fx=eb.fx.filter(f=>f.to!=="next"&&f.eff>0).map(f=>`${echoLab(f.k,f.elem)} +${+f.eff.toFixed(1)}`);
   return `<div class="esum2"><div class="es-score"><span>스탯 배율</span><b>${sf?(sf.f*100).toFixed(0)+"%":"–"}</b></div>
-    ${bar(sc==="hp"?"HP":"공격력",mainV,mainRef,"",false,`기준 ${Math.round(mainRef).toLocaleString()}`)}
+    ${bar(mainLabel,mainV,mainRef,"",false,`기준 ${Math.round(mainRef).toLocaleString()}`)}
     ${bar("크리티컬",X.cr,crRef,"%",false,`기준 ${crRef}%${gd.cr?" (공식 가이드 추천)":""}`)}
     ${bar("크리 피해",X.cd,cdRef,"%",false,`기준 ${cdRef}%${gd.cd?" (공식 가이드 추천)":""}`)}
     ${bar(`${EL[c.el]} 피해`,X.el,elRefOf(id),"%",false,`기준 ${elRefOf(id)}%`)}
@@ -284,15 +282,15 @@ async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
-  const I=ijkOf(id),sc=scaleOf(id);
-  const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:k===sc?`${I.main[1]}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
+  const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},mainRef=gd[sc]||I.main[1];
+  const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:k===sc?`${mainRef}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
   const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);
   const tab=pfTab(id);
   return `<div class="ptabs" role="tablist"><button type="button" data-ptab="echo" aria-pressed="${tab==="echo"}">에코 세팅</button><button type="button" data-ptab="stat" aria-pressed="${tab==="stat"}">스탯 직접 입력</button></div>
    ${tab==="echo"?echoHTML(id):`<div class="pf-sec"><span>스탯</span><b id="pfStSum">${statSum(id)}</b></div>
    <div class="paste" id="pfPaste" tabindex="0"><span>스탯 화면 캡처를 <b>Ctrl+V</b>로 붙여넣거나 끌어다 놓으세요.</span> <button type="button" class="btn" id="pfPick">이미지 선택</button><input type="file" accept="image/*" id="pfFile" hidden><span id="pfOcr" class="ocr"></span></div>
-   <p class="sbnote">기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${I.main[1].toLocaleString()} · 크리티컬 ${I.cr}% · 크리티컬 피해 ${I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 주 스탯·크리티컬·크리티컬 피해를 넣으면 이 기준과 비교해 강도에 반영합니다.</p>
+    <p class="sbnote">기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${mainRef.toLocaleString()} · 크리티컬 ${gd.cr||I.cr}% · 크리티컬 피해 ${gd.cd||I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 비전투 캐릭터 정보창의 최종 스탯을 입력하면 이 기준과 비교해 강도에 반영합니다.</p>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
    <p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>

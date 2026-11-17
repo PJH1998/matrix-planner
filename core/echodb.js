@@ -99,7 +99,7 @@
     return m}
 
   /* ---------- 스탯 합산 ----------
-     o: {el, base:[HP,공,방], nodes, weapon:[공격력, 부옵 키, 수치]|null, echoes, has(ms), share(k)}
+     o: {el, base:[HP,공,방], nodes, weapon:[공격력, 부옵 키, 수치]|null, sheetFx, echoes, has(ms), share(k)}
      최종 = 기본 + 무기(기본 공격력·부옵) + 고유 노드 + 에코 주옵·고정 부주옵·부옵 + 세트 2세트 + 조건부 효과(장착자 본인 몫) */
   function blank(){return {pct:{atk:0,hp:0,def:0},flat:{atk:0,hp:0,def:0},cr:5,cd:150,er:100,heal:0,el:0,all:0,types:{},crT:{}}}
   function addKey(S,k,v,elem,myEl){if(!v)return;
@@ -116,13 +116,14 @@
     const S=blank();const B=o.base||[0,0,0];const W=o.weapon;const C={el:o.el,has:o.has,share:o.share};
     Object.entries(o.nodes||{}).forEach(([k,v])=>addKey(S,k,v,null,o.el));
     if(W){if(W[1])addKey(S,W[1],W[2],null,o.el)}
+    Object.entries(o.sheetFx||{}).forEach(([k,v])=>addKey(S,k,v,null,o.el));
     const E=(o.echoes||[]).filter(e=>e&&e.main);
     E.forEach(e=>{addKey(S,e.main.k,+e.main.v||0,e.main.elem,o.el);const f=FIXED[e.cost];if(f)addKey(S,f[0],e.fixed!=null?+e.fixed:f[1],null,o.el);
       (e.subs||[]).forEach(s=>addKey(S,s.k,+s.v||0,null,o.el))});
     const act=activeFx(setCounts(E));
     act.filter(a=>a.p2).forEach(a=>Object.entries(a.p2).forEach(([k,v])=>{if(k!=="elem")addKey(S,k,v,a.p2.elem,o.el)}));
     // 스탯 화면에 보이는 값(조건부 효과 전) — 공식 추천 스탯과 비교할 때 쓴다
-    {const T=finish(JSON.parse(JSON.stringify(S)),o,B[1]+(W?W[0]:0));S.screen={atk:T.atk,hp:T.hp,def:T.def,cr:T.cr,cd:T.cd,er:T.er,heal:T.heal,el:T.el,types:Object.assign({},T.types)}}
+    {const T=finish(JSON.parse(JSON.stringify(S)),o,B[1]+(W?W[0]:0));S.screen={atk:T.atk,hp:T.hp,def:T.def,cr:T.cr,cd:T.cd,er:T.er,heal:T.heal,el:T.el,all:T.all,types:Object.assign({},T.types),crT:Object.assign({},T.crT)}}
     S.fx=[];
     act.filter(a=>a.fx&&a.fx.to!=="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:a.fx.to||"self"});if(m>0)addKey(S,a.fx.k,a.fx.v*m,a.fx.elem,o.el)});
     act.filter(a=>a.fx&&a.fx.to==="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:"next"})});
@@ -138,7 +139,7 @@
       if(a.fx.k==="atk%")addAtk+=baseAtk*v/100;else if(a.fx.k==="hp%")addHp+=baseHp*v/100;else addKey(S,a.fx.k,v,a.fx.elem,o.el)});
     S.atk=(sc==="atk"?mv:0)+addAtk;S.hp=(sc==="hp"?mv:0)+addHp;return S}
   /* 기대 피해: 피해 유형별 비중(w)으로 크리티컬·피해 보너스를 나눠 계산 */
-  function dmg(S,scale,w){const ks=Object.keys(w).filter(k=>w[k]>0);const tw=ks.reduce((a,k)=>a+w[k],0)||1;const main=scale==="hp"?S.hp:S.atk;
+  function dmg(S,scale,w){const ks=Object.keys(w).filter(k=>w[k]>0);const tw=ks.reduce((a,k)=>a+w[k],0)||1;const main=scale==="hp"?S.hp:scale==="def"?S.def:S.atk;
     let d=0;ks.forEach(k=>{const cr=Math.min(Math.max(S.cr+(S.crT[k]||0),0),100)/100;d+=w[k]*(1+cr*(S.cd/100-1))*(1+(S.el+S.all+(S.types[k]||0))/100)});
     return main*d/tw}
   /* 파티에 주는 세트 효과(다른 파티원 몫): to party(장착자 제외) / next */

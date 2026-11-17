@@ -22,7 +22,7 @@
                                 {cr, cd, er, atk, hp, def, heal, el, skill} Lv.90 스탯 화면 기준. gt: '초과'(>) 조건인 항목, src: 공략 id
      er, erNote, erAdj          공명 효율 최소치(%) — 못 채우면 사이클이 밀린다. 출처: 위 위키 표(없으면 공식 추천 guide.er → 역할별 기본값)
                                 erNote: 돌파·조합에 따른 차이(표시용), erAdj: 자동 보정 [{set, n, d}] — 해당 세트를 n개 이상 끼면 최소치 + d
-     statScale                  공격력 대신 비례하는 주 스탯(hp)
+     statScale                  주 스탯(atk|hp|def). 딜러 피해 배율과 서포터 유효 옵션·요약 표시에 사용
      nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)
      wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)
      pairs                      자동 추천 궁합 {상대 id: 가중치} (1 = 정석 파트너, 0.5~0.8 = 무난한 대체)
