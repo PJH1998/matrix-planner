@@ -35,18 +35,21 @@ jobs:
           mkdir -p _site
           cp index.html firebase-config.js updates.js _site/
           cp -r assets core data src portraits icons _site/
+      # 캐시 키는 이미지를 정하는 값(eid · 무기/세트 아이콘)만 해시한다. 수치 패치로는 캐시가 깨지지 않는다.
+      - name: Build image manifest
+        run: node scripts/fetch-assets.mjs --manifest .image-manifest.json
       - name: Restore processed image cache
         id: processed-images
         uses: actions/cache/restore@v4
         with:
           path: _site/img
-          key: processed-images-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
+          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
       - name: Restore game image cache
         if: steps.processed-images.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
           path: .asset-cache
-          key: assets-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'scripts/fetch-assets.mjs') }}
+          key: assets-${{ hashFiles('.image-manifest.json', 'scripts/fetch-assets.mjs') }}
       - name: Fetch game images from encore.moe
         if: steps.processed-images.outputs.cache-hit != 'true'
         id: fetch-images
@@ -78,7 +81,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: _site/img
-          key: processed-images-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
+          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
