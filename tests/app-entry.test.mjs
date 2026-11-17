@@ -29,3 +29,10 @@ test("분리된 앱 파일은 각 책임과 엄격 모드를 유지한다",()=>{
     assert.ok(source.includes(marker));
   });
 });
+
+test("CSS 변수에 넣는 캐릭터 이미지는 페이지 기준 절대 URL을 사용한다",()=>{
+  const source=fs.readFileSync(path.join(root,"src/app/core.js"),"utf8");
+  assert.ok(source.includes("const assetUrl=path=>new URL(path,document.baseURI).href"));
+  assert.match(source,/const picUrl=id=>assetUrl\(/);
+  assert.match(source,/const cardUrl=id=>gameImg\.card\.has\(id\)\?assetUrl\(/);
+});

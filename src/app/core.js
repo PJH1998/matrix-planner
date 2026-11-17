@@ -66,8 +66,9 @@ let portraits={};          // charId -> file name in portraits/
 let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set()};
 const hasPic=id=>gameImg.char.has(id)||!!portraits[id];
 // --pic은 외부 CSS에서 사용되므로 상대 URL을 넣으면 CSS 파일 위치 기준으로 해석된다. 페이지 기준 절대 URL로 고정한다.
-const picUrl=id=>new URL(gameImg.char.has(id)?`img/char/${id}.webp`:"portraits/"+encodeURIComponent(portraits[id]),document.baseURI).href;
-const cardUrl=id=>gameImg.card.has(id)?`img/card/${id}.webp`:(portraits[id]?"portraits/"+encodeURIComponent(portraits[id]):null);
+const assetUrl=path=>new URL(path,document.baseURI).href;
+const picUrl=id=>assetUrl(gameImg.char.has(id)?`img/char/${id}.webp`:"portraits/"+encodeURIComponent(portraits[id]));
+const cardUrl=id=>gameImg.card.has(id)?assetUrl(`img/card/${id}.webp`):(portraits[id]?assetUrl("portraits/"+encodeURIComponent(portraits[id])):null);
 let currentUser=null, fb=null;
 const ui={el:null,q:"",rq:"",rel:null};
 
