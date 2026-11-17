@@ -90,3 +90,17 @@ test("기존 저장 데이터의 정규화 규칙을 고정한다", () => {
   assert.equal(normalized.rosterView, "profile");
   assert.equal(normalized.sortV, 2);
 });
+
+test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
+  const teams = loadCurrentApp().recommend();
+
+  assert.equal(teams.length, 18);
+  assert.deepEqual(teams.map(team => `${team.slots.join("/")}:${team.buff}`), [
+    "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:negative",
+    "aemeath/lynae/mornye:negative", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
+    "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
+    "zani/phoebe/verina:negative", "jingran/lynae/shorekeeper:tune", "sigrika/qiuyuan/lily:basic",
+    "lucy/rebecca/verina:tune", "carlotta/zhezhi/buling:negative", "xiangliyao/yinlin/buling:negative",
+    "camellya/sanhua/jianxin:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/baizhi:general",
+  ]);
+});

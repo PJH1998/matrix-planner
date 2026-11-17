@@ -30,7 +30,7 @@ export function loadCurrentApp() {
   context.globalThis = context;
 
   run(context, "core/hub.js");
-  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
+  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
   for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js"]) run(context, file);
@@ -39,17 +39,15 @@ export function loadCurrentApp() {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   const appStart = html.indexOf("(()=>{");
   const persistence = html.indexOf("/* ---------- persistence ---------- */", appStart);
-  const simulation = html.indexOf("/* ---------- boss-run simulation ----------", persistence);
-  const renderSynergy = html.indexOf("function synChips", simulation);
-  if ([appStart, persistence, simulation, renderSynergy].some((index) => index < 0)) throw new Error("index.html 계산 구간을 찾지 못했습니다.");
+  if ([appStart, persistence].some((index) => index < 0)) throw new Error("index.html 계산 구간을 찾지 못했습니다.");
 
   const strengthCode = html.slice(appStart, persistence);
-  const simulationCode = html.slice(simulation, renderSynergy);
   const expose = `
-    function echoSetOf(id){const g=state.growth[id]||{};if(g.echoSet&&g.echoSet.a)return g.echoSet;const r=(CharDB.sets(id)||[])[0];
-      if(!r)return {mode:"5",a:EchoDB.setNames()[0]||"",b:""};const names=[];for(let i=0;i<r.length;i+=2){if(typeof r[i]!=="string")break;names.push(r[i].split("|")[0])}
-      return {mode:names.length>1?"32":"5",a:names[0]||"",b:names[1]||""}}
     state=appMediator.replace(appStore.fresh());derive();
+    const recommendationTestService=new window.MP.RecommendationService({state:calculationContext.state,chars:calculationContext.chars,
+      charMap:calculationContext.charMap,cycle:calculationContext.cycle,charDb:CharDB,characters:characterCalculator,teams:teamCalculator,vigorOf,
+      bestBuffs:t=>{if(!t.slots.some(Boolean))return new Set();const scores=(cycle.buffs||[]).map(b=>[b.id,teamScore({...t,buff:b.id})]);
+        const max=Math.max(...scores.map(x=>x[1])),base=teamScore({...t,buff:null});return !(max>base+1e-9)?new Set():new Set(scores.filter(x=>x[1]>=max-1e-9).map(x=>x[0]))}});
     window.__calcTest={
       reset(patch){state=appMediator.replace(Object.assign(appStore.fresh(),clone(patch||{})));derive();_tc.clear();return clone(state)},
       state:()=>clone(state),
@@ -60,10 +58,11 @@ export function loadCurrentApp() {
       simulate:teams=>clone(simulate(clone(teams))),
       echoBuild:(id,list)=>clone(echoBuild(id,list==null?undefined:clone(list))),
       echoFactor:id=>clone(echoFactor(id)),
+      recommend:()=>clone(recommendationTestService.recommend()),
       normalize:s=>clone(appStore.normalize(clone(s)))
     };
   })();`;
-  vm.runInContext(strengthCode + simulationCode + expose, context, { filename: "index-calculation-harness.js" });
+  vm.runInContext(strengthCode + expose, context, { filename: "index-calculation-harness.js" });
   const copy = (value) => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
   return new Proxy(context.__calcTest, {
     get(target, property) {

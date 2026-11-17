@@ -191,6 +191,11 @@
 <script src="src/mediators/TeamMediator.js"></script>
 <script src="src/mediators/BossMediator.js"></script>
 <script src="src/mediators/AppMediator.js"></script>
+<script src="src/services/WeaponCalculator.js"></script>
+<script src="src/services/EchoCalculator.js"></script>
+<script src="src/services/CharacterCalculator.js"></script>
+<script src="src/services/TeamCalculator.js"></script>
+<script src="src/services/RecommendationService.js"></script>
 <script src="src/components/Icon.js"></script>
 <script src="src/components/FavoriteButton.js"></script>
 <script src="src/components/CharacterCard.js"></script>
@@ -282,222 +287,51 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const replaceState=s=>(state=appMediator.replace(s));
 function derive(){
   const model=appMediator.bind(state,{validElements:EL,admin:IS_ADMIN});chars=model.characters;charMap=model.characterMap;cycle=model.cycle;
-  for(const k in _dpsAvg)delete _dpsAvg[k];
+  if(typeof characterCalculator!=="undefined")characterCalculator.reset();
 }
 const vigorOf=id=>BossDB.vigor(id);
 // 방랑자는 속성이 달라도 한 명 — 어느 속성이든 하나가 편성되면 다른 속성 방랑자도 쓴 것으로 센다
 const sameChar=(a,b)=>a===b||(!!a&&!!b&&a.startsWith("rover_")&&b.startsWith("rover_"));
 function usedCount(id){let n=0;state.teams.forEach(t=>t.slots.forEach(s=>{if(sameChar(s,id))n++}));return n}
 
-/* ---------- strength ----------
-   캐릭터 점수 = 14 × 무기 성능% × DPS 배율(메인·서브 공통 평균 대비) × 레벨(또는 스탯) × 공명 체인 배율 × 주기 피해 증가
-   파티 강도 = Σ(캐릭터 점수 × 역할 비중 × (1 + 받은 반주·파티 버프) × 파워 서킷) × (1 + 서포터 딜증%) × (1 + 메커니즘·추천 조합%)
-     역할 비중: 메인 1 / 서브 0.5 / 서포터 0.2. 서포터 없는 파티에서 반주 이득을 못 받는 공명자는 ×0.75
-     반주: 교대 순환(A→B→C→A)으로 각자 한 번 주고 받는다. 이득 = 버프% × 받는 쪽 피해 비중(profile) ÷ 1.9 (outro) */
+/* ---------- calculation services ----------
+   계산식은 서비스에 모으고, 아래 별칭은 기존 화면 렌더링과 이벤트 코드의 호출 규약을 유지한다. */
+const calculationContext={state:()=>state,chars:()=>chars,charMap:()=>charMap,cycle:()=>cycle};
+const weaponCalculator=new window.MP.WeaponCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,
+  weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS});
+const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator});
+const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
+  cycle:calculationContext.cycle,charDb:CharDB,weapons:weaponCalculator,echoes:echoCalculator});
 
-const DPS_EXP=0.75, DPS_CLAMP=[0.4,2]; // 계산 조건(무기·로테이션·패치) 차이를 감안해 비율을 완만하게 반영
-const _dpsAvg={};
-function dpsFactor(id){const c=charMap[id];if(!c)return 1;const v=CharDB.baseDps(id);if(!v)return 1;
-  // 메인·서브 딜러를 같은 평균으로 나눈다 → 서브 딜러는 실제 DPS만큼 낮게 나온다(예전엔 역할별 평균이라 서브가 메인급으로 부풀었다)
-  if(_dpsAvg.all==null){const xs=chars.filter(x=>x.role!=="support").map(x=>CharDB.baseDps(x.id)).filter(Boolean);_dpsAvg.all=xs.reduce((a,b)=>a+b,0)/(xs.length||1);}
-  return clamp(Math.pow(v/_dpsAvg.all,DPS_EXP),DPS_CLAMP[0],DPS_CLAMP[1]);}
-// 체인 데이터(공명자 파일의 chain)가 없는 캐릭터용 역할별 평균 (위 데이터의 메인 딜러 28명 / 서브 딜러 23명 평균).
-// 서포터는 Prydwen에 DPS 계산이 없어 딜증(amp)에 곱하는 완만한 배율을 쓴다.
-const CHAIN_MUL={
-  dps:[1.0, 1.09, 1.27, 1.49, 1.58, 1.66, 2.21],
-  sub:[1.0, 1.07, 1.21, 1.42, 1.52, 1.62, 1.92],
-  support:[1,1.03,1.06,1.1,1.13,1.16,1.2]};
-function chainMul(id){const c=charMap[id];const ch=clamp(Math.round(+((state.growth[id]||{}).chain)||0),0,6);
-  const t=CharDB.chain(id)||CHAIN_MUL[c&&c.role]||CHAIN_MUL.sub;return t[ch]||1;}
-const ROLE_W={main:1,dps:0.5,sub:0.5,support:0.2}; // 파티 내 피해 비중 (메인 딜러는 1)
-// 서포터 딜증(%) 추정치(공명자 파일의 amp) — 반주·고유 스킬·공명 체인 0 기준 파티 전체 피해 증가. 메인 딜러 본인에게는 적용하지 않는다.
-// 서포터의 반주 버프는 이 값에 포함돼 있으므로 outro로 따로 계산하지 않는다(서포터 중 amp가 없는 캐릭터만 outro 사용).
-// 서브 딜러는 반주를 outro로 계산하고, 수치로 옮기기 어려운 효과(이상 효과 스택 등)만 amp에 둔다.
-/* 반주(변주 아웃트로)·파티 버프 수치(공명자 파일의 outro, %). 키: el 자기 속성 / all 전체 피해(심화) / basic·heavy·skill·lib·echo 피해 유형.
-   실제 이득 = all은 그대로, el은 (같은 속성일 때) v ÷ (1 + 평소 피해 보너스 90%), 피해 유형은 v × 받는 쪽 피해 비중(profile) ÷ 1.9
-   메커니즘 의존(공명자 파일의 needs): 해당 메커니즘을 가진 파티원이 없으면 피해 배율을 낮춘다(예: 금희 협동 공격 파트너).
-   서포터 조건부 버프(공명자 파일의 supCond): 기본 딜증(amp)에 더해 특정 조합에서만 붙는 몫. 공명자 파일은 다른 공명자 정보를 SUP_CTX로만 읽는다. */
-const BONUS_BASE=1.9; // 평소 피해 보너스 합(≈90%) — 같은 종류 보너스는 더하기라 실제 이득이 줄어든다
-const MAIN_SUB_RATIO=1.3; // 서브 딜러 점수가 메인 딜러 후보보다 30% 넘게 높으면 서브 딜러를 메인으로 본다
-const NOSYN_W=0.75, NOSYN_MIN=0.05; // 서포터 없는 파티에서 다른 둘에게 반주 이득을 5% 미만 받는 공명자는 비중 ×0.75
-const SYN_BONUS={mech:5,combo:5,cap:30};
-/* ---------- weapons (weapons.js) ----------
-   무기 성능 = Prydwen 무기별 성능 %를 공명자별 최고값 100으로 맞춘 값 × 재련 보정.
-   목록에 없는 무기는 같은 등급 최저값 - 3 (없으면 5성 85 / 4성 72 / 3성 60)으로 추정한다. */
-const WMAP={};(window.WEAPONS||[]).forEach(([id,name,type,q,icon])=>WMAP[id]={id,name,type,q,icon});
-const WTYPE=window.WEAPON_TYPES||{};
-const REF_STEP={5:3,4:2,3:1.5}; // 재련 1단계당 성능 % (추정)
+const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types,TRIAL_MUL=weaponCalculator.trialMul;
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";
 const weaponIcon=w=>gameImg.weapon.has(w.id)?`img/weapon/${w.id}.webp`:WICON_BASE+(w.icon||`T_IconWeapon${w.id}_UI`)+".webp";
-const _perf={};
-function perfList(cid){if(_perf[cid])return _perf[cid];const l=CharDB.weaponPerf(cid).filter(x=>WMAP[x[0]]);
-  const mx=Math.max(0,...l.map(x=>x[2]));const seen=new Set();
-  return _perf[cid]=l.filter(x=>!seen.has(x[0])&&seen.add(x[0])).map(([id,r,p])=>({id,r,p:p/mx*100})).sort((a,b)=>b.p-a.p);}
-function weaponPct(cid,wid,ref){const w=WMAP[wid];if(!w)return null;const l=perfList(cid);const e=l.find(x=>x.id===wid);
-  let base,baseR;
-  if(e){base=e.p;baseR=e.r}else{const same=l.filter(x=>WMAP[x.id].q===w.q);base=same.length?Math.min(...same.map(x=>x.p))-3:({5:85,4:72,3:60}[w.q]||55);baseR=w.q===5?1:5}
-  return base*(1+(REF_STEP[w.q]||2)/100*(ref-baseR));}
-const charWType=cid=>CharDB.wtype(cid);
-function defaultWeapon(cid){const c=charMap[cid];const g=state.growth[cid]||{};const want=+g.wr||(c&&c.rar===5?5:4);
-  const l=perfList(cid);const best=l.find(x=>WMAP[x.id].q===want)||l[0];if(best)return best.id;
-  const t=charWType(cid);const w=Object.values(WMAP).find(w=>w.type===t&&w.q===want);return w?w.id:null;}
-/* 체험 세팅: 보유했지만 육성하지 않은 공명자를 매트릭스에서 쓸 때 게임이 주는 기본 세팅.
-   90레벨, 5성은 상시 5성 무기 · 4성은 4성 상시 무기(R1), 스킬 8레벨, 에코 세트는 맞지만 옵션이 약하다. 공명 체인은 그대로.
-   스킬·에코 손실은 TRIAL_MUL(예측치)로 반영한다. */
-const TRIAL_MUL=0.82;
-const isTrial=id=>!!(state.growth[id]||{}).trial;
-function trialWeapon(cid){const c=charMap[cid];const t=+charWType(cid);
-  if(c&&c.rar===5&&t){const id=21000015+t*10000;if(WMAP[id])return id}
-  const l=perfList(cid).filter(x=>WMAP[x.id].q===4);if(l.length)return l[l.length-1].id;
-  const w=Object.values(WMAP).find(w=>w.type===t&&w.q===4);return w?w.id:null}
-function weaponOf(cid){const g=state.growth[cid]||{};
-  if(g.trial){const id=trialWeapon(cid);const w=WMAP[id]||null;return {w,ref:1,pct:w?weaponPct(cid,id,1):null,custom:false,trial:true}}
-  const id=g.wid&&WMAP[g.wid]?g.wid:defaultWeapon(cid);const w=WMAP[id]||null;
-  const ref=clamp(+g.ref||(w&&w.q<5?5:1),1,5);return {w,ref,pct:w?weaponPct(cid,id,ref):null,custom:!!(g.wid&&WMAP[g.wid])};}
-/* ---------- 스탯 → 배율 (stats.js · weapons.js) ----------
-   기준점: 공명자별 '이 정도면 잘 키웠다' 스탯(IJK) + 최고 무기(Prydwen 100%) = Prydwen DPS가 나오는 세팅으로 본다.
-   기대 피해 D = 주 스탯 × (1 + 크리티컬 × (크리티컬 피해 − 1)) × (1 + 속성 피해 + 주력 유형 피해)
-   · 스탯 입력 없음: 무기 효과 = Prydwen 무기 성능 %(스탯 + 패시브)를 그대로 쓴다.
-   · 스탯 입력: 스탯 배율 = D(내 스탯) ÷ D(기준). 입력한 스탯에 무기 기본 스탯이 이미 들어 있으므로
-     무기는 '패시브 몫'만 곱한다 = 무기 성능 % ÷ (내 무기 스탯 배율 ÷ 최고 무기 스탯 배율).
-   공명 체인 배율은 스탯 화면에 안 잡히는 효과(조건부 버프·추가타)가 대부분이라 그대로 곱한다.
-   기준 피해 보너스 = 속성(3코 속성 개수 × 30 + 세트 10 + 속성 노드 12) + 주력 유형 10. 비워 둔 칸은 이 기준값으로 채운다. */
-const TYPE_REF=10, FLAT_ATK=350, FLAT_HP=2300;
-const BONUS_KEYS={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
-function bonusKeysOf(id){const S=synOf(id);return ["el",...(S.w||[]).filter(k=>BONUS_KEYS[k])];}
-const scaleOf=id=>CharDB.scale(id); // 공격력이 아닌 HP에 비례하는 공명자는 공명자 파일의 statScale
-function ijkOf(id){const I=CharDB.ijk(id);if(I)return I;const c=charMap[id]||{};const sc=scaleOf(id);
-  return {main:[sc,sc==="hp"?45000:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
-function elRefOf(id){const I=ijkOf(id);return I.el*30+10+(I.node?12:0)}
-const _wst=id=>(window.WEAPON_STATS||{})[id]||null;
-function bestWeaponId(cid){const l=perfList(cid);return l.length?l[0].id:defaultWeapon(cid)}
-// 무기를 바꿨을 때 기준 스탯에서 달라지는 값(무기 기본 공격력 · 부옵션)
-function statsWithWeapon(cid,wid){const I=ijkOf(cid);const sc=I.main[0];const base=CharDB.base(cid)||[11000,400,1150];
-  const r={main:I.main[1],cr:I.cr,cd:I.cd};const W0=_wst(bestWeaponId(cid)),W1=_wst(wid);if(!W0||!W1||bestWeaponId(cid)===wid)return r;
-  const sub=(W,k)=>W[1]===k?W[2]:0;
-  if(sc==="atk"){const B=base[1];const P0=Math.max(0,(I.main[1]-FLAT_ATK)/(B+W0[0])-1);const P1=P0-sub(W0,"atk%")/100+sub(W1,"atk%")/100;r.main=(B+W1[0])*(1+P1)+FLAT_ATK}
-  else if(sc==="hp"){const B=base[0];const P0=Math.max(0,(I.main[1]-FLAT_HP)/B-1);r.main=B*(1+P0-sub(W0,"hp%")/100+sub(W1,"hp%")/100)+FLAT_HP}
-  r.cr+=sub(W1,"cr")-sub(W0,"cr");r.cd+=sub(W1,"cd")-sub(W0,"cd");return r}
-const expDmg=(main,cr,cd,bonus)=>main*(1+Math.min(Math.max(cr,0),100)/100*(cd/100-1))*(1+bonus/100);
-function refDmg(cid){const I=ijkOf(cid);return expDmg(I.main[1],I.cr,I.cd,elRefOf(cid)+TYPE_REF)}
-// 무기 스탯만으로 본 배율(기준 = 최고 무기). 패시브 몫 = 무기 성능 % ÷ 이 값
-function weaponStatRatio(cid,wid){const r=statsWithWeapon(cid,wid);return expDmg(r.main,r.cr,r.cd,elRefOf(cid)+TYPE_REF)/refDmg(cid)}
-/* ---------- 에코 세팅 → 스탯 (EchoDB) ----------
-   에코를 입력했으면 기본 스탯 + 무기 + 고유 노드 + 에코 + 세트(2세트 고정·조건부 효과)로 최종 스탯을 만들고,
-   기준(이잘키 스탯 + 기준 세트의 조건부 효과)과 기대 피해를 비교한다. 피해 유형별 비중(profile)으로 크리티컬·보너스를 나눠 계산. */
-// 세트는 칸마다가 아니라 세트 구성(5세트 / 3+2세트)으로 정한다: 채워진 에코 순서대로 앞 3개(5세트면 전부) = a, 나머지 = b
-const echoesOf=id=>{const E=((state.growth[id]||{}).echoes||[]).filter(e=>e&&e.main);if(!E.length)return E;const S=echoSetOf(id);
-  return E.map((e,i)=>Object.assign({},e,{set:S.mode==="5"||i<3?S.a:(S.b||S.a)}))};
-function dmgWeights(id){const p=CharDB.profile(id);const w={};if(p)EchoDB.DMG_TYPES.forEach(k=>{if(p[k])w[k]=p[k]});
-  if(!Object.keys(w).length)(synOf(id).w||[]).forEach(k=>{if(EchoDB.DMG_TYPES.includes(k))w[k]=1});if(!Object.keys(w).length)w.basic=1;return w}
-const echoCtx=id=>({el:(charMap[id]||{}).el,has:ms=>CharDB.has(id,ms),share:k=>CharDB.share(id,k)});
-function echoBuild(id,list){const E=list||echoesOf(id);if(!E.length)return null;const wp=weaponOf(id);
-  return EchoDB.build(Object.assign(echoCtx(id),{base:CharDB.base(id)||[11000,400,1150],nodes:CharDB.nodes(id),weapon:wp.w?_wst(wp.w.id):null,echoes:E}))}
-function echoRef(id){const I=ijkOf(id);const W=_wst(bestWeaponId(id));
-  return EchoDB.refBuild(Object.assign(echoCtx(id),{ijk:I,elRef:elRefOf(id),typeRef:TYPE_REF,typeKeys:bonusKeysOf(id).filter(k=>k!=="el"),base:CharDB.base(id)||[11000,400,1150],weaponAtk:W?W[0]:0,counts:EchoDB.refCounts(id)}))}
-function echoFactor(id){const eb=echoBuild(id);if(!eb)return null;const sc=scaleOf(id),w=dmgWeights(id);
-  const f=clamp(EchoDB.dmg(eb,sc,w)/EchoDB.dmg(echoRef(id),sc,w),0.4,2);
-  return {f,sc,crit:1+Math.min(eb.cr,100)/100*(eb.cd/100-1),bonus:eb.el,echo:eb}}
-function statFactor(id){
-  const c=charMap[id];if(!c||c.role==="support")return null;
-  const ef=echoFactor(id);if(ef)return ef; // 에코 입력이 스탯 직접 입력보다 우선
-  const st=(state.growth[id]||{}).stats;if(!st)return null;
-  const sc=scaleOf(id);const main=+st[sc];const cr=+st.cr,cd=+st.cd;if(!main||!cr||!cd)return null;
-  const b=st.b||{};const has=k=>b[k]!=null&&b[k]!=="";
-  const el=has("el")?+b.el:elRefOf(id);
-  const ks=bonusKeysOf(id).filter(k=>k!=="el");const p=CharDB.profile(id)||{};
-  const wt=k=>(p[k]||0)>0?p[k]:1;const tw=ks.reduce((a,k)=>a+wt(k),0);
-  const typeB=ks.length?ks.reduce((a,k)=>a+(has(k)?+b[k]:TYPE_REF)*wt(k),0)/tw:TYPE_REF;
-  const bonus=el+typeB;
-  const f=clamp(expDmg(main,cr,cd,bonus)/refDmg(id),0.4,2);
-  return {f,sc,crit:1+Math.min(cr,100)/100*(cd/100-1),bonus};
-}
-// 서포터 조건부 보정에 넘기는 중개 컨텍스트 — 공명자 파일이 다른 공명자를 직접 참조하지 않게 한다
-const SUP_CTX={el:id=>(charMap[id]||{}).el,has:(id,ms)=>CharDB.has(id,ms),share:(id,k)=>CharDB.share(id,k),BONUS_BASE};
-function charScore(id){
-  const c=charMap[id]; if(!c) return 0;
-  const g=state.growth[id]||{};
-  const tr=!!g.trial;
-  const lv=tr?90:clamp(+g.lv||90,1,90);
-  const hasDps=CharDB.hasDps(id); // DPS 데이터가 있으면 등급 차이는 DPS에 이미 들어 있다
-  const wp=weaponOf(id);
-  const sf=tr?null:statFactor(id);
-  let s=(hasDps?10:(c.rar===5?10:6));
-  // 무기: 공명자별 최고 무기(재련 기준값) = 100%. 스탯을 입력했으면 무기 기본 스탯은 스탯에 이미 들어 있으므로 패시브 몫만 반영
-  if(wp.pct!=null) s=(s+4)*(sf&&wp.w?clamp(wp.pct/100/weaponStatRatio(id,wp.w.id),0.5,1.3):wp.pct/100);
-  else s+=4;
-  s*=dpsFactor(id);
-  if(sf) s*=sf.f; else s*=0.5+0.5*(lv/90); // 스탯을 입력했으면 레벨 대신 스탯으로 계산
-  s*=c.role==='support'&&!CharDB.hasChainData(id)?1:chainMul(id);
-  if(tr) s*=TRIAL_MUL;
-  const b=(cycle.dmgBonus||{})[id]; if(b) s*=1+b/100;
-  return s;
-}
-function ampOf(id){const c=charMap[id];if(!c)return 0;const a=CharDB.amp(id);
-  const ch=clamp(Math.round(+((state.growth[id]||{}).chain)||0),0,6);return a*(CHAIN_MUL.support[ch]);}
-// 파워 서킷(강화 효과) 반영: 조건을 만족하는 공명자 점수에 효과 수치(%)를 곱한다
-function circuitMul(t,id){
-  const buff=selBuff(t);if(!buff)return {mul:1,hits:[]};
-  let add=0;const hits=[];
-  (buff.effects||[]).forEach(e=>{const v=+e.dmg||0;const w=v?condWeight(e.cond,t,id):0;if(w>0){add+=v*w;hits.push(e.text+(w<1?` (${Math.round(w*100)}% 적용)`:""))}});
-  return {mul:1+add/100,hits};
-}
-/* 반주 이득: 공명자 g의 반주(outro)를 공명자 x가 받을 때 x의 피해가 몇 % 늘어나는지 */
-const typeShare=(x,k)=>CharDB.typeShare(x,k);
-// cond.to: 받는 공명자 본인이 그 메커니즘을 가져야 cv 적용(예: 합일 버프는 합일 캐릭터만). 없으면 파티에 다른 누가 가져도 적용.
-const hasM=(x,ms)=>CharDB.has(x,ms);
-function outroVals(g,ids,x){const o=CharDB.outro(g);if(!o)return null;if(!o.cond)return o.v;
-  if(o.cond.to)return x&&hasM(x,o.cond.m)&&ids.filter(y=>hasM(y,o.cond.m)).length>=2?o.cond.v:o.v;
-  return ids.some(y=>y!==g&&hasM(y,o.cond.m))?o.cond.v:o.v}
-function outroGain(g,x,ids){const v=outroVals(g,ids,x);if(!v)return 0;const cg=charMap[g],cx=charMap[x];let a=0;
-  Object.entries(v).forEach(([k,n])=>{if(k==="all")a+=n;else if(k==="el"){if(cg.el===cx.el)a+=n/BONUS_BASE}else a+=n*typeShare(x,k)/BONUS_BASE});
-  return a/100;}
-const usesAmp=id=>{const c=charMap[id];return c&&c.role==="support"&&CharDB.hasAmp(id)};
-/* 파티 안 반주 배분: 교대 순환(A→B→C→A)에서 각자 반주를 한 번 주고 한 번 받는다. 두 순환 방향 중 이득이 큰 쪽을 쓴다.
-   파티 버프(SYN의 p)는 순환과 관계없이 전원(본인 포함)에게. 반환: gain = 받는 이득 합, from = 다른 공명자에게서 받은 이득 */
-function outroMap(ids,main,wOf){
-  const run=order=>{const gain={},from={},links=[];ids.forEach(x=>{gain[x]=0;from[x]=0});let val=0;
-    ids.forEach(g=>{if(usesAmp(g)||!outroVals(g,ids))return;
-      const add=(x,party)=>{const e=outroGain(g,x,ids);if(e<=0)return;gain[x]+=e;if(x!==g)from[x]+=e;val+=charScore(x)*wOf(x)*e;links.push({from:g,to:x,e,party})};
-      if(synOf(g).p)ids.forEach(x=>add(x,1));
-      else if(order.length>1)add(order[(order.indexOf(g)+1)%order.length],0)});
-    return {gain,from,links,val};};
-  const A=run(ids),B=ids.length>2?run([ids[0],ids[2],ids[1]]):A;return A.val>=B.val?A:B;
-}
-// 세트 효과 하나가 공명자 x에게 주는 피해 증가 비율. 공격력%는 평소 공격력 보너스 합(≈100%)을 감안해 ÷2
-const ATK_BASE=2;
-function setFxGain(f,x){const cx=charMap[x];if(!cx)return 0;const v=f.v/100;
-  if(f.k==="atk%")return v/ATK_BASE;if(f.k==="el")return f.elem&&f.elem!==cx.el?0:v/BONUS_BASE;if(f.k==="all")return v/BONUS_BASE;
-  if(EchoDB.DMG_TYPES.includes(f.k))return v*typeShare(x,f.k)/BONUS_BASE;return 0}
-function teamCalc(t){
-  const ids=t.slots.filter(Boolean);const r={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[],setx:[]};if(!ids.length)return r;
-  const main=mainDps(t);r.main=main;
-  const wOf=id=>id===main?ROLE_W.main:(ROLE_W[charMap[id].role]||0.5);
-  const om=outroMap(ids,main,wOf);r.gain=om.gain;r.links=om.links;
-  ids.forEach(g=>{const f=CharDB.supCond(g);if(!f||!usesAmp(g))return;ids.forEach(x=>{if(x===g||charMap[x].role==="support")return;const v=f(x,ids,main,SUP_CTX);if(v.a>0){om.gain[x]+=v.a;r.supx.push({from:g,to:x,e:v.a,t:v.t})}})});
-  // 에코 세트가 파티원에게 주는 효과: 기준 세트 대비 차이만 반영(기준 세트 효과는 보정값에 이미 들어 있다). 에코를 입력한 공명자만.
-  ids.forEach(g=>{const E=echoesOf(g);if(!E.length)return;const C=echoCtx(g);
-    const recv=to=>to==="party"?ids.filter(x=>x!==g):[g===main?ids[(ids.indexOf(g)+1)%ids.length]:main].filter(x=>x&&x!==g);
-    const add=(list,sign)=>list.forEach(f=>recv(f.to).forEach(x=>{const e=sign*setFxGain(f,x);if(!e)return;om.gain[x]+=e;
-      const l=r.setx.find(y=>y.from===g&&y.to===x);if(l){l.e+=e;if(sign>0&&!l.t.includes(f.set))l.t.push(f.set)}else r.setx.push({from:g,to:x,e,t:sign>0?[f.set]:[]})}));
-    add(EchoDB.teamFx(E,C),1);add(EchoDB.refTeamFx(EchoDB.refCounts(g),C),-1)});
-  const noSup=!ids.some(id=>charMap[id].role==="support");
-  let dmg=0,dmgC=0;
-  ids.forEach(id=>{let w=wOf(id);
-    const ampIn=ids.filter(x=>x!==id&&charMap[x].role!=="support").reduce((a,x)=>a+ampOf(x),0)/100; // 수치로 못 옮긴 서브 딜러 버프(이상 효과 스택 등)도 받은 것으로 친다
-    if(noSup&&ids.length===3&&om.from[id]+ampIn<NOSYN_MIN){w*=NOSYN_W;r.weak.push(id)}
-    const nd=CharDB.needs(id);if(nd&&!ids.some(x=>x!==id&&(synOf(x).m||[]).includes(nd.m))){w*=nd.mul;r.needs.push(id)}
-    const v=charScore(id)*w*(1+om.gain[id]);dmg+=v;dmgC+=v*circuitMul(t,id).mul;});
-  r.amp=ids.filter(id=>id!==main).reduce((a,id)=>a+(usesAmp(id)?ampOf(id):(charMap[id].role==="support"?0:ampOf(id))),0);
-  const sy=teamSynergy(t);let syn=0;const seen=new Set();
-  sy.links.forEach(l=>{if(l.k==="mech"&&!seen.has(l.tag)){seen.add(l.tag);syn+=SYN_BONUS.mech}});
-  syn+=sy.combos.length*SYN_BONUS.combo;r.syn=Math.min(SYN_BONUS.cap,syn);
-  const mul=(1+r.amp/100)*(1+r.syn/100);
-  r.base=dmg*mul;r.total=dmgC*mul;r.circuit=r.total-r.base;return r;
-}
-const _tc=new Map(); // bestOrder 계산 중 캐시
-function teamBase(t){return (_tc.get(t)||teamCalc(t)).base}
-function teamScore(t){return (_tc.get(t)||teamCalc(t)).total}
+const perfList=id=>weaponCalculator.perfList(id),weaponPct=(id,wid,ref)=>weaponCalculator.weaponPct(id,wid,ref);
+const charWType=id=>weaponCalculator.charType(id),defaultWeapon=id=>weaponCalculator.defaultWeapon(id),trialWeapon=id=>weaponCalculator.trialWeapon(id);
+const isTrial=id=>!!(state.growth[id]||{}).trial,weaponOf=id=>weaponCalculator.weaponOf(id),bestWeaponId=id=>weaponCalculator.bestWeaponId(id),_wst=id=>weaponCalculator.stat(id);
+
+const TYPE_REF=echoCalculator.typeRef,FLAT_ATK=echoCalculator.flatAtk,FLAT_HP=echoCalculator.flatHp,BONUS_KEYS=echoCalculator.bonusKeys;
+const echoSetOf=id=>echoCalculator.setOf(id),bonusKeysOf=id=>echoCalculator.bonusKeysOf(id),scaleOf=id=>echoCalculator.scaleOf(id),ijkOf=id=>echoCalculator.ijkOf(id);
+const elRefOf=id=>echoCalculator.elRefOf(id),statsWithWeapon=(id,wid)=>echoCalculator.statsWithWeapon(id,wid);
+const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=id=>echoCalculator.refDmg(id),weaponStatRatio=(id,wid)=>echoCalculator.weaponStatRatio(id,wid);
+const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);
+const echoBuild=(id,list)=>echoCalculator.build(id,list),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
+
+const CHAIN_MUL=characterCalculator.chain,ROLE_W=characterCalculator.roleWeight,BONUS_BASE=characterCalculator.bonusBase,MAIN_SUB_RATIO=characterCalculator.mainSubRatio;
+const NOSYN_W=characterCalculator.noSynergyWeight,NOSYN_MIN=characterCalculator.noSynergyMin,SYN_BONUS=characterCalculator.synergyBonus;
+const dpsFactor=id=>characterCalculator.dpsFactor(id),chainMul=id=>characterCalculator.chainMul(id),charScore=id=>characterCalculator.score(id),ampOf=id=>characterCalculator.amp(id);
+const SUP_CTX=characterCalculator.supportContext();
+const teamCalculator=new window.MP.TeamCalculator({state:calculationContext.state,charMap:calculationContext.charMap,cycle:calculationContext.cycle,
+  charDb:CharDB,bossDb:BossDB,echoDb:EchoDB,characters:characterCalculator,echoes:echoCalculator,condWeight,selectedBuff:selBuff,
+  damageLabels:DT,mechanicLabels:MT,elementLabels:EL,anomalies:ANOM});
+const synOf=id=>teamCalculator.synOf(id),circuitMul=(t,id)=>teamCalculator.circuitMul(t,id),typeShare=(id,k)=>teamCalculator.typeShare(id,k),hasM=(id,ms)=>teamCalculator.hasMechanic(id,ms);
+const outroVals=(g,ids,x)=>teamCalculator.outroValues(g,ids,x),outroGain=(g,x,ids)=>teamCalculator.outroGain(g,x,ids),usesAmp=id=>teamCalculator.usesAmp(id);
+const outroMap=(ids,main,wOf)=>teamCalculator.outroMap(ids,main,wOf),ATK_BASE=teamCalculator.atkBase,setFxGain=(f,x)=>teamCalculator.setFxGain(f,x);
+const teamCalc=t=>teamCalculator.teamCalc(t),_tc=teamCalculator.cache,teamBase=t=>teamCalculator.teamBase(t),teamScore=t=>teamCalculator.teamScore(t);
+const MAX_ROUNDS=teamCalculator.maxRounds,S_REF=teamCalculator.strengthRef,DMG_EXP=teamCalculator.damageExp,SKILL_LV=teamCalculator.skillLevels;
+const skillMul=()=>teamCalculator.skillMul(),partyDamage=score=>teamCalculator.partyDamage(score),mainDps=t=>teamCalculator.mainDps(t),simulate=teams=>teamCalculator.simulate(teams);
+const permutations=a=>teamCalculator.permutations(a),bestOrder=()=>teamCalculator.bestOrder(),bestOrder_=()=>teamCalculator.bestOrderInternal();
+const pairLinks=(a,b)=>teamCalculator.pairLinks(a,b),teamSynergy=t=>teamCalculator.teamSynergy(t);
 function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 
 /* ---------- persistence ---------- */
@@ -610,94 +444,7 @@ function renderPool(){
 }
 
 
-/* ---------- boss-run simulation ----------
-   파티는 순서대로 보스를 상대하고, 남은 HP는 다음 파티가 이어받는다고 가정한다.
-   보스 HP·점수·저항 배율은 BossDB(core/bossdb.js)가 내준다. */
-const MAX_ROUNDS=BossDB.MAX_ROUNDS;
-function mainDps(t){const ids=t.slots.filter(Boolean);if(!ids.length)return null;
-  const by=l=>l.slice().sort((a,b)=>charScore(b)-charScore(a))[0];
-  const d=by(ids.filter(id=>charMap[id]&&charMap[id].role==="dps")),sb=by(ids.filter(id=>charMap[id]&&charMap[id].role==="sub"));
-  if(d&&sb&&charScore(sb)>charScore(d)*MAIN_SUB_RATIO)return sb; // 서브 딜러가 확실히 더 세면 그쪽이 필드 메인
-  return d||sb||by(ids);}
-/* 피해 보정 (실측): 강도 38.7 파티가 1R 지옥불 기사 HP 74.0%, 다음 57.9 파티가 남은 26.0% + 봉정계유 100% + 크라운리스 41.8%
-   → 파티 피해(보스 HP 단위) = (강도 / 44.85)^2. 강도는 더하기로 쌓지만 실제 피해는 곱으로 커지기 때문에 제곱에 가깝다.
-   실측은 매우 잘하는 유저 기준이라 숙련도 설정으로 낮출 수 있다. */
-const S_REF=37.8, DMG_EXP=1.07; // 2026-11-16 재보정: 상위권 영상 14개 파티 강도-피해 회귀(피해 = (강도/37.8)^1.07, 라운드 점수 배율 분리·에이메스 3체인·서포터 조건부 효과 반영)
-// 숙련 = 퀵스왑 + 4해방(실측 기준) / 보통 = 평범한 321 사이클 / 뉴비 = 321 사이클도 잘 못 굴림. 보통·뉴비 배율은 추정치
-// (저장 키 top/good/normal은 예전 설정과 호환되도록 그대로 둔다)
-const SKILL_LV={top:{label:"숙련",mul:1},good:{label:"보통",mul:0.8},normal:{label:"뉴비",mul:0.65}};
-const skillMul=()=>(SKILL_LV[state.skill]||SKILL_LV.top).mul;
-const partyDamage=score=>Math.pow(Math.max(0,score)/S_REF,DMG_EXP)*skillMul();
-function simulate(teams){
-  const bosses=BossDB.bosses();const live=teams.filter(t=>t.slots.some(Boolean));
-  const res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
-  const bHp=BossDB.hp;
-  let bi=0,round=1,hp=bHp(bosses[0],1),progress=0,bad=0;
-  teams.forEach((t,ti)=>{
-    if(!t.slots.some(Boolean))return;
-    const d=mainDps(t),el=d&&charMap[d].el;let D=partyDamage(teamScore(t));
-    while(D>1e-9&&round<=MAX_ROUNDS){
-      const b=bosses[bi],f=BossDB.resMul(b,el);
-      if(!res[ti].hits.length&&f<1)bad++;
-      const H=bHp(b,round);const hit={name:b.name,round,resisted:f<1,from:hp/H*100,left:0,pts:0};res[ti].hits.push(hit);
-      const ptsOf=dealt=>BossDB.points(dealt,b,round); // dealt는 1R 보스 HP 단위(라운드 HP 배율 포함)
-      if(D*f>=hp){D-=hp/f;progress+=hp/H;hit.pts=ptsOf(hp)+BossDB.killBonus(b);bi++;if(bi>=bosses.length){bi=0;round++}hp=bHp(bosses[bi],round);}
-      else{hp-=D*f;progress+=D*f/H;hit.pts=ptsOf(D*f);hit.left=hp/H*100;D=0;}
-    }
-  });
-  res.forEach(r=>r.pts=r.hits.reduce((a,h)=>a+h.pts,0));
-  return {progress,res,bad,total:res.reduce((a,r)=>a+r.pts,0)};
-}
-function permutations(a){if(a.length<=1)return [a];const out=[];a.forEach((x,i)=>permutations(a.slice(0,i).concat(a.slice(i+1))).forEach(p=>out.push([x].concat(p))));return out}
-function bestOrder(){
-  _tc.clear();state.teams.forEach(t=>_tc.set(t,teamCalc(t)));
-  try{return bestOrder_()}finally{_tc.clear()}
-}
-function bestOrder_(){
-  const live=state.teams.filter(t=>t.slots.some(Boolean)),empty=state.teams.filter(t=>!t.slots.some(Boolean));
-  /* 기본은 약한 파티부터. 강한 파티를 약한 파티보다 앞으로 당기는 쌍(강도 5% 이상 차이) 하나마다 보스 0.03마리를 손해로 쳐서,
-     상성(내성 보스를 피함)으로 그보다 많이 이득일 때만 순서를 바꾼다. 첫 상대가 내성인 파티는 0.15마리 감점. */
-  const sc=new Map(live.map(t=>[t,teamScore(t)]));
-  const val=o=>{const r=simulate(o);let inv=0;for(let i=0;i<o.length;i++)for(let j=i+1;j<o.length;j++)if(sc.get(o[i])>sc.get(o[j])*1.05)inv++;
-    return r.progress-0.15*r.bad-0.03*inv};
-  let best=live.slice().sort((a,b)=>sc.get(a)-sc.get(b)),bv=val(best);
-  if(live.length<=8){permutations(live).forEach(o=>{const v=val(o);if(v>bv){bv=v;best=o}})}
-  else{let improved=true;while(improved){improved=false;for(let i=0;i<best.length;i++)for(let j=i+1;j<best.length;j++){const o=best.slice();[o[i],o[j]]=[o[j],o[i]];const v=val(o);if(v>bv){bv=v;best=o;improved=true}}}}
-  return best.concat(empty);
-}
-
-/* ---------- synergy ---------- */
-// 메인 딜러의 주력 피해 유형은 피해 비중 20% 이상인 유형으로 정한다 (CharDB.syn)
-const synOf=id=>CharDB.syn(id);
-// pairwise links between two characters in the same party
-function pairLinks(a,b){
-  const out=[],A=synOf(a),B=synOf(b),ca=charMap[a],cb=charMap[b];if(!ca||!cb)return out;
-  const outro=(x,y,X,Y,cx,cy)=>{const hit=(X.ob||[]).filter(t=>(Y.w||[]).includes(t)).map(t=>DT[t]);
-    if((X.ob||[]).includes("el")&&cx.el===cy.el&&(Y.w||[]).length) hit.unshift(EL[cy.el]+" 피해");
-    if(hit.length) out.push({k:"outro",from:x,to:y,n:hit.length,txt:`${cx.name} → ${cy.name} · ${hit.join("·")}`});};
-  outro(a,b,A,B,ca,cb);outro(b,a,B,A,cb,ca);
-  const ma=A.m||[],mb=B.m||[];
-  const shared=ma.filter(t=>mb.includes(t));
-  if(ma.includes("anom")&&!mb.includes("anom")) shared.push(...mb.filter(t=>ANOM.includes(t)));
-  if(mb.includes("anom")&&!ma.includes("anom")) shared.push(...ma.filter(t=>ANOM.includes(t)));
-  // 협동 공격은 그걸 받아 쓰는 공명자(금희 등 needs)와 같이 있을 때만 시너지로 친다
-  const needsC=x=>((CharDB.needs(x)||{}).m)==="coord";
-  [...new Set(shared)].filter(t=>t!=="coord"||needsC(a)||needsC(b)).forEach(t=>out.push({k:"mech",tag:t,txt:MT[t]}));
-  return out;
-}
-function teamSynergy(t){
-  const ids=t.slots.filter(Boolean),adj=[false,false,false];let links=[];
-  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const a=t.slots[i],b=t.slots[j];if(!a||!b)continue;
-    links.push(...pairLinks(a,b).map(x=>({...x,i,j})));}
-  // 다음 등장 캐릭터에게만 걸리는 반주는 조건을 가장 많이 만족하는 대상 하나만 남긴다 (동률이면 메인 딜러 우선)
-  const best={};
-  links.filter(l=>l.k==="outro"&&!synOf(l.from).p).forEach(l=>{const b=best[l.from];
-    const r=x=>x.n*10+(charMap[x.to].role==="dps"?1:0);if(!b||r(l)>r(b))best[l.from]=l;});
-  links=links.filter(l=>l.k!=="outro"||synOf(l.from).p||best[l.from]===l);
-  links.forEach(l=>{if(l.j===l.i+1)adj[l.j]=true;else adj.wrap=true});
-  const combos=CharDB.combos().filter(c=>c.ids.every(id=>ids.includes(id)));
-  return {links,adj,combos};
-}
+/* ---------- team calculation rendering ---------- */
 function synChips(t){
   const {links,combos}=teamSynergy(t);let h="";
   combos.forEach(c=>h+=`<span class="chip syn star" title="추천 조합: ${esc(c.ids.map(id=>charMap[id]?charMap[id].name:id).join(" · "))}">★ ${esc(c.name)}</span>`);
@@ -861,9 +608,6 @@ let pfTabSel=null,echoSel=null,echoEdit=null;const echoMsg={};
 function pfTab(id){if(pfTabSel)return pfTabSel;const g=state.growth[id]||{};return g.stats&&!echoesOf(id).length?"stat":"echo"}
 function echoSlots(id){return appMediator.echoes.slots(id)}
 // 세트 구성. 저장값이 없으면 공명자의 주력 세트(3+2 등)를 기본으로
-function echoSetOf(id){const g=state.growth[id]||{};if(g.echoSet&&g.echoSet.a)return g.echoSet;const r=(CharDB.sets(id)||[])[0];
-  if(!r)return {mode:"5",a:EchoDB.setNames()[0],b:null};const a=r[0].split("|")[0];const b=typeof r[2]==="string"?r[2].split("|")[0]:null;
-  return {mode:(+r[1]>=5||!b)?"5":"32",a,b:b||a}}
 const SLOT_COST=[4,3,3,1,1];
 const fmtV=(k,v)=>`${+(+v).toFixed(1)}${EchoDB.PCT_KEYS.has(k)?"%":""}`;
 const echoLab=(k,elem)=>k==="el"&&elem?`${EL[elem]} 피해`:k==="atk%"?"공격력":k==="hp%"?"HP":k==="def%"?"방어력":EchoDB.LABEL[k]||k;
@@ -1288,63 +1032,10 @@ $("#btnClear").addEventListener("click",e=>{
    3) 남은 메인 딜러는 궁합 또는 반주 이득이 있는 파트너가 있을 때만 짝을 짓는다. 메인 딜러를 모두 쓰려고 하지 않는다.
    4) 센 짝부터 서포터를 넣는다: 궁합 표의 서포터 → 5성 → 4성. 서포터가 남으면 안 쓴 메인 딜러로 파티를 더 만든다.
    5) 3명을 못 채운 파티는 빼고, 파티끼리 서포터를 맞바꿔 전체(강화 효과 포함)가 세지면 바꾼 뒤, 강화 효과·순서를 정한 뒤 예상 점수가 MIN_POINTS(1000점) 미만인 파티는 뺀다. 방랑자는 속성과 관계없이 1명. */
-const TEAM_PRESETS=CharDB.presets(), MIN_POINTS=CharDB.minPoints();
-function affinity(main,ids){return ids.filter(x=>x!==main).reduce((a,x)=>a+(CharDB.pairW(main,x)||CharDB.pairW(x,main)*.5),0)}
-function recommendTeams(){
-  const own=chars.filter(c=>state.owned[c.id]).map(c=>c.id);
-  const key=id=>id.startsWith("rover_")?"rover":id;
-  const left={};own.forEach(id=>{const k=key(id);left[k]=k==="rover"?1:Math.max(left[k]||0,vigorOf(id))});
-  const can=id=>left[key(id)]>0, use=id=>{left[key(id)]--};
-  const okIds=ids=>new Set(ids.map(key)).size===ids.length;
-  const val=ids=>teamCalc({slots:ids.slice(),buff:null}).base;
-  const role=id=>charMap[id].role, isSup=id=>role(id)==="support";
-  const pw=(a,b)=>CharDB.pairW(a,b)||CharDB.pairW(b,a)||0;
-  const done=[],cores=[];
-  // 1) 최우선 조합(셋 다 고정)
-  TEAM_PRESETS.forEach(ids=>{if(ids.every(id=>charMap[id]&&state.owned[id]&&can(id))&&okIds(ids)){ids.forEach(use);done.push(ids.slice())}});
-  // 2) 정석 메인+서브 짝(궁합 1, 서포터 제외)을 예상 점수보다 먼저 묶는다. 같은 파트너를 두 메인이 원하면 2인 강도가 높은 쪽
-  const mains=own.filter(id=>role(id)==="dps");
-  const pairs=[];mains.forEach(m=>Object.entries(CharDB.pairs(m)).forEach(([x,w])=>{if(w>=1&&state.owned[x]&&charMap[x]&&!isSup(x)&&key(x)!==key(m))pairs.push({ids:[m,x],v:val([m,x])})}));
-  pairs.sort((a,b)=>b.v-a.v).forEach(p=>{if(p.ids.every(can)){p.ids.forEach(use);cores.push(p.ids)}});
-  // 3) 남은 메인 딜러: 궁합이 있거나 반주 이득이 5% 이상인 비서포터 파트너가 있을 때만 짝을 짓는다(없으면 쓰지 않음 — 조합 우선)
-  const syn2=(m,x)=>pw(m,x)>0||outroGain(x,m,[m,x])>=0.05||outroGain(m,x,[m,x])>=0.05;
-  mains.filter(can).sort((a,b)=>charScore(b)-charScore(a)).forEach(m=>{if(!can(m))return;
-    const opts=own.filter(x=>x!==m&&can(x)&&!isSup(x)&&key(x)!==key(m)&&(role(x)!=="dps"||pw(m,x)>0)&&syn2(m,x))
-      .map(x=>({x,s:val([m,x])*(1+0.4*pw(m,x))})).sort((a,b)=>b.s-a.s);
-    if(opts.length){use(m);use(opts[0].x);cores.push([m,opts[0].x])}});
-  // 4) 서포터 배분: 센 짝부터. 궁합 표의 서포터 → 없으면 5성 중 최고 → 4성 중 최고 (벨리나·복령·설지 포함, 배치 횟수 안에서)
-  cores.sort((a,b)=>val(b)-val(a)).forEach(c=>{
-    const sups=own.filter(x=>isSup(x)&&can(x));if(!sups.length)return;
-    const m=mainDps({slots:c});const fav=sups.filter(x=>pw(m,x)>0).sort((a,b)=>pw(m,b)-pw(m,a)||val([...c,b])-val([...c,a]));
-    const best=l=>l.sort((a,b)=>val([...c,b])-val([...c,a]))[0];
-    const s=fav[0]||best(sups.filter(x=>charMap[x].rar===5))||best(sups);if(s){use(s);c.push(s)}});
-  // 5) 서포터가 모자라 2명인 짝은 남은 서브 딜러 중 가장 센 공명자로 채운다
-  cores.filter(c=>c.length<3).forEach(c=>{const o=own.filter(x=>can(x)&&!c.map(key).includes(key(x))&&role(x)!=="dps").sort((a,b)=>val([...c,b])-val([...c,a]))[0];if(o){use(o);c.push(o)}});
-  // 6) 서포터가 남으면, 아직 안 쓴 메인 딜러 + 남은 공명자로 파티를 더 만든다
-  mains.filter(can).sort((a,b)=>charScore(b)-charScore(a)).forEach(m=>{if(!can(m))return;
-    const sup=own.filter(x=>isSup(x)&&can(x)).sort((a,b)=>val([m,b])-val([m,a]))[0];if(!sup)return;
-    const o=own.filter(x=>can(x)&&x!==m&&x!==sup&&key(x)!==key(m)&&role(x)!=="dps"&&!isSup(x)&&syn2(m,x)).sort((a,b)=>val([m,sup,b])-val([m,sup,a]))[0]; // 궁합·반주 이득 없는 서브는 넣지 않는다
-    if(!o)return;const ids=[m,o,sup];if(okIds(ids)){ids.forEach(use);cores.push(ids)}});
-  // 7) 마무리: 파티끼리 세 번째 멤버(서포터 등)를 맞바꾸거나 남은 서포터로 바꿔서 전체가 세지면 바꾼다.
-  //    강화 효과(파워 서킷)까지 넣은 강도로 비교하고, 피해는 강도의 제곱에 가까우므로 제곱 합으로 본다.
-  //    (예: 젠니·페비 + 시그리카·구원에 릴리·벨리나를 줄 때, 앞 파티부터 욕심내면 릴리가 젠니 쪽으로 가지만 시그리카 쪽이 더 크게 오른다)
-  const tv=ids=>{const t={slots:ids.slice(),buff:null};return Math.max(teamCalc(t).base,...(cycle.buffs||[]).map(b=>teamCalc({...t,buff:b.id}).total))};
-  const all=done.concat(cores).filter(ids=>ids.length===3),fixed=new Set(done);
-  const third=ids=>ids.findIndex(isSup)>=0?ids.findIndex(isSup):2;
-  const sq=x=>x*x;
-  for(let it=0,imp=true;imp&&it<4;it++){imp=false;
-    for(let i=0;i<all.length;i++){if(fixed.has(all[i]))continue;
-      for(let j=i+1;j<all.length;j++){if(fixed.has(all[j]))continue;
-        const A=all[i],B=all[j],ia=third(A),ib=third(B);if(A[ia]===B[ib])continue;
-        const A2=A.slice(),B2=B.slice();[A2[ia],B2[ib]]=[B[ib],A[ia]];if(!okIds(A2)||!okIds(B2))continue;
-        if(sq(tv(A2))+sq(tv(B2))>sq(tv(A))+sq(tv(B))+1e-6){all[i]=A2;all[j]=B2;imp=true}}
-      const A=all[i],ia=third(A);if(!isSup(A[ia]))continue;
-      own.filter(x=>isSup(x)&&can(x)&&x!==A[ia]).forEach(x=>{const cur=all[i],A2=cur.slice();A2[third(cur)]=x;if(okIds(A2)&&tv(A2)>tv(cur)+1e-6){left[key(cur[third(cur)])]++;use(x);all[i]=A2;imp=true}});}}
-  // 서포터는 항상 3번 칸(2명 파티면 2번 칸 대신 3번 칸)
-  const arrange=ids=>{const d=ids.filter(x=>!isSup(x)),su=ids.filter(isSup);const sl=[d[0]||null,d[1]||null,su.length?null:(d[2]||null)];
-    su.forEach(x=>{if(!sl[2])sl[2]=x;else sl[sl.indexOf(null)]=x});return sl};
-  return all.map(ids=>{const t={slots:arrange(ids),buff:null,example:false};const bb=[...bestBuffs(t)];t.buff=bb[0]||null;return t});
-}
+const recommendationService=new window.MP.RecommendationService({state:calculationContext.state,chars:calculationContext.chars,
+  charMap:calculationContext.charMap,cycle:calculationContext.cycle,charDb:CharDB,characters:characterCalculator,teams:teamCalculator,vigorOf,bestBuffs});
+const TEAM_PRESETS=recommendationService.presets,MIN_POINTS=recommendationService.minPoints;
+const affinity=(main,ids)=>recommendationService.affinity(main,ids),recommendTeams=()=>recommendationService.recommend();
 /* 자동 추천 미리보기: 처음 누를 때의 편성을 스냅샷으로 저장하고, 적용을 누르기 전까지는 저장소에 스냅샷 편성을 그대로 둔다.
    여러 번 눌러도 스냅샷은 첫 번째 그대로 → 되돌리기는 항상 자동 추천을 처음 누르기 전으로 돌아간다. */
 let undoTeams=null;
