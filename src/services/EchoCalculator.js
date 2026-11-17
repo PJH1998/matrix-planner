@@ -9,9 +9,12 @@
       this.bonusKeys={el:"속성",basic:"일반 공격",heavy:"강공격",skill:"공명 스킬",lib:"공명 해방",echo:"에코 어빌리티"};
     }
     clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
-    setOf(id){const growth=this.state().growth[id]||{};if(growth.echoSet&&growth.echoSet.a)return growth.echoSet;const row=(this.db.sets(id)||[])[0];
-      if(!row)return {mode:"5",a:this.echoDb.setNames()[0],b:null};const a=row[0].split("|")[0],b=typeof row[2]==="string"?row[2].split("|")[0]:null;
-      return {mode:(+row[1]>=5||!b)?"5":"32",a,b:b||a}}
+    defaultSetOf(id){const row=(this.db.sets(id)||[])[0],fallback=this.echoDb.setNames()[0];if(!row)return {mode:"5",a:fallback,b:null,c:null};
+      const parts=[];for(let i=0;i<row.length;i+=2){if(typeof row[i]!=="string")break;parts.push({name:row[i].split("|")[0],count:+row[i+1]||0})}
+      if(parts.length===3&&parts[0].count===1&&parts[1].count===2&&parts[2].count===2)return {mode:"122",a:parts[0].name,b:parts[1].name,c:parts[2].name};
+      const a=parts[0]&&parts[0].name||fallback,b=parts[1]&&parts[1].name||null;return {mode:(parts[0]&&parts[0].count>=5||!b)?"5":"32",a,b:b||a,c:null}}
+    setOf(id){const base=this.defaultSetOf(id),saved=(this.state().growth[id]||{}).echoSet;return saved&&saved.a?Object.assign({},base,saved):base}
+    modesOf(id){return this.defaultSetOf(id).mode==="122"?["5","32","122"]:["5","32"]}
     bonusKeysOf(id){const syn=this.db.syn(id);return ["el",...(syn.w||[]).filter(k=>this.bonusKeys[k])]}
     scaleOf(id){return this.db.scale(id)}
     ijkOf(id){const ijk=this.db.ijk(id);if(ijk)return ijk;const c=this.charMap()[id]||{},scale=this.scaleOf(id);
@@ -26,9 +29,9 @@
       else if(scale==="hp"){const b=base[0],p0=Math.max(0,(ijk.main[1]-this.flatHp)/b-1);result.main=b*(1+p0-sub(w0,"hp%")/100+sub(w1,"hp%")/100)+this.flatHp}
       result.cr+=sub(w1,"cr")-sub(w0,"cr");result.cd+=sub(w1,"cd")-sub(w0,"cd");return result}
     weaponStatRatio(cid,wid){const r=this.statsWithWeapon(cid,wid);return this.expDmg(r.main,r.cr,r.cd,this.elRefOf(cid)+this.typeRef)/this.refDmg(cid)}
-    // 5세트는 전부 a, 3+2세트는 입력 순서의 앞 3개를 a로 배정한다.
+    // 5세트는 전부 a, 3+2는 앞 3개가 a, 1+2+2는 첫 칸부터 a·b·b·c·c 순서로 배정한다.
     echoesOf(id){const echoes=((this.state().growth[id]||{}).echoes||[]).filter(e=>e&&e.main);if(!echoes.length)return echoes;const set=this.setOf(id);
-      return echoes.map((e,i)=>Object.assign({},e,{set:set.mode==="5"||i<3?set.a:(set.b||set.a)}))}
+      return echoes.map((e,i)=>Object.assign({},e,{set:set.mode==="122"?(i===0?set.a:(i<3?set.b:set.c)):(set.mode==="5"||i<3?set.a:(set.b||set.a))}))}
     dmgWeights(id){const profile=this.db.profile(id),weights={};if(profile)this.echoDb.DMG_TYPES.forEach(k=>{if(profile[k])weights[k]=profile[k]});
       if(!Object.keys(weights).length)(this.db.syn(id).w||[]).forEach(k=>{if(this.echoDb.DMG_TYPES.includes(k))weights[k]=1});if(!Object.keys(weights).length)weights.basic=1;return weights}
     context(id){return {el:(this.charMap()[id]||{}).el,has:ms=>this.db.has(id,ms),share:k=>this.db.share(id,k)}}

@@ -57,6 +57,8 @@ export function loadCurrentApp() {
       simulate:teams=>clone(simulate(clone(teams))),
       echoBuild:(id,list)=>clone(echoBuild(id,list==null?undefined:clone(list))),
       echoFactor:id=>clone(echoFactor(id)),
+      echoSet:id=>clone(echoSetOf(id)),
+      echoes:id=>clone(echoesOf(id)),
       recommend:()=>clone(recommendationTestService.recommend()),
       normalize:s=>clone(appStore.normalize(clone(s)))
     };

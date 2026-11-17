@@ -192,7 +192,7 @@ const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],[
 function statSum(id){const c=charMap[id];const sf=statFactor(id);return sf?`스탯 배율 ${(sf.f*100).toFixed(0)}%${sf.echo?" (에코 세팅 사용 중)":""}`:c.role==="support"?"서포터는 강도에 쓰지 않음":"입력 전 (레벨 기준으로 계산)"}
 
 /* ---------- profile: 에코 세팅 ----------
-   에코 5칸(카드) + 세트 구성(5세트 / 3+2세트) + 요약 줄. 저장: growth.echoes[5], growth.echoSet {mode:"5"|"32", a, b} */
+   에코 5칸(카드) + 세트 구성(5세트 / 3+2세트 / 데이터가 지원하는 1+2+2세트) + 요약 줄. */
 let pfTabSel=null,echoSel=null,echoEdit=null;const echoMsg={};
 function pfTab(id){if(pfTabSel)return pfTabSel;const g=state.growth[id]||{};return g.stats&&!echoesOf(id).length?"stat":"echo"}
 function echoSlots(id){return appMediator.echoes.slots(id)}
@@ -208,12 +208,13 @@ function subUseful(id,k){const sc=scaleOf(id);if(k==="cr"||k==="cd"||k==="er")re
   if(k==="atk%"||k==="atk")return sc==="atk";if(k==="hp%"||k==="hp")return sc==="hp";if(k==="def%"||k==="def")return sc==="def";
   if(["basic","heavy","skill","lib"].includes(k))return CharDB.share(id,k)>=0.08;return false}
 function echoHTML(id){
-  const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const S=echoSetOf(id);const sets=EchoDB.setNames();
+  const c=charMap[id];const E=echoSlots(id);const n=E.filter(Boolean).length;const S=echoSetOf(id);const modes=echoSetModes(id);const sets=EchoDB.setNames();
   const cost=E.reduce((a,e)=>a+(e?+e.cost:0),0);
   const opt=v=>sets.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("");
-  const setbar=`<div class="esetbar"><div class="seg2" role="group" aria-label="세트 구성"><button type="button" data-esmode="5" aria-pressed="${S.mode==="5"}">5세트</button><button type="button" data-esmode="32" aria-pressed="${S.mode==="32"}">3+2세트</button></div>
-    <label class="esel"><img src="${setIconUrl(S.a)}" alt="" onerror="this.style.visibility='hidden'"><select data-eseta aria-label="세트">${opt(S.a)}</select><em>×${S.mode==="5"?5:3}</em></label>
-    ${S.mode==="32"?`<label class="esel"><img src="${setIconUrl(S.b)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetb aria-label="두 번째 세트">${opt(S.b)}</select><em>×2</em></label>`:""}
+  const setbar=`<div class="esetbar"><div class="seg2" role="group" aria-label="세트 구성"><button type="button" data-esmode="5" aria-pressed="${S.mode==="5"}">5세트</button><button type="button" data-esmode="32" aria-pressed="${S.mode==="32"}">3+2세트</button>${modes.includes("122")?`<button type="button" data-esmode="122" aria-pressed="${S.mode==="122"}">1+2+2세트</button>`:""}</div>
+    <label class="esel"><img src="${setIconUrl(S.a)}" alt="" onerror="this.style.visibility='hidden'"><select data-eseta aria-label="첫 번째 세트">${opt(S.a)}</select><em>×${S.mode==="5"?5:S.mode==="32"?3:1}</em></label>
+    ${S.mode!=="5"?`<label class="esel"><img src="${setIconUrl(S.b)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetb aria-label="두 번째 세트">${opt(S.b)}</select><em>×2</em></label>`:""}
+    ${S.mode==="122"?`<label class="esel"><img src="${setIconUrl(S.c)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetc aria-label="세 번째 세트">${opt(S.c)}</select><em>×2</em></label>`:""}
     <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><span class="estat-msg" id="pfEOcr"></span></div>`;
   const card=(e,i)=>{const m=echoMsg[id+":"+i];const msg=m?`<div class="ec-msg${/실패/.test(m)?" err":""}">${esc(m)}</div>`:"";const sel=echoSel===i?" sel":"";
     if(!e)return `<div class="ecard empty${sel}" data-eslot="${i}"><div class="ec-plus">+</div><div>캡처 붙여넣기</div><small>Ctrl+V · 끌어다 놓기 · 눌러서 선택</small><button type="button" class="ec-b" data-enew="${i}">직접 입력</button>${msg}</div>`;
@@ -228,7 +229,7 @@ function echoHTML(id){
       ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
       <div class="ec-subs">${subs}</div>${msg}</div>`};
   const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음</span></div>`;
-  return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 5세트 / 3+2세트로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
+  return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 서포터는 본인 강도에 스탯을 쓰지 않고, 세트가 파티원에게 주는 효과만 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=eb.screen;
   const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});

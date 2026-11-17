@@ -98,7 +98,7 @@ const charWType=id=>weaponCalculator.charType(id),defaultWeapon=id=>weaponCalcul
 const isTrial=id=>!!(state.growth[id]||{}).trial,weaponOf=id=>weaponCalculator.weaponOf(id),bestWeaponId=id=>weaponCalculator.bestWeaponId(id),_wst=id=>weaponCalculator.stat(id);
 
 const TYPE_REF=echoCalculator.typeRef,FLAT_ATK=echoCalculator.flatAtk,FLAT_HP=echoCalculator.flatHp,BONUS_KEYS=echoCalculator.bonusKeys;
-const echoSetOf=id=>echoCalculator.setOf(id),bonusKeysOf=id=>echoCalculator.bonusKeysOf(id),scaleOf=id=>echoCalculator.scaleOf(id),ijkOf=id=>echoCalculator.ijkOf(id);
+const echoSetOf=id=>echoCalculator.setOf(id),echoSetModes=id=>echoCalculator.modesOf(id),bonusKeysOf=id=>echoCalculator.bonusKeysOf(id),scaleOf=id=>echoCalculator.scaleOf(id),ijkOf=id=>echoCalculator.ijkOf(id);
 const elRefOf=id=>echoCalculator.elRefOf(id),statsWithWeapon=(id,wid)=>echoCalculator.statsWithWeapon(id,wid);
 const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=id=>echoCalculator.refDmg(id),weaponStatRatio=(id,wid)=>echoCalculator.weaponStatRatio(id,wid);
 const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);

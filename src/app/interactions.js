@@ -233,6 +233,7 @@ $("#prof").addEventListener("change",e=>{
   const T=e.target,ds=T.dataset;
   if(ds.eseta!=null)return saveEchoSet(profId,{a:T.value});
   if(ds.esetb!=null)return saveEchoSet(profId,{b:T.value});
+  if(ds.esetc!=null)return saveEchoSet(profId,{c:T.value});
   if(ds.ecost!=null||ds.emk!=null||ds.emv!=null||ds.eme!=null||ds.esk!=null||ds.esv!=null){
     const a=echoSlots(profId);const i=+(ds.ecost??ds.emk??ds.emv??ds.eme??String(ds.esk??ds.esv).split(":")[0]);const x=a[i];if(!x)return;
     const e2=JSON.parse(JSON.stringify(x));

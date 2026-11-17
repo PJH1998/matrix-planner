@@ -104,3 +104,38 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
     "camellya/sanhua/jianxin:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/baizhi:general",
   ]);
 });
+
+test("루시와 레베카의 1+2+2 에코 세트를 순서대로 배정한다", () => {
+  const app = loadCurrentApp();
+  const expected = {
+    mode: "122",
+    a: "꿈을 깨뜨리는 망령의 악몽",
+    b: "끊임없는 잔향",
+    c: "마음을 엮은 꿈의 그림자",
+  };
+  assert.deepEqual(app.echoSet("lucy"), expected);
+  assert.deepEqual(app.echoSet("rebecca"), expected);
+  assert.notEqual(app.echoSet("hiyuki").mode, "122");
+
+  const echoes = [
+    { cost: 4, main: { k: "cr", v: 22 }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 3, main: { k: "el", v: 30, elem: "spectro" }, subs: [] },
+    { cost: 1, main: { k: "atk%", v: 18 }, subs: [] },
+    { cost: 1, main: { k: "atk%", v: 18 }, subs: [] },
+  ];
+  app.reset({ growth: { lucy: { echoes } } });
+  assert.deepEqual(app.echoes("lucy").map(echo => echo.set), [expected.a, expected.b, expected.b, expected.c, expected.c]);
+  const build = app.echoBuild("lucy");
+  assert.deepEqual(build.sets, [
+    { name: expected.a, c: 1, on: [1] },
+    { name: expected.b, c: 2, on: [2] },
+    { name: expected.c, c: 2, on: [2] },
+  ]);
+  assert.deepEqual(build.fx.map(effect => [effect.set, effect.pc, effect.k, effect.eff]), [
+    [expected.a, 1, "basic", 31.5],
+    [expected.a, 1, "heavy", 31.5],
+  ]);
+  closeTo(app.echoFactor("lucy").f, 0.5296079417908597);
+  closeTo(app.charScore("lucy"), 9.31609570008344);
+});
