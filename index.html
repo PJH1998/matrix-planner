@@ -377,10 +377,18 @@ th{font-family:var(--f-num);background:var(--strip)}
 /* ===== 보유 캐릭터: 카드 격자 + 프로필 창 ===== */
 .roster-h{align-items:center}
 .roster-h .elf{display:flex}
+.roster-main-h{align-items:flex-start}
+.roster-title{display:flex;align-items:center;gap:10px;flex:none}
+.roster-main-h .roster-title h2{margin:0}
+.roster-controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end;min-width:0;margin-left:auto}
+.roster-control-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.roster-main-h .elf{flex-wrap:wrap}
 .rgrid{--face:150px;display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--face) + 4px),1fr));gap:16px 12px;justify-items:center;padding:4px 0 24px}
 @media (max-width:560px){.rgrid{--face:104px}}
 .rcard{cursor:pointer}
-.roster-h .rview{margin-left:4px}
+.roster-main-h .rview{margin-left:0}
+@media (max-width:900px){.roster-main-h{align-items:stretch}.roster-main-h .roster-title{width:100%}.roster-controls{width:100%;margin-left:0;align-items:stretch}.roster-control-row{justify-content:flex-start}}
+@media (max-width:560px){.roster-main-h #rq{width:100%!important}.roster-main-h .sortl,.roster-main-h #ownCount{flex:1 0 100%}.roster-main-h #ownAll,.roster-main-h #ownNone{flex:1 1 0}}
 :root[data-theme="light"] .roster-h .seg2{background:rgba(0,0,0,.07)}
 :root[data-theme="light"] .roster-h .seg2 button{color:#4f5964}
 :root[data-theme="light"] .roster-h .seg2 button[aria-pressed="true"]{background:#2a2a22;color:#f3e3b5}
@@ -685,15 +693,23 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
 
 <!-- ROSTER -->
 <section class="view" id="v-roster">
-  <div class="roster-h">
-    <h2>보유 캐릭터</h2>
-    <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
-    <div class="elf" id="rElFilter" aria-label="속성 필터"></div>
-    <label class="sortl">정렬 <select id="rosterSort" class="sortsel"><option value="new">출시순 (신캐 먼저)</option><option value="rar">5성 먼저</option><option value="desc">강함순 (높은 순)</option><option value="asc">강함순 (낮은 순)</option><option value="name">이름순</option></select></label>
-    <div class="seg2 rview" role="group" aria-label="보기 방식"><button type="button" data-rview="icon">아이콘</button><button type="button" data-rview="profile">프로필</button></div>
-    <span class="lbl" id="ownCount"></span>
-    <button class="btn" id="ownAll">전체 보유</button>
-    <button class="btn ghost" id="ownNone">전체 해제</button>
+  <div class="roster-h roster-main-h">
+    <div class="roster-title">
+      <h2>보유 캐릭터</h2>
+      <div class="seg2 rview" role="group" aria-label="보기 방식"><button type="button" data-rview="icon">아이콘</button><button type="button" data-rview="profile">프로필</button></div>
+    </div>
+    <div class="roster-controls">
+      <div class="roster-control-row">
+        <input type="search" id="rq" placeholder="이름으로 검색" style="width:200px" autocomplete="off">
+        <div class="elf" id="rElFilter" aria-label="속성 필터"></div>
+      </div>
+      <div class="roster-control-row">
+        <label class="sortl">정렬 <select id="rosterSort" class="sortsel"><option value="new">출시순 (신캐 먼저)</option><option value="rar">5성 먼저</option><option value="desc">강함순 (높은 순)</option><option value="asc">강함순 (낮은 순)</option><option value="name">이름순</option></select></label>
+        <span class="lbl" id="ownCount"></span>
+        <button class="btn" id="ownAll">전체 보유</button>
+        <button class="btn ghost" id="ownNone">전체 해제</button>
+      </div>
+    </div>
   </div>
   <p class="hint">카드를 누르면 레벨·공명 체인·무기를 설정합니다. 우클릭(터치 화면은 길게 누르기)하면 보유/미보유가 바뀌고, 미보유 공명자는 배치 화면에 나오지 않습니다.</p>
   <div class="rgrid" id="rgrid"></div>
