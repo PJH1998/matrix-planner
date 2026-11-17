@@ -30,7 +30,7 @@ export function loadCurrentApp() {
   context.globalThis = context;
 
   run(context, "core/hub.js");
-  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
+  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
   for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js"]) run(context, file);
@@ -49,9 +49,9 @@ export function loadCurrentApp() {
     function echoSetOf(id){const g=state.growth[id]||{};if(g.echoSet&&g.echoSet.a)return g.echoSet;const r=(CharDB.sets(id)||[])[0];
       if(!r)return {mode:"5",a:EchoDB.setNames()[0]||"",b:""};const names=[];for(let i=0;i<r.length;i+=2){if(typeof r[i]!=="string")break;names.push(r[i].split("|")[0])}
       return {mode:names.length>1?"32":"5",a:names[0]||"",b:names[1]||""}}
-    state=appStore.fresh();derive();
+    state=appMediator.replace(appStore.fresh());derive();
     window.__calcTest={
-      reset(patch){state=appStore.normalize(Object.assign(appStore.fresh(),clone(patch||{})));derive();_tc.clear();return clone(state)},
+      reset(patch){state=appMediator.replace(Object.assign(appStore.fresh(),clone(patch||{})));derive();_tc.clear();return clone(state)},
       state:()=>clone(state),
       defaults:()=>clone(DEFAULT_CHARS),
       reference:id=>({sets:clone(CharDB.sets(id)),er:clone(CharDB.erMin(id))}),
