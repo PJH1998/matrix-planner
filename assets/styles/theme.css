@@ -1,0 +1,156 @@
+/* ===================== 명조 스킨 =====================
+   종말 매트릭스 화면 참고: 남색 배경 + 점 격자, 반투명 패널과 모서리 브래킷, 회색 띠 섹션 제목,
+   어두운 정사각형 공명자 카드(아래 금색 띠), 흰 알약 주 버튼, 청록 강조. 장식은 모두 CSS로 다시 그림. */
+:root,:root[data-theme="dark"]{
+  --bg:#0a0f14; --panel:rgba(16,21,27,.84); --panel-2:rgba(0,0,0,.32); --line:rgba(255,255,255,.13);
+  --fg:#eef2f5; --muted:#9ba7b3; --accent:#e6c36a; --accent-ink:#1c1606; --warn:#f0a35a; --ok:#5fd6a0; --danger:#f2687e;
+  --gold:#e6c36a; --tick:rgba(225,232,238,.72); --strip:rgba(255,255,255,.085); --card:#15191d;
+  --dots:rgba(255,255,255,.055); --glow1:rgba(230,195,106,.09); --glow2:rgba(124,92,214,.09);
+  --pri-bg:#e9edf0; --pri-fg:#14181c; --tipbg:rgba(9,11,13,.96);
+  --glacio:#5cbcff; --fusion:#ff7a52; --electro:#c18bff; --aero:#5ff0b8; --spectro:#f5de6a; --havoc:#f066b5;
+  --f-display:"Jost","Noto Sans KR",system-ui,sans-serif;
+  --f-body:"Noto Sans KR",system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-num:"Jost","Noto Sans KR",sans-serif;
+  --r:3px; color-scheme:dark}
+:root[data-theme="light"]{
+  --bg:#e4e8eb; --panel:rgba(255,255,255,.88); --panel-2:#f1f3f5; --line:rgba(20,30,40,.15);
+  --fg:#14191e; --muted:#58646f; --accent:#9a7418; --accent-ink:#fff; --warn:#c25a12; --ok:#1d8a55; --danger:#b4233c;
+  --gold:#9a7418; --tick:rgba(20,30,40,.5); --strip:rgba(20,30,40,.075); --card:#22272c;
+  --dots:rgba(0,0,0,.06); --glow1:rgba(154,116,24,.10); --glow2:rgba(124,92,214,.07);
+  --pri-bg:#1b2026; --pri-fg:#fff; --tipbg:rgba(14,17,20,.96);
+  --glacio:#2f8fd0; --fusion:#d9542e; --electro:#8a4fd6; --aero:#1d9f7c; --spectro:#a9840f; --havoc:#a8336b;
+  color-scheme:light}
+body{background:
+  radial-gradient(1100px 560px at 78% -8%,var(--glow1),transparent 62%),
+  radial-gradient(900px 520px at -5% 105%,var(--glow2),transparent 60%),
+  radial-gradient(var(--dots) 1px,transparent 1.2px) 0 0/22px 22px,
+  var(--bg);background-attachment:fixed}
+/* header */
+header.top{border-bottom:1px solid var(--line);position:relative}
+header.top::after{content:"";position:absolute;left:0;bottom:-1px;width:180px;height:2px;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.brand{align-items:center}
+.brand .hex{width:30px;height:30px;color:var(--accent);flex:none;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--accent) 50%,transparent))}
+.brand h1{font-family:var(--f-body);font-weight:700;font-size:24px;letter-spacing:.01em;color:var(--accent);text-shadow:0 0 14px color-mix(in srgb,var(--accent) 35%,transparent)}
+.brand small{font-family:var(--f-num);letter-spacing:.14em}
+nav.tabs{gap:2px}
+nav.tabs a{border-radius:2px;border:0;border-bottom:2px solid transparent;padding:7px 14px}
+nav.tabs a[aria-current="page"]{background:linear-gradient(to top,color-mix(in srgb,var(--accent) 18%,transparent),transparent);color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs a:hover:not([aria-current]){color:var(--fg);background:var(--strip)}
+.theme{border-radius:999px;background:var(--panel)}
+/* panels: corner brackets */
+.panel,.team,.rtable-wrap{position:relative;border-radius:var(--r)}
+.panel{background:var(--panel);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.panel::before,.team::before,.rtable-wrap::before{content:"";position:absolute;inset:-1px;pointer-events:none;z-index:1;
+  background:
+   linear-gradient(var(--tick),var(--tick)) 0 0/12px 1.5px,linear-gradient(var(--tick),var(--tick)) 0 0/1.5px 12px,
+   linear-gradient(var(--tick),var(--tick)) 100% 0/12px 1.5px,linear-gradient(var(--tick),var(--tick)) 100% 0/1.5px 12px,
+   linear-gradient(var(--tick),var(--tick)) 0 100%/12px 1.5px,linear-gradient(var(--tick),var(--tick)) 0 100%/1.5px 12px,
+   linear-gradient(var(--tick),var(--tick)) 100% 100%/12px 1.5px,linear-gradient(var(--tick),var(--tick)) 100% 100%/1.5px 12px;
+  background-repeat:no-repeat}
+.panel>h2,.ph{background:linear-gradient(90deg,var(--strip),transparent 85%);border-bottom:0;margin:10px 10px 2px;padding:7px 12px;font-size:15px;font-weight:500;letter-spacing:.01em}
+.teams-h h2,.roster-h h2{font-family:var(--f-body);font-weight:700;font-size:20px;padding-left:12px;border-left:3px solid var(--accent)}
+.lbl{font-family:var(--f-num);letter-spacing:.12em}
+/* controls */
+.btn{background:var(--strip);border:1px solid var(--line);border-radius:2px;font-weight:500}
+.btn:hover{border-color:var(--tick)}
+.btn.pri{background:var(--pri-bg);color:var(--pri-fg);border-color:transparent;border-radius:999px;padding:6px 18px;font-weight:700}
+.btn.pri:hover{filter:brightness(1.06)}
+input[type=search],input[type=text],input[type=number],select,textarea{background:var(--panel-2);border-radius:2px}
+.elf{gap:6px;align-items:center}
+.elf button{border-radius:2px}
+.elf button.eb{padding:0;border:0;border-radius:50%;width:34px;height:34px;opacity:.55;transition:opacity .12s,box-shadow .12s}
+.elf button.eb:hover{opacity:.85}
+.elf button.eb[aria-pressed="true"]{opacity:1;box-shadow:0 0 0 2px #e6c36a}
+.elf .eli{width:100%;height:100%;display:block}
+.chip{border-radius:2px;background:color-mix(in srgb,var(--panel-2) 80%,transparent)}
+.chip.el{background:color-mix(in srgb,var(--ec) 26%,transparent);color:var(--fg);border-color:color-mix(in srgb,var(--ec) 60%,transparent)}
+/* character card */
+/* 카드 = 정사각형 초상화 + 아래 이름 띠, 전체를 두꺼운 테두리로 감쌈 */
+.tok{gap:0;width:calc(var(--face) + 4px);border:2px solid #59616b;border-radius:9px;background:#181b1f;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);transition:border-color .12s}
+.grid .tok:hover:not(.used),.slot .tok:hover{border-color:#e6c36a}
+.tok .face{border-radius:0;background-color:var(--card);box-shadow:none}
+/* 초상화 뒤 배경: 별이 뜬 밤하늘에서 아래로 갈수록 그 공명자 속성 색으로 물든다 (속성을 한눈에 구분) */
+.tok .face,.pf-l .face{--sky:
+  radial-gradient(1px 1px at 18% 22%,rgba(255,255,255,.9),transparent 70%),
+  radial-gradient(1px 1px at 72% 14%,rgba(255,255,255,.8),transparent 70%),
+  radial-gradient(1.5px 1.5px at 86% 38%,rgba(255,255,255,.75),transparent 70%),
+  radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.7),transparent 70%),
+  radial-gradient(1px 1px at 9% 52%,rgba(255,255,255,.6),transparent 70%),
+  radial-gradient(1px 1px at 58% 32%,rgba(255,255,255,.55),transparent 70%),
+  linear-gradient(158deg,transparent 38%,rgba(175,205,235,.16) 50%,transparent 62%),
+  radial-gradient(130% 55% at 50% 108%,color-mix(in srgb,var(--ec,#9fbcd2) 45%,rgba(215,232,245,.8)),transparent 62%),
+  linear-gradient(to bottom,#060a13 0%,color-mix(in srgb,var(--ec,#2c4663) 28%,#0e1828) 48%,color-mix(in srgb,var(--ec,#2c4663) 55%,#2a3a50) 80%,color-mix(in srgb,var(--ec,#7f9fbb) 70%,#cfe0ee) 100%)}
+.tok .face{background:var(--sky)}
+.tok .face.pic{background:var(--pic) center 12%/cover no-repeat,var(--sky)}
+.pf-l .face{background:var(--sky)}
+.pf-l .face.pic{background:var(--pic) center 8%/cover no-repeat,var(--sky)}
+.pf-l .face.pic.tall{background:var(--pic) center top/cover no-repeat,var(--sky)}
+.pf-r .wgrid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;max-height:none;padding:2px 2px 6px}
+.pf-r .wgrid .wt{flex:0 0 88px;padding:4px 4px 5px}
+.pf-r .wt .wi{width:48px;height:48px}
+.tok .face.pic.sq{background:var(--pic) center/cover no-repeat,var(--sky)}
+.tok .face.pic::after{border-radius:0;box-shadow:none;background:none}
+.tok .nm{position:static;width:100%;max-width:none;padding:4px 8px 5px;font-size:14.5px;font-weight:500;color:#eef2f5;line-height:1.35;
+  background:#1e2226;border-top:2px solid #e6c36a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tok .face .elb{left:6px;top:6px;width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;
+  background:rgba(12,14,17,.78);color:var(--ec);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ec) 70%,transparent)}
+.tok .face .elb{background:none;box-shadow:none;width:34px;height:34px;left:5px;top:5px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.tok .face .elb img{width:100%;height:100%;display:block}
+.tok .face .elb b{display:none}
+.tok .face .r{font-family:var(--f-num);font-size:12px;top:6px;right:7px;padding:0 5px;border-radius:2px;background:rgba(12,14,17,.7);color:#e6c36a}
+.tok .cnt{right:6px;bottom:38px;width:auto;min-width:0;padding:0 6px;background:rgba(12,14,17,.72);color:#e6c36a;font-family:var(--f-num);font-size:14px;border-radius:2px;line-height:1.5}
+.tok .cnt::before{content:"⚡";margin-right:2px;font-size:12px}
+.tok .cnt.dbl{background:#2b6fb3;color:#fff;box-shadow:inset 0 0 0 1px rgba(160,210,255,.55)}
+.tok .bonus{right:6px;bottom:62px;width:auto;padding:0 6px;border-radius:2px;font-family:var(--f-num);background:#d1532d;line-height:1.5}
+.slot .tok .bonus{bottom:62px}
+.grid{gap:10px 8px}
+.grid .tok.used{opacity:.3;filter:grayscale(.6)}
+.grid .tok{justify-self:center}
+/* party rows */
+.team{background:linear-gradient(90deg,color-mix(in srgb,var(--panel) 100%,transparent),color-mix(in srgb,var(--panel) 70%,transparent));border:1px solid var(--line);transition:border-color .15s,box-shadow .15s}
+.team:hover{border-color:color-mix(in srgb,var(--gold) 70%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 35%,transparent),0 0 18px color-mix(in srgb,var(--gold) 12%,transparent)}
+.team .no{font-family:var(--f-num);font-weight:300;font-size:38px;color:var(--fg);letter-spacing:-.02em}
+.team .no small{font-family:var(--f-num);font-weight:400;color:var(--muted);letter-spacing:.16em;font-size:10px}
+.slot{height:calc(var(--face) + 44px);border:1px dashed var(--line);border-radius:6px}
+.slot.empty::after{content:"+";width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:var(--card);
+  box-shadow:0 0 0 4px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.08);color:#d5dadf;font-size:34px;font-weight:200;line-height:1;font-family:var(--f-num)}
+.slot.over{border-color:var(--accent);border-style:solid;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.slot.filled{border-color:transparent}
+.slot.syn.filled{border-color:transparent;background:none}
+.slot.syn.filled .tok{border-color:#e6c36a;box-shadow:0 0 10px rgba(230,195,106,.3)}
+.slot .lnk{background:var(--line)}
+.slot .lnk.on{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 3px var(--bg),0 0 10px var(--accent)}
+.team.wrap .no::after{color:var(--accent)}
+.score{font-family:var(--f-num)}
+.score b{font-size:19px;font-weight:500}
+.synbox{border-left:1px solid var(--line)}
+.chip.syn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.recbar{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 10px;border:1px dashed var(--gold,#e6c36a);border-radius:8px}.recbar[hidden]{display:none}.rec-note{font-size:12px;color:var(--gold,#e6c36a);font-weight:700}
+.chip.syn.star{color:var(--accent-ink);background:var(--gold);border-color:var(--gold);font-weight:700}
+/* intel */
+.boss .ix{font-family:var(--f-num);font-size:16px;color:var(--accent)}
+.boss b{font-size:16px}
+.fx li{border-left-color:var(--accent)}
+.fx li span{color:var(--accent);font-family:var(--f-num)}
+.buff{border:1px solid var(--line);background:color-mix(in srgb,var(--panel-2) 70%,transparent);padding:0 0 8px;border-radius:2px;position:relative}
+.buff b{display:block;background:#d8dcdf;color:#171b1f;text-align:center;padding:4px 8px;font-size:15px;font-weight:700}
+.buff .tag{display:block;text-align:center;margin-top:6px;font-size:12.5px}
+.buff ul{padding:0 12px 0 28px;color:var(--fg)}
+.period{font-family:var(--f-num)}
+/* tooltip */
+#tip{background:var(--tipbg);color:#eef2f5;border:1px solid rgba(255,255,255,.14);border-radius:2px;padding:12px 14px;max-width:380px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#tip .th b{font-size:18px;margin-right:4px}
+.sbnote{margin:-2px 0 8px;font-size:12px;color:var(--muted);text-align:center}
+.upd-v{font-weight:800;color:var(--gold,#e6c36a);margin-right:8px;font-size:15px;letter-spacing:.02em}
+#tip .chip.tipTrial{color:#14110a;background:#e6c36a;border-color:#e6c36a;font-weight:700}#tip .tipTrialTxt{font-size:12px;color:#e6c36a}
+#tip .chip{background:rgba(255,255,255,.06);color:#d9dee3;border-color:rgba(255,255,255,.18)}
+#tip .chip.el{color:#fff}
+#tip .chip.g{color:#f0c95a;border-color:rgba(240,201,90,.5);background:rgba(240,201,90,.08)}
+#tip .chip.syn{color:#f3dc9a;border-color:rgba(243,220,154,.45)}
+#tip .tl{display:flex;justify-content:space-between;background:rgba(255,255,255,.09);color:#e9edf0;padding:3px 8px;margin:0 0 4px;font-size:13px;font-weight:500;letter-spacing:0}
+#tip p{color:#d3d9df}
+#tip em{font-style:normal;color:#f0c95a;font-weight:700}
+/* roster table */
+th{font-family:var(--f-num);background:var(--strip)}
+

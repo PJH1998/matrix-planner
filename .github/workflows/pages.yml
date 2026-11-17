@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html firebase-config.js updates.js _site/
-          cp -r core data portraits icons _site/
+          cp -r assets core data portraits icons _site/
       - name: Restore game image cache
         uses: actions/cache@v4
         with:
