@@ -181,8 +181,11 @@
 </main>
 
 <script src="firebase-config.js"></script>
-<!-- 데이터 등록소 → 데이터 파일 → 중개자(CharDB · BossDB · EchoDB) 순서로 읽는다 -->
+<!-- 데이터 등록소·상태 저장소 → 데이터 파일 → 중개자(CharDB · BossDB · EchoDB) 순서로 읽는다 -->
 <script src="core/hub.js"></script>
+<script src="src/store/LocalStorageRepository.js"></script>
+<script src="src/store/state-schema.js"></script>
+<script src="src/store/AppStore.js"></script>
 <script src="data/cycle.js"></script>
 <script src="data/conds.js"></script>
 <script src="data/weapons.js"></script>
@@ -250,6 +253,9 @@ const IS_ADMIN=(()=>{try{const q=new URLSearchParams(location.search).get("admin
 
 /* ---------- state ---------- */
 const LS_KEY="wuwa-matrix-planner-v1";
+const stateSchema=window.MP.createStateSchema(DEFAULT_CHARS,EXAMPLE_TEAMS);
+const localStateRepository=new window.MP.LocalStorageRepository(LS_KEY);
+const appStore=new window.MP.AppStore(stateSchema,localStateRepository);
 let state=null;            // {v,owned,growth,teams,cycle,chars}
 let chars=[], charMap={}, cycle=null;
 let db=null, docRef=null, storeMode="local";
@@ -264,15 +270,7 @@ let currentUser=null, fb=null;
 const ui={el:null,q:"",rq:"",rel:null};
 
 const clone=o=>JSON.parse(JSON.stringify(o));
-function freshState(){return {v:1,owned:Object.fromEntries(DEFAULT_CHARS.map(c=>[c.id,true])),growth:{},teams:clone(EXAMPLE_TEAMS).concat(Array.from({length:4},()=>({slots:[null,null,null],buff:null}))),cycle:null,chars:null}}
-function normalize(s){
-  const d=freshState();
-  if(!s||typeof s!=="object") return d;
-  const o={v:1,owned:s.owned&&typeof s.owned==="object"?s.owned:d.owned,growth:s.growth&&typeof s.growth==="object"?s.growth:{},
-    teams:Array.isArray(s.teams)?s.teams.map(t=>({slots:[0,1,2].map(i=>(t&&Array.isArray(t.slots)&&typeof t.slots[i]==="string")?t.slots[i]:null),buff:t&&typeof t.buff==="string"?t.buff:null,example:!!(t&&t.example)})):d.teams,
-    cycle:s.cycle&&typeof s.cycle==="object"?s.cycle:null,chars:Array.isArray(s.chars)?s.chars:null,skill:typeof s.skill==="string"?s.skill:"top",records:Array.isArray(s.records)?s.records:[],cur:s.cur&&typeof s.cur==="object"?s.cur:null,poolSort:typeof s.poolSort==="string"?s.poolSort:"rar",rosterSort:(s.sortV>=2&&typeof s.rosterSort==="string")?s.rosterSort:"new",rosterView:s.rosterView==="profile"?"profile":"icon",fav:s.fav&&typeof s.fav==="object"?s.fav:{},sortV:2}; // sortV 2: 보유 캐릭터 기본 정렬을 출시순으로 바꾸며 한 번 초기화
-  return o;
-}
+const replaceState=s=>(state=appStore.replace(s));
 function derive(){
   chars=(state.chars||DEFAULT_CHARS).filter(c=>c&&c.id&&c.name&&EL[c.el]);
   charMap=Object.fromEntries(chars.map(c=>[c.id,c]));
@@ -504,7 +502,7 @@ function setSave(cls,text){const el=document.getElementById("save");el.className
 function persist(){
   try{if(!(typeof undoTeams!=="undefined"&&undoTeams)&&state.cur&&state.cur.cycle===cycle.name&&typeof simCache!=="undefined"&&simCache){const a=state.cur.actual;state.cur=Object.assign(snapRecord(),{actual:a||{}})}}catch(e){}
   const saved=(typeof undoTeams!=="undefined"&&undoTeams)?Object.assign({},state,{teams:undoTeams}):state; // 추천 미리보기 중엔 적용 전 편성을 저장
-  try{localStorage.setItem(LS_KEY,JSON.stringify(saved))}catch(e){}
+  appStore.save(saved);
   if(!docRef){setSave("ok","이 브라우저에 저장됨");refreshExport();return}
   setSave("busy","저장 중");
   clearTimeout(saveTimer);
@@ -514,8 +512,6 @@ function persist(){
   },700);
   refreshExport();
 }
-function loadLocal(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return null}}
-
 const FB_VER="10.12.2";
 async function connect(){
   const cfg=window.FIREBASE_CONFIG;
@@ -535,7 +531,7 @@ async function connect(){
         const snap=await fsM.getDoc(docRef);storeMode="account";
         let parsed=null;
         if(snap.exists()){try{parsed=JSON.parse(snap.data().data)}catch(e){}}
-        if(parsed){state=normalize(parsed);derive();renderAll();try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}setSave("ok","내 계정에서 불러옴")}
+        if(parsed){replaceState(parsed);derive();renderAll();appStore.save(state);setSave("ok","내 계정에서 불러옴")}
         else persist(); // 이 계정의 첫 로그인: 지금 브라우저의 데이터를 계정에 올림
       }catch(e){docRef=null;storeMode="local";setSave("busy","계정 데이터를 불러오지 못함 · 브라우저에 저장")}
       renderStoreInfo();
@@ -1470,7 +1466,7 @@ $("#btnCopy").addEventListener("click",async()=>{const b=$("#exportBox");try{awa
 function doImport(text){
   const m=$("#dataMsg");
   try{const o=JSON.parse(text);if(!o||typeof o!=="object"||!o.owned)throw new Error("편성기 백업 형식이 아닙니다.");
-    state=normalize(o);derive();persist();renderAll();m.className="msg okm";m.textContent="백업을 불러왔습니다.";
+    replaceState(o);derive();persist();renderAll();m.className="msg okm";m.textContent="백업을 불러왔습니다.";
   }catch(err){m.className="msg err";m.textContent="불러오지 못했습니다: "+err.message}
 }
 $("#btnImport").addEventListener("click",()=>doImport($("#importBox").value));
@@ -1506,7 +1502,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeB
 paintThemeBtn();
 
 /* ---------- boot ---------- */
-state=normalize(loadLocal()||freshState());derive();simCache=simulate(state.teams);archiveIfCycleChanged();renderAll();route();
+state=appStore.load();derive();simCache=simulate(state.teams);archiveIfCycleChanged();renderAll();route();
 setSave("ok","이 브라우저에 저장됨");
 connect();
 loadPortraits();loadGameImages();
