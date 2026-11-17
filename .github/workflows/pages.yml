@@ -35,19 +35,35 @@ jobs:
           mkdir -p _site
           cp index.html firebase-config.js updates.js _site/
           cp -r assets core data src portraits icons _site/
+      - name: Restore processed image cache
+        id: processed-images
+        uses: actions/cache/restore@v4
+        with:
+          path: _site/img
+          key: processed-images-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
       - name: Restore game image cache
+        if: steps.processed-images.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
           path: .asset-cache
-          key: assets-${{ hashFiles('data/chars/*.js', 'data/weapons.js') }}
-          restore-keys: assets-
+          key: assets-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'scripts/fetch-assets.mjs') }}
       - name: Fetch game images from encore.moe
-        run: node scripts/fetch-assets.mjs _site/img .asset-cache
+        if: steps.processed-images.outputs.cache-hit != 'true'
+        id: fetch-images
+        run: |
+          node scripts/fetch-assets.mjs _site/img .asset-cache | tee image-fetch.log
+          if grep -q '  실패:' image-fetch.log; then
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          fi
       - name: Smooth profile card images
+        if: steps.processed-images.outputs.cache-hit != 'true'
         run: |
           python -m pip install Pillow==11.3.0
           python scripts/process-card-images.py _site/img/card
       - name: Publish images to img-cache branch
+        if: steps.processed-images.outputs.cache-hit != 'true' && steps.fetch-images.outputs.complete == 'true'
         run: |
           cd _site/img
           git init -q -b img-cache
@@ -57,6 +73,12 @@ jobs:
           git commit -qm "img cache ${GITHUB_SHA::7}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" img-cache
           rm -rf .git
+      - name: Save processed image cache
+        if: steps.processed-images.outputs.cache-hit != 'true' && steps.fetch-images.outputs.complete == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: _site/img
+          key: processed-images-${{ hashFiles('core/hub.js', 'data/chars/*.js', 'data/weapons.js', 'data/echoes.js', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
