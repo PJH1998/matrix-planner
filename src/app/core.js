@@ -90,7 +90,7 @@ const weaponCalculator=new window.MP.WeaponCalculator({state:calculationContext.
   weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS,weaponSheetFx:window.WEAPON_SHEET_FX});
 const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator});
 const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
-  cycle:calculationContext.cycle,charDb:CharDB,weapons:weaponCalculator,echoes:echoCalculator});
+  cycle:calculationContext.cycle,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator,echoes:echoCalculator});
 
 const WMAP=weaponCalculator.map,WTYPE=weaponCalculator.types,TRIAL_MUL=weaponCalculator.trialMul;
 const WICON_BASE="https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconWeapon/";

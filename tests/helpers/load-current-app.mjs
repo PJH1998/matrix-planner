@@ -30,7 +30,7 @@ export function loadCurrentApp() {
   context.globalThis = context;
 
   run(context, "core/hub.js");
-  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
+  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
   for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js"]) run(context, file);
