@@ -6,10 +6,11 @@ MP.addChar({
   // 반주·메커니즘
   syn:{o:"파티 전체 피해 +25% (30초), 꽃향기의 편지 소모량에 따라 추가 효과",ob:["all"],p:1,w:[],m:["frost","anom"]},
   // 파티 딜증(%)
-  amp:35,
+  amp:25,
   // 공명 해방(천리강산): 암흑 효과 소모 후 인멸 피해가 방어력 6%·인멸 저항 12% 무시 → 암흑 파티의 인멸 공명자 +15%
   // 이상 효과 스택 최대치 +3 → 이상 효과 피해 비중 × 30% (치사의 같은 효과와는 중첩 안 됨)
-  supCond(x,ids,main,C){let a=0;const t=[];
+  supCond(x,ids,main,C){let a=0;const t=[],er=C.stat("suisui","er"),bonus=Math.min(12,Math.max(0,er-200)*0.2);
+    if(bonus>0){a+=bonus/100/C.BONUS_BASE;t.push(`반주: 피해 보너스 +${bonus.toFixed(1)}%`)}
     if(ids.some(y=>C.has(y,["bane"]))&&C.el(x)==="havoc"){a+=0.15;t.push("암흑: 인멸 저항 무시")}
     const sh=C.share(x,"other");
     if(sh>0&&!ids.includes("chisa")&&ids.some(y=>C.has(y,["frost","burn","erosion","frazzle","flare"]))){a+=sh*0.3;t.push("이상 효과 스택 +3")}

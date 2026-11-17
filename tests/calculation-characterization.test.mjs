@@ -31,9 +31,9 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const teams = app.state().teams.slice(0, 4);
   const expected = [
     ["camellya", 33.80698414798899, 44.15244671627511],
-    ["qingxiao", 76.83726086802139, 96.04657608502671],
-    ["jingran", 62.09560345611809, 69.43685945114954],
-    ["hsin", 76.71361908152322, 117.80654957636096],
+    ["qingxiao", 71.61895644780418, 89.5236955597552],
+    ["jingran", 58.91348702419128, 65.88332199011603],
+    ["hsin", 71.0035356543491, 109.1522702642411],
   ];
 
   teams.forEach((team, index) => {
@@ -44,8 +44,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 7.026175100545651);
-  closeTo(simulation.total, 44486.073873621324);
+  closeTo(simulation.progress, 6.801195750239694);
+  closeTo(simulation.total, 42405.40859715426);
   assert.equal(simulation.bad, 0);
 });
 
@@ -99,7 +99,7 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:negative",
     "aemeath/lynae/mornye:negative", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
-    "zani/phoebe/verina:negative", "jingran/lynae/shorekeeper:tune", "sigrika/qiuyuan/lily:basic",
+    "zani/phoebe/shorekeeper:negative", "jingran/lynae/verina:tune", "sigrika/qiuyuan/lily:basic",
     "lucy/rebecca/verina:tune", "carlotta/zhezhi/buling:negative", "xiangliyao/yinlin/buling:negative",
     "camellya/sanhua/jianxin:general", "jinhsi/lumi/baizhi:general", "jiyan/mortefi/baizhi:general",
   ]);
@@ -193,4 +193,31 @@ test("서포터 유효 옵션과 릴리 공효 190~260 구간을 실제 최종 �
   assert.equal(app.usefulStat("mornye", "def%"), true);
   assert.equal(app.usefulStat("mornye", "hp%"), false);
   assert.equal(app.usefulStat("baizhi", "hp%"), true);
+});
+
+test("모니에·수수·파수인 버프와 브렌트 전투 공격력이 입력 공효를 따른다", () => {
+  const app = loadCurrentApp();
+  const buff = (id, er, slots, to) => {
+    app.reset({ growth: { [id]: { stats: { er } } } });
+    return app.teamCalc({ slots, buff: null }).supx.find(x => x.from === id && x.to === to)?.e || 0;
+  };
+  const mornyeTeam = ["qingxiao", "denia", "mornye"];
+  closeTo(buff("mornye", 100, mornyeTeam, "qingxiao"), 0);
+  closeTo(buff("mornye", 260, mornyeTeam, "qingxiao"), 0.4 / 1.9);
+  assert.equal(app.usefulStat("mornye", "er"), false);
+  buff("mornye", 250, mornyeTeam, "qingxiao");
+  assert.equal(app.usefulStat("mornye", "er"), true);
+  app.reset({ growth: { mornye: { chain: 1, stats: { er: 260 } } } });
+  closeTo(app.teamCalc({ slots: ["camellya", "sanhua", "mornye"], buff: null }).supx.find(x => x.from === "mornye" && x.to === "camellya")?.e || 0, 0.4 / 1.9);
+
+  const suisuiTeam = ["hiyuki", "lucilla", "suisui"];
+  const low = buff("suisui", 200, suisuiTeam, "hiyuki");
+  const high = buff("suisui", 260, suisuiTeam, "hiyuki");
+  closeTo(high - low, 0.12 / 1.9);
+
+  const shoreTeam = ["augusta", "iuno", "shorekeeper"];
+  assert.ok(buff("shorekeeper", 240, shoreTeam, "augusta") > buff("shorekeeper", 100, shoreTeam, "augusta"));
+
+  const brant = er => {app.reset({ growth: { brant: { stats: { atk: 2000, cr: 70, cd: 210, er } } } });return app.charScore("brant")};
+  assert.ok(brant(280) > brant(150));
 });

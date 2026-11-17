@@ -54,6 +54,8 @@
     gb:id=>raw(id).gb,
     scale:id=>{const c=cur(id);return (c&&c.statScale)||raw(id).statScale||"atk"},
     nodes:id=>raw(id).nodes||{},
+    combatErAtk:id=>raw(id).combatErAtk||null,
+    erBuffCap:id=>raw(id).erBuffCap||null,
     sets:id=>raw(id).sets||[],
     /* 무기 */
     wtype:id=>{const c=cur(id);return (c&&c.wtype)||raw(id).wtype||null},

@@ -6,7 +6,14 @@ MP.addChar({
   // 반주·메커니즘
   syn:{o:"파티 전체 피해 +15%, 피격 회피 보조 (30초)",ob:["all"],p:1,w:[],m:[]},
   // 파티 딜증(%)
-  amp:40,
+  amp:15,
+  // 공명 해방 영역 2·3단계: 전투 중 고유 스킬 공효 +10%를 적용한다.
+  // 에코 액티브의 공효는 에코 종류·발동 상태를 저장하지 않아 별도로 더하지 않는다.
+  supCond(x,ids,main,C){const er=C.stat("shorekeeper","er")+10,cr=Math.min(12.5,er*0.05),cd=Math.min(25,er*0.1);
+    const c=C.combatCrit(x),before=1+Math.min(c.cr,100)/100*(c.cd/100-1),after=1+Math.min(c.cr+cr,100)/100*((c.cd+cd)/100-1);
+    let a=after/before-1;const t=[`영역: 치명타 확률 +${cr.toFixed(1)}% · 피해 +${cd.toFixed(1)}%`];
+    if(C.chain("shorekeeper")>=2){a+=0.4/C.ATK_BASE;t.push("2체인: 파티 공격력 +40%")}
+    return {a,t}},
 
   // 90레벨 기본 [HP, 공격력, 방어력]
   base:[16713,288,1100],

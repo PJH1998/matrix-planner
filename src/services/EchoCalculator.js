@@ -50,7 +50,7 @@
     usefulStat(id,k){const c=this.charMap()[id];if(!c)return false;const scale=this.scaleOf(id);
       if(c.role!=="support"){if(k==="cr"||k==="cd"||k==="er")return true;if(k==="atk%"||k==="atk")return scale==="atk";if(k==="hp%"||k==="hp")return scale==="hp";if(k==="def%"||k==="def")return scale==="def";if(["basic","heavy","skill","lib"].includes(k))return this.db.share(id,k)>=.08;return false}
       const guide=this.db.guide(id)||{},base=k.endsWith("%")?k.slice(0,-1):k;
-      if(k==="er")return this.sheetStats(id).er+.05<this.db.erMin(id).min;
+      if(k==="er")return this.sheetStats(id).er+.05<Math.max(this.db.erMin(id).min,this.db.erBuffCap(id)||0);
       if(["atk","hp","def"].includes(base))return base===scale;
       if(k==="heal"||k==="cr"||k==="cd")return guide[k]!=null;
       return guide[k]!=null}
