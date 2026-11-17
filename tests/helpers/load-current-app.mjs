@@ -36,12 +36,11 @@ export function loadCurrentApp() {
   for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js"]) run(context, file);
   for (const file of ["core/chardb.js", "core/bossdb.js", "core/echodb.js"]) run(context, file);
 
-  const appSource = fs.readFileSync(path.join(ROOT, "src/app.js"), "utf8");
-  const appStart = appSource.indexOf("(()=>{");
-  const persistence = appSource.indexOf("/* ---------- persistence ---------- */", appStart);
-  if ([appStart, persistence].some((index) => index < 0)) throw new Error("index.html 계산 구간을 찾지 못했습니다.");
+  const appSource = fs.readFileSync(path.join(ROOT, "src/app/core.js"), "utf8");
+  const persistence = appSource.indexOf("/* ---------- persistence ---------- */");
+  if (persistence < 0) throw new Error("앱 코어의 계산 구간을 찾지 못했습니다.");
 
-  const strengthCode = appSource.slice(appStart, persistence);
+  const strengthCode = `(()=>{\n${appSource.slice(0, persistence)}`;
   const expose = `
     state=appMediator.replace(appStore.fresh());derive();
     const recommendationTestService=new window.MP.RecommendationService({state:calculationContext.state,chars:calculationContext.chars,
