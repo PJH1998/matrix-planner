@@ -9,6 +9,8 @@ MP.addChar({
   profile:{basic:2.7,heavy:4.3,skill:4.1,lib:84.5,intro:2.6,echo:1.8},
   // S0 기본 DPS
   dps:31826,
+  // Prydwen 한 바퀴 시간(초) · DPS를 잴 때 함께 넣은 파티원(빈 목록 = 혼자 잰 값)
+  rot:7.21, dpsTeam:["aemeath","denia"],
   // 0~6체인 DPS 배율
   chain:[1,1.184,1.597,2.022,2.022,2.181,2.801],
   // 파티 딜증(%)

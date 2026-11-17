@@ -11,6 +11,8 @@ MP.addChar({
   profile:{basic:56.4,heavy:3.5,skill:4.1,intro:3.4,echo:1.2,other:31.3},
   // S0 기본 DPS
   dps:71049,
+  // Prydwen 한 바퀴 시간(초) · DPS를 잴 때 함께 넣은 파티원(빈 목록 = 혼자 잰 값)
+  rot:6.56, dpsTeam:["xuanling","suisui"],
   // 0~6체인 DPS 배율
   chain:[1,1.021,1.177,1.464,1.597,1.684,2.127],
 

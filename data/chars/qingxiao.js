@@ -9,8 +9,12 @@ MP.addChar({
   profile:{basic:22.8,heavy:31.2,skill:1.4,lib:28.5,intro:1.3,outro:10.8,echo:4.1},
   // S0 기본 DPS
   dps:169516,
+  // Prydwen 한 바퀴 시간(초) · DPS를 잴 때 함께 넣은 파티원(빈 목록 = 혼자 잰 값)
+  rot:12.4, dpsTeam:["denia","mornye"],
   // 0~6체인 DPS 배율
   chain:[1,1.151,1.329,1.611,1.713,1.73,2.33],
+  // 공명 체인으로 오르는 상시 스탯(파티에 넣고 필드에 꺼내면 스탯 화면에 보이는 값) — 최종 스탯에 더한다
+  chainStats:[{chain:1,cr:16}],
 
   // 90레벨 기본 [HP, 공격력, 방어력]
   base:[10300,463,1112],

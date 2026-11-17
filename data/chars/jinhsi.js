@@ -9,6 +9,8 @@ MP.addChar({
   profile:{skill:79.1,lib:15.2,intro:4,echo:1.7},
   // S0 기본 DPS
   dps:96558,
+  // Prydwen 한 바퀴 시간(초) · DPS를 잴 때 함께 넣은 파티원(빈 목록 = 혼자 잰 값)
+  rot:10.2, dpsTeam:["hsin","shorekeeper"],
   // 0~6체인 DPS 배율
   chain:[1,1.151,1.151,1.328,1.425,1.642,2.014],
   // 파티원 협동 공격 피해마다 「봄의 빛」 2pt — 협동 공격 파트너가 없으면 스택이 느려진다(Prydwen DPS는 절지 파티 기준)

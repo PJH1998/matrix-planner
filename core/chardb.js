@@ -41,6 +41,17 @@
     hasChainData:id=>!!raw(id).chain,
     amp:id=>{const c=cur(id);return c&&c.amp!=null?+c.amp:(raw(id).amp||0)},
     hasAmp:id=>{const c=cur(id);return (c&&c.amp!=null)||raw(id).amp!=null},
+    rot:id=>raw(id).rot||null,                      // Prydwen 한 바퀴 시간(초)
+    dpsTeam:id=>raw(id).dpsTeam||null,              // dps를 잴 때 함께 넣은 파티원 (빈 목록 = 혼자)
+    chainStats:id=>raw(id).chainStats||[],          // 체인으로 오르는 상시 스탯 [{chain, 스탯 키: 값}]
+    buffChain:id=>raw(id).buffChain||null,          // 서포터 0~6체인 버프 배율
+    // 체험 세팅 {from: "stats"|"guide"|"ijk", stats, weapon, chain}. ijk면 stats 없이 이잘키 기준을 쓴다
+    trialSpec:id=>{const T=MP.TRIAL||{},own=(T.stats||{})[id],keys=["atk","hp","def","cr","cd","er","el","heal"];
+      const pick=o=>{const out={};keys.forEach(k=>{if(o&&o[k]!=null)out[k]=+o[k]});return Object.keys(out).length?out:null};
+      const from=src=>src==="guide"?pick(raw(id).guide):null;
+      let stats=from(T.source),src=stats?T.source:null;if(!stats&&T.fallback&&T.fallback!=="ijk"){stats=from(T.fallback);src=stats?T.fallback:null}
+      if(!stats)src="ijk";if(own){stats=Object.assign({},stats||{},pick(own));src="stats"}
+      return {from:src,stats,weapon:T.weapon||"default",chain:T.chain==null?null:+T.chain}},
     /* 스탯 */
     base:id=>raw(id).base||null,
     ijk:id=>raw(id).ijk||null,
