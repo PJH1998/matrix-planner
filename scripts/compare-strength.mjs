@@ -46,6 +46,9 @@ try {
       if (!g) return;
       const stats = {};
       ["atk", "hp", "def", "cr", "cd", "er"].forEach((k) => { if (g[k] != null) stats[k] = g[k]; });
+      // 가이드에 주 스탯이 없으면 이잘키 기준 주 스탯으로 채운다(없으면 주 스탯 0으로 계산되므로)
+      const ijk = newApp.ijk && newApp.ijk(c.id);
+      if (ijk && stats[ijk.main[0]] == null && c.role !== "support") stats[ijk.main[0]] = ijk.main[1];
       if (Object.keys(stats).length) growth[c.id] = { stats };
     });
     return { growth };

@@ -39,6 +39,38 @@
       if(!echoes.length&&growth.stats){const st=growth.stats,b=st.b||{},base=this.sheetBuild(id,[]).screen,out=Object.assign({},base);
         ["atk","hp","def","cr","cd","er"].forEach(k=>{if(st[k]!=null&&st[k]!=="")out[k]=+st[k]});out.types=Object.assign({},base.types,b);if(b.el!=null)out.el=+b.el;return out}
       return this.sheetBuild(id,echoes).screen}
+    /* 체인 단계: 체험 세팅이면 data/trial.js의 chain(null이면 사용자 값), 아니면 사용자가 정한 체인 */
+    chainOf(id){const growth=this.state().growth[id]||{},own=this.clamp(Math.round(+growth.chain||0),0,6);if(!growth.trial)return own;const spec=this.db.trialSpec(id);return spec.chain==null?own:this.clamp(spec.chain,0,6)}
+    /* 상시 체인 스탯을 스탯 화면 값에 더한다 (공격력%·HP%·방어력%는 기본값 기준) */
+    addChainStats(id,sheet,chain){const rows=this.db.chainStats(id).filter(row=>row.chain<=chain);if(!rows.length)return sheet;
+      const out=Object.assign({},sheet,{types:Object.assign({},sheet.types||{})}),base=this.db.base(id)||[11000,400,1150],weapon=this.weapons.weaponOf(id),w=weapon.w?this.weapons.stat(weapon.w.id):null,baseAtk=base[1]+(w?w[0]:0);
+      rows.forEach(row=>Object.entries(row).forEach(([k,v])=>{if(k==="chain")return;
+        if(k==="atk%")out.atk+=baseAtk*v/100;else if(k==="hp%")out.hp+=base[0]*v/100;else if(k==="def%")out.def+=base[2]*v/100;
+        else if(["atk","hp","def","cr","cd","er","el","all","heal"].includes(k))out[k]=(out[k]||0)+v;else out.types[k]=(out.types[k]||0)+v}));return out}
+    /* 체험 세팅 스탯: 기본+무기+노드 위에 data/trial.js 기준(공식 가이드 추천 스탯 등)을 덮어쓴다.
+       기준에 없는 항목(가이드에 공격력이 없는 공명자 등)은 이잘키 기준 스탯으로 채운다. 피해 유형 보너스는 이잘키 기준값 */
+    trialStats(id){const spec=this.db.trialSpec(id),out=Object.assign({},this.sheetBuild(id,[]).screen),ijk=this.ijkOf(id);out.types=Object.assign({},out.types);
+      const ref={cr:ijk.cr,cd:ijk.cd,el:this.elRefOf(id)};ref[ijk.main[0]]=ijk.main[1];
+      Object.entries(Object.assign(ref,spec.stats||{})).forEach(([k,v])=>out[k]=+v);this.bonusKeysOf(id).filter(k=>k!=="el").forEach(k=>out.types[k]=(out.types[k]||0)+this.typeRef);
+      return this.addChainStats(id,out,this.chainOf(id))}
+    /* 최종 스탯: 필드에 꺼낸 상태의 정보창 값. 에코(없으면 에코 0) + 상시 체인 스탯.
+       스탯 직접 입력은 게임 화면 값을 옮겨 적은 것이라 체인 스탯을 더하지 않는다. */
+    finalStats(id){const growth=this.state().growth[id]||{};if(growth.trial)return this.trialStats(id);
+      const sheet=this.sheetStats(id);if(!this.echoesOf(id).length&&growth.stats)return sheet;return this.addChainStats(id,sheet,this.chainOf(id))}
+    /* 이잘키 기준 스탯에 n체인까지의 상시 체인 스탯을 더했을 때의 피해 배율 (체인 배율에서 이 몫을 뺀다) */
+    chainStatMul(id,chain){const rows=this.db.chainStats(id).filter(row=>row.chain<=chain);if(!rows.length)return 1;
+      const ijk=this.ijkOf(id),scale=ijk.main[0],base=this.db.base(id)||[11000,400,1150],best=this.weapons.stat(this.weapons.bestWeaponId(id)),r={main:ijk.main[1],cr:ijk.cr,cd:ijk.cd,bonus:this.elRefOf(id)+this.typeRef};
+      rows.forEach(row=>Object.entries(row).forEach(([k,v])=>{if(k==="cr"||k==="cd")r[k]+=v;else if(k==="el"||k==="all")r.bonus+=v;
+        else if(k===scale+"%")r.main+=(scale==="atk"?base[1]+(best?best[0]:0):scale==="hp"?base[0]:base[2])*v/100;else if(k===scale)r.main+=v}));
+      return this.expDmg(r.main,r.cr,r.cd,r.bonus)/this.refDmg(id)}
+    /* 공명력 = 100 × 최종 스탯 피해 기대값 ÷ 이잘키 기준 스탯 피해 기대값 (아래 제한 없음). 스탯 직접 입력에서 피해 보너스를 비우면 기준값을 쓴다 */
+    resonance(id){const growth=this.state().growth[id]||{};
+      if(!growth.trial&&!this.echoesOf(id).length&&growth.stats){const f=this.manualFactor(id);if(f!=null)return 100*f}
+      return 100*this.echoDb.dmg(this.finalStats(id),this.scaleOf(id),this.dmgWeights(id))/this.refDmg(id)}
+    manualFactor(id){const stats=(this.state().growth[id]||{}).stats;if(!stats)return null;const scale=this.scaleOf(id),main=+stats[scale],cr=+stats.cr,cd=+stats.cd;if(!main||!cr||!cd)return null;
+      const bonuses=stats.b||{},has=k=>bonuses[k]!=null&&bonuses[k]!=="",el=has("el")?+bonuses.el:this.elRefOf(id),keys=this.bonusKeysOf(id).filter(k=>k!=="el"),profile=this.db.profile(id)||{};
+      const weight=k=>(profile[k]||0)>0?profile[k]:1,total=keys.reduce((a,k)=>a+weight(k),0),typeBonus=keys.length?keys.reduce((a,k)=>a+(has(k)?+bonuses[k]:this.typeRef)*weight(k),0)/total:this.typeRef;
+      return this.expDmg(main,cr,cd,el+typeBonus)/this.refDmg(id)}
     sheetBuild(id,echoes){const weapon=this.weapons.weaponOf(id);
       return this.echoDb.build(Object.assign(this.context(id),{base:this.db.base(id)||[11000,400,1150],nodes:this.db.nodes(id),weapon:weapon.w?this.weapons.stat(weapon.w.id):null,sheetFx:weapon.w?this.weapons.sheetFx(weapon.w.id,weapon.ref):null,echoes:echoes||[]}))}
     build(id,list){const echoes=list||this.echoesOf(id);if(!echoes.length)return null;const weapon=this.weapons.weaponOf(id);

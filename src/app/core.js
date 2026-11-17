@@ -106,7 +106,7 @@ const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=
 const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);
 const echoBuild=(id,list)=>echoCalculator.build(id,list),sheetStats=id=>echoCalculator.sheetStats(id),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
 
-const CHAIN_MUL=characterCalculator.chain,ROLE_W=characterCalculator.roleWeight,BONUS_BASE=characterCalculator.bonusBase,MAIN_SUB_RATIO=characterCalculator.mainSubRatio;
+const CHAIN_MUL=characterCalculator.chain,BONUS_BASE=characterCalculator.bonusBase;
 const NOSYN_W=characterCalculator.noSynergyWeight,NOSYN_MIN=characterCalculator.noSynergyMin,SYN_BONUS=characterCalculator.synergyBonus;
 const dpsFactor=id=>characterCalculator.dpsFactor(id),chainMul=id=>characterCalculator.chainMul(id),charScore=id=>characterCalculator.score(id),ampOf=id=>characterCalculator.amp(id);
 const SUP_CTX=characterCalculator.supportContext();

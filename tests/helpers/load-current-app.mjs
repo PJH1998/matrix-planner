@@ -33,7 +33,7 @@ export function loadCurrentApp() {
   for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
-  for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js"]) run(context, file);
+  for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js", "data/trial.js"]) run(context, file);
   for (const file of ["core/chardb.js", "core/bossdb.js", "core/echodb.js"]) run(context, file);
 
   const appSource = fs.readFileSync(path.join(ROOT, "src/app/core.js"), "utf8");
@@ -56,6 +56,11 @@ export function loadCurrentApp() {
       weapon:id=>clone(weaponOf(id)),
       supportProgress:id=>clone(echoCalculator.supportProgress(id)),
       charScore,
+      damage:id=>characterCalculator.damage(id),
+      refBuff:id=>characterCalculator.dealers.refBuff(id),
+      chainRemain:id=>characterCalculator.dealers.chainRemain(id),
+      finalStats:id=>clone(echoCalculator.finalStats(id)),
+      ijk:id=>clone(echoCalculator.ijkOf(id)),
       teamCalc:t=>clone(teamCalc(clone(t))),
       simulate:teams=>clone(simulate(clone(teams))),
       echoBuild:(id,list)=>clone(echoBuild(id,list==null?undefined:clone(list))),

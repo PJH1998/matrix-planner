@@ -1,34 +1,33 @@
 (function(g){
-  /* 파티 강도는 역할별 캐릭터 강도에 반주·에코 세트·서포터 증폭·메커니즘 시너지를 합산한다.
-     반주는 두 교대 방향 중 실제 이득이 큰 쪽을 선택한다. 보스 피해는 상위권 실측 회귀식
-     (강도 / 37.8)^1.07을 사용하며 숙련도와 속성 저항을 별도로 반영한다. */
+  /* 파티 강도 = Σ(딜러 한 바퀴 피해 × (1 + 받는 버프)) ÷ (Σ 딜러 한 바퀴 시간 + 서포터 1명당 7초)
+                × (1 + 파티 딜증) × (1 + 메커니즘·조합 시너지) × strengthScale
+     딜러는 1:1로 더한다(서브 딜러도 자기 로테이션을 다 한다고 본다). 메인 = 개인 피해가 가장 큰 딜러(버프 대상·표시용).
+     반주는 두 교대 방향 중 실제 이득이 큰 쪽을 선택한다. strengthScale은 예전 강도 눈금(보스 회귀식)에 맞춘 상수다(공식 가이드 스탯 기준 중앙값을 맞춤, scripts/compare-strength.mjs).
+     보스 피해는 상위권 실측 회귀식 (강도 / 37.8)^1.07을 사용하며 숙련도와 속성 저항을 별도로 반영한다. */
   class TeamCalculator{
     constructor({state,charMap,cycle,charDb,bossDb,echoDb,characters,echoes,condWeight,selectedBuff,damageLabels,mechanicLabels,elementLabels,anomalies}){
       this.state=state;this.charMap=charMap;this.cycle=cycle;this.db=charDb;this.bossDb=bossDb;this.echoDb=echoDb;this.characters=characters;this.echoes=echoes;
       this.condWeight=condWeight;this.selectedBuff=selectedBuff;this.damageLabels=damageLabels;this.mechanicLabels=mechanicLabels;this.elementLabels=elementLabels;this.anomalies=anomalies;
-      this.atkBase=2;this.strengthRef=37.8;this.damageExp=1.07;this.maxRounds=bossDb.MAX_ROUNDS;
+      this.atkBase=2;this.strengthScale=.00061;this.strengthRef=37.8;this.damageExp=1.07;this.maxRounds=bossDb.MAX_ROUNDS;
       this.skillLevels={top:{label:"숙련",mul:1},good:{label:"보통",mul:.8},normal:{label:"뉴비",mul:.65}};this.cache=new Map();
     }
     synOf(id){return this.db.syn(id)}
     typeShare(id,key){return this.db.typeShare(id,key)}
     hasMechanic(id,mechanics){return this.db.has(id,mechanics)}
-    outroValues(giver,ids,receiver){const outro=this.db.outro(giver);if(!outro)return null;if(!outro.cond)return outro.v;
-      if(outro.cond.to)return receiver&&this.hasMechanic(receiver,outro.cond.m)&&ids.filter(id=>this.hasMechanic(id,outro.cond.m)).length>=2?outro.cond.v:outro.v;
-      return ids.some(id=>id!==giver&&this.hasMechanic(id,outro.cond.m))?outro.cond.v:outro.v}
-    outroGain(giver,receiver,ids){const values=this.outroValues(giver,ids,receiver);if(!values)return 0;const cg=this.charMap()[giver],cr=this.charMap()[receiver];let gain=0;
-      Object.entries(values).forEach(([key,value])=>{if(key==="all")gain+=value;else if(key==="el"){if(cg.el===cr.el)gain+=value/this.characters.bonusBase}else gain+=value*this.typeShare(receiver,key)/this.characters.bonusBase});return gain/100}
+        outroValues(giver,ids,receiver){return this.characters.supports.outroValues(giver,ids,receiver)}
+    outroGain(giver,receiver,ids){return this.characters.supports.outroGain(giver,receiver,ids)}
     usesAmp(id){return this.characters.supports.usesAmp(id)}
-    outroMap(ids,main,weightOf){const run=order=>{const gain={},from={},links=[];ids.forEach(id=>{gain[id]=0;from[id]=0});let value=0;
+    outroMap(ids,main){const run=order=>{const gain={},from={},links=[];ids.forEach(id=>{gain[id]=0;from[id]=0});let value=0;
         ids.forEach(giver=>{if(this.usesAmp(giver)||!this.outroValues(giver,ids))return;
-          const add=(receiver,party)=>{const amount=this.outroGain(giver,receiver,ids);if(amount<=0)return;gain[receiver]+=amount;if(receiver!==giver)from[receiver]+=amount;value+=this.characters.score(receiver)*weightOf(receiver)*amount;links.push({from:giver,to:receiver,e:amount,party})};
+          const add=(receiver,party)=>{const amount=this.outroGain(giver,receiver,ids);if(amount<=0)return;gain[receiver]+=amount;if(receiver!==giver)from[receiver]+=amount;value+=this.characters.damage(receiver)*amount;links.push({from:giver,to:receiver,e:amount,party})};
           if(this.synOf(giver).p)ids.forEach(receiver=>add(receiver,1));else if(order.length>1)add(order[(order.indexOf(giver)+1)%order.length],0)});return {gain,from,links,val:value}};
       const a=run(ids),b=ids.length>2?run([ids[0],ids[2],ids[1]]):a;return a.val>=b.val?a:b}
     circuitMul(team,id){const buff=this.selectedBuff(team);if(!buff)return {mul:1,hits:[]};let add=0;const hits=[];
       (buff.effects||[]).forEach(effect=>{const value=+effect.dmg||0,weight=value?this.condWeight(effect.cond,team,id):0;if(weight>0){add+=value*weight;hits.push(effect.text+(weight<1?` (${Math.round(weight*100)}% 적용)`:""))}});return {mul:1+add/100,hits}}
     setFxGain(effect,id){return this.characters.supports.setFxGain(effect,id)}
-    mainDps(team){const ids=team.slots.filter(Boolean);if(!ids.length)return null;const by=list=>list.slice().sort((a,b)=>this.characters.score(b)-this.characters.score(a))[0],map=this.charMap();
-      const dps=by(ids.filter(id=>map[id]&&map[id].role==="dps")),sub=by(ids.filter(id=>map[id]&&map[id].role==="sub"));
-      if(dps&&sub&&this.characters.score(sub)>this.characters.score(dps)*this.characters.mainSubRatio)return sub;return dps||sub||by(ids)}
+    // 메인 = 파티 딜러 중 개인 피해가 가장 큰 공명자 (딜러가 없으면 첫 공명자)
+    mainDps(team){const ids=team.slots.filter(Boolean);if(!ids.length)return null;const map=this.charMap(),dealers=ids.filter(id=>map[id]&&map[id].role!=="support");
+      return dealers.length?dealers.slice().sort((a,b)=>this.characters.damage(b)-this.characters.damage(a))[0]:ids[0]}
     pairLinks(a,b){const out=[],sa=this.synOf(a),sb=this.synOf(b),ca=this.charMap()[a],cb=this.charMap()[b];if(!ca||!cb)return out;
       const outro=(from,to,source,target,cf,ct)=>{const hit=(source.ob||[]).filter(type=>(target.w||[]).includes(type)).map(type=>this.damageLabels[type]);
         if((source.ob||[]).includes("el")&&cf.el===ct.el&&(target.w||[]).length)hit.unshift(this.elementLabels[ct.el]+" 피해");
@@ -43,17 +42,19 @@
       const best={};links.filter(link=>link.k==="outro"&&!this.synOf(link.from).p).forEach(link=>{const old=best[link.from],rank=x=>x.n*10+(this.charMap()[x.to].role==="dps"?1:0);if(!old||rank(link)>rank(old))best[link.from]=link});
       links=links.filter(link=>link.k!=="outro"||this.synOf(link.from).p||best[link.from]===link);links.forEach(link=>{if(link.j===link.i+1)adj[link.j]=true;else adj.wrap=true});
       return {links,adj,combos:this.db.combos().filter(combo=>combo.ids.every(id=>ids.includes(id)))}}
-    teamCalc(team){const ids=team.slots.filter(Boolean),result={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[],setx:[],weaponx:[]};if(!ids.length)return result;
-      const main=this.mainDps(team),map=this.charMap();result.main=main;const weightOf=id=>id===main?this.characters.roleWeight.main:(this.characters.roleWeight[map[id].role]||.5),outro=this.outroMap(ids,main,weightOf);result.gain=outro.gain;result.links=outro.links;
+    teamCalc(team){const ids=team.slots.filter(Boolean),result={base:0,circuit:0,amp:0,syn:0,total:0,main:null,gain:{},links:[],weak:[],needs:[],supx:[],setx:[],weaponx:[],parts:[],time:0};if(!ids.length)return result;
+      const main=this.mainDps(team),map=this.charMap();result.main=main;const outro=this.outroMap(ids,main);result.gain=outro.gain;result.links=outro.links;
       this.characters.supports.teamBuffs(ids,main,outro.gain,result);
-      const noSupport=!ids.some(id=>map[id].role==="support");let damage=0,circuitDamage=0;
-      ids.forEach(id=>{let weight=weightOf(id);const ampIn=ids.filter(x=>x!==id&&map[x].role!=="support").reduce((sum,x)=>sum+this.characters.amp(x),0)/100;
+      const noSupport=!ids.some(id=>map[id].role==="support");let damage=0,circuitDamage=0,time=0;
+      ids.forEach(id=>{let weight=1;const support=map[id].role==="support",ampIn=ids.filter(x=>x!==id&&map[x].role!=="support").reduce((sum,x)=>sum+this.characters.amp(x),0)/100;
         if(noSupport&&ids.length===3&&outro.from[id]+ampIn<this.characters.noSynergyMin){weight*=this.characters.noSynergyWeight;result.weak.push(id)}
         const need=this.db.needs(id);if(need&&!ids.some(x=>x!==id&&(this.synOf(x).m||[]).includes(need.m))){weight*=need.mul;result.needs.push(id)}
-        const value=this.characters.score(id)*weight*(1+outro.gain[id]);damage+=value;circuitDamage+=value*this.circuitMul(team,id).mul});
-      result.amp=ids.filter(id=>id!==main).reduce((sum,id)=>sum+(this.usesAmp(id)?this.characters.amp(id):(map[id].role==="support"?0:this.characters.amp(id))),0);
+        time+=this.characters.rot(id);if(support)return;
+        const personal=this.characters.damage(id),value=personal*weight*(1+outro.gain[id]);damage+=value;circuitDamage+=value*this.circuitMul(team,id).mul;result.parts.push({id,dmg:personal,rot:this.characters.rot(id),value})});
+      result.time=time;
+      result.amp=ids.filter(id=>id!==main).reduce((sum,id)=>sum+this.characters.amp(id),0);
       const synergy=this.teamSynergy(team),seen=new Set();let syn=0;synergy.links.forEach(link=>{if(link.k==="mech"&&!seen.has(link.tag)){seen.add(link.tag);syn+=this.characters.synergyBonus.mech}});
-      syn+=synergy.combos.length*this.characters.synergyBonus.combo;result.syn=Math.min(this.characters.synergyBonus.cap,syn);const multiplier=(1+result.amp/100)*(1+result.syn/100);
+      syn+=synergy.combos.length*this.characters.synergyBonus.combo;result.syn=Math.min(this.characters.synergyBonus.cap,syn);const multiplier=(1+result.amp/100)*(1+result.syn/100)*(time>0?this.strengthScale/time:0);
       result.base=damage*multiplier;result.total=circuitDamage*multiplier;result.circuit=result.total-result.base;return result}
     teamBase(team){return (this.cache.get(team)||this.teamCalc(team)).base}
     teamScore(team){return (this.cache.get(team)||this.teamCalc(team)).total}
