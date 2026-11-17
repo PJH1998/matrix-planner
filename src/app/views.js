@@ -286,7 +286,7 @@ async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
-  const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},targets=CharDB.supportTargets(id)||{},mainRef=gd[sc]||I.main[1];
+  const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},targets=echoCalculator.supportTargets(id),mainRef=gd[sc]||I.main[1];
   const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:c.role==="support"?targets[k]!=null?`${targets[k]}`:"–":k===sc?`${mainRef}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
   const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
   const bk=bonusKeysOf(id);

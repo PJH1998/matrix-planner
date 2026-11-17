@@ -268,3 +268,13 @@ test("서포터 전용 무기의 명시된 팀 버프는 장착했을 때만 적
     app.reset();
   }
 });
+
+test("복링 2체인과 도기 5체인 구름 세트의 공효 기준을 낮춘다", () => {
+  const app = loadCurrentApp();
+  app.reset({ growth: { buling: { chain: 2 }, taoqi: { chain: 5 } } });
+  assert.equal(app.supportProgress("buling").targets.er, 130);
+  assert.equal(app.supportProgress("taoqi").targets.er, 126);
+  app.reset({ growth: { taoqi: { chain: 5, echoSet: { mode: "5", a: "떠오르는 구름" } } } });
+  assert.equal(app.supportProgress("taoqi").targets.er, 100);
+  assert.equal(app.usefulStat("taoqi", "er"), false);
+});

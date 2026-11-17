@@ -24,6 +24,7 @@
                                 erNote: 돌파·조합에 따른 차이(표시용), erAdj: 자동 보정 [{set, n, d}] — 해당 세트를 n개 이상 끼면 최소치 + d
      statScale                  주 스탯(atk|hp|def). 딜러 피해 배율과 서포터 유효 옵션·요약 표시에 사용
      supportTargets             서포터의 비전투 최종 스탯 지원 기준 {atk|hp|def|er: 값}. 개인 피해용 크리티컬은 제외
+     supportTargetAdjust       체인·세트 조건에 따른 공효 기준 수정 [{chain, set?, er}]
      nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)
      wtype, weapons             무기 종류, 무기별 성능 [무기 id, 기준 재련, 성능 %] (Prydwen Build 탭)
      defaultWeaponId            기본 장착 추천 무기 id. 서포터는 전용 무기 또는 지원 운용 추천 무기

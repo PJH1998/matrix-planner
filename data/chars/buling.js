@@ -15,6 +15,7 @@ MP.addChar({
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{er:160,heal:48.4,atk:2400,src:13133},
   supportTargets:{atk:2400,er:160},
+  supportTargetAdjust:[{chain:2,er:130}], // 2체인 이후: 팀에 따라 공효 125~135% (Prydwen)
   defaultWeaponId:21050024,
   gb:1307,
   // 고유 스탯 노드 합계

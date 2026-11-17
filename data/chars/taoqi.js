@@ -19,6 +19,7 @@ MP.addChar({
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{def:4000,src:13018},
   supportTargets:{def:4000,er:126},
+  supportTargetAdjust:[{chain:5,set:"떠오르는 구름",er:100}], // 5체인 + 떠오르는 구름: 추가 공효 불필요 (Prydwen)
   defaultWeaponId:21010024,
   statScale:"def",
   gb:1601,
