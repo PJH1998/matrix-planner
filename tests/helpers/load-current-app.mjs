@@ -65,6 +65,9 @@ export function loadCurrentApp() {
       echoSet:id=>clone(echoSetOf(id)),
       echoes:id=>clone(echoesOf(id)),
       recommend:()=>clone(recommendationTestService.recommend()),
+      pairs:id=>clone(CharDB.pairs(id)),
+      guide:id=>clone(CharDB.guide(id)),
+      presets:()=>clone(window.MP.TEAM_PRESETS||[]),
       normalize:s=>clone(appStore.normalize(clone(s)))
     };
   })();`;
