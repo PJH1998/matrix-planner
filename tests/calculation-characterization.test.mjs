@@ -11,11 +11,11 @@ test("기본 캐릭터 데이터와 대표 강도 결과를 고정한다", () =>
   const app = loadCurrentApp();
 
   assert.equal(app.defaults().length, 61);
-  // 1.3.3: 딜러 점수 = 공명력(에코 미입력 = 에코 0), 서포터 점수 = 협주력(기준 세팅 = 100)
-  closeTo(app.charScore("hiyuki"), 16.929125818181816);
-  closeTo(app.charScore("cantarella"), 15.94926253687316);
-  closeTo(app.charScore("shorekeeper"), 86.82085077706749);
-  closeTo(app.charScore("jinhsi"), 15.844874213836478);
+  // 1.3.3: 딜러 점수 = 공명력, 서포터 점수 = 협주력(기준 세팅 = 100). 에코 미입력은 체험 세팅 기준 스탯
+  closeTo(app.charScore("hiyuki"), 95.43983369313185);
+  closeTo(app.charScore("cantarella"), 86.11000380911887);
+  closeTo(app.charScore("shorekeeper"), 97.87094737992825);
+  closeTo(app.charScore("jinhsi"), 103.73421121593287);
 
   assert.deepEqual(app.reference("hiyuki"), {
     sets: [["소리 없이 내려앉은 기도의 눈", 5]],
@@ -31,10 +31,10 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const app = loadCurrentApp();
   const teams = app.state().teams.slice(0, 4);
   const expected = [
-    ["camellya", 4.618726196371381, 6.116628094586464],
-    ["qingxiao", 10.793864835251332, 13.492331044064166],
-    ["jingran", 13.654928573330656, 15.27704508466358],
-    ["hsin", 12.28720585964559, 19.04516908245067],
+    ["camellya", 27.944933011231065, 36.97499186422595],
+    ["qingxiao", 66.23832843723189, 82.79791054653985],
+    ["jingran", 63.59063742236907, 71.16518308957548],
+    ["hsin", 70.21280676197273, 108.82985048105773],
   ];
 
   teams.forEach((team, index) => {
@@ -45,9 +45,9 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 1.1823793564036509);
-  closeTo(simulation.total, 5616.301942917342);
-  assert.equal(simulation.bad, 1);
+  closeTo(simulation.progress, 6.765934362208769);
+  closeTo(simulation.total, 42079.30246529725);
+  assert.equal(simulation.bad, 0);
 });
 
 test("에코 5세트의 스탯과 강도 환산 결과를 고정한다", () => {
@@ -99,10 +99,10 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
   assert.deepEqual(teams.map(team => `${team.slots.join("/")}:${team.buff}`), [
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:negative",
     "aemeath/lynae/mornye:negative", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
-    "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "jingran/lynae/verina:tune",
-    "sigrika/qiuyuan/lily:basic", "xuanling/chisa/suisui:negative", "zani/phoebe/verina:negative",
-    "jinhsi/zhezhi/shorekeeper:general", "lucy/rebecca/baizhi:tune", "xiangliyao/yinlin/buling:negative",
-    "camellya/sanhua/baizhi:general", "jiyan/mortefi/jianxin:general", "carlotta/lumi/buling:negative",
+    "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
+    "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "lucy/rebecca/verina:tune",
+    "jinhsi/zhezhi/shorekeeper:general", "zani/phoebe/baizhi:negative", "camellya/sanhua/baizhi:general",
+    "xiangliyao/yinlin/buling:negative", "jiyan/mortefi/jianxin:general", "carlotta/lumi/buling:negative",
   ]);
 });
 
@@ -313,10 +313,11 @@ test("서포터 체인은 버프력에 곱하고, 협주력은 기준 세팅이 
   assert.ok(app.charScore("mornye") >= m0);
 });
 
-test("에코 미입력은 에코 0으로 계산하고, 체험 세팅은 공식 가이드 스탯을 쓴다", () => {
+test("에코 미입력과 체험 세팅은 공식 가이드 스탯을 쓴다", () => {
   const app = loadCurrentApp();
-  const empty = app.charScore("jiyan");
-  assert.ok(empty < 40, `에코 0 공명력 ${empty}`);
+  // 에코도 스탯 직접 입력도 없으면 체험 세팅 기준 스탯(무기·체인은 사용자 설정)
+  closeTo(app.finalStats("jiyan").atk, 2200);
+  closeTo(app.finalStats("jiyan").cr, 70);
   app.reset({ growth: { jiyan: { trial: true } } });
   const sheet = app.finalStats("jiyan");
   closeTo(sheet.atk, 2200);

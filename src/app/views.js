@@ -190,10 +190,12 @@ function toggleOwned(id){const on=appMediator.characters.toggleOwned(id);
 /* ---------- profile: stats ---------- */
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
 function statSum(id){const c=charMap[id];if(c.role==="support"){const p=echoCalculator.supportProgress(id);return `지원 기준 ${p.met}/${p.total} 충족`}
-  const g=state.growth[id]||{},src=g.trial?"체험 세팅":echoesOf(id).length?"에코 세팅 사용 중":g.stats?"직접 입력":"에코 미입력 · 에코 0으로 계산";return `공명력 ${charScore(id).toFixed(0)} (${src})`}
+  const g=state.growth[id]||{},src=g.trial?"체험 세팅":echoesOf(id).length?"에코 세팅 사용 중":g.stats?"직접 입력":"에코 미입력 · 체험 세팅으로 계산";return `공명력 ${charScore(id).toFixed(0)} (${src})`}
 // 개인 점수 이름: 딜러 공명력 / 서포터 협주력. 표시 꼬리표: 체험 · 에코 미입력
 function scoreName(id){return charMap[id]&&charMap[id].role==="support"?"협주력":"공명력"}
-function scoreTag(id){const g=state.growth[id]||{};if(g.trial)return "체험";return !echoesOf(id).length&&!g.stats?"에코 미입력":""}
+function scoreTag(id){const g=state.growth[id]||{};if(g.trial)return "체험";return noEchoInput(id)?"체험 세팅":""}
+// 에코도 스탯 직접 입력도 없는 보유 공명자 → 체험 세팅 기준 스탯으로 계산 중
+function noEchoInput(id){const g=state.growth[id]||{};return !g.trial&&!echoesOf(id).length&&!g.stats}
 function trialChainNote(id){const ch=CharDB.trialSpec(id).chain;return ch==null?" · 공명 체인은 지금 설정":` · ${ch}체인`}
 
 /* ---------- profile: 에코 세팅 ----------
@@ -363,6 +365,7 @@ function renderProfile(){
     <div class="pf-toggles"><label class="pf-own"><input type="checkbox" class="sw" id="pfOwn" ${state.owned[id]?"checked":""}> 보유</label>
     <label class="pf-own" title="육성하지 않은 공명자는 매트릭스에서 게임이 주는 체험 세팅으로 씁니다"><input type="checkbox" class="sw" id="pfTrial" ${g.trial?"checked":""}> 체험 세팅 (육성 안 함)</label>
     <span class="pf-own" style="margin-left:auto" title="${c.role==="support"?"기준 세팅(지원 기준 충족 · 0체인 · 추천 무기)으로 주는 버프 = 100":"이잘키 기준 스탯의 피해 기대값 = 100"}">${scoreName(id)} <b id="pfScore" style="color:#e6c36a;font-family:var(--f-num);margin-left:4px">${charScore(id).toFixed(1)}</b><small id="pfScoreTag" class="pf-stag">${scoreTag(id)}</small></span></div>
+    <p class="pf-trial" id="pfNoEcho" ${noEchoInput(id)?"":"hidden"}>에코를 입력하지 않아 <b>체험 세팅(공식 가이드 추천 스탯)</b>으로 계산합니다. 에코를 입력하면 더 정확해집니다.</p>
     ${g.trial?`<p class="pf-trial">매트릭스 체험 세팅으로 계산합니다: <b>90레벨 · ${wp.w?esc(wp.w.name):"상시 무기"} R1 · 공식 가이드 추천 스탯</b>${trialChainNote(id)}. 계산 기준 탭에서 자세히 볼 수 있습니다.</p>`:""}
     <div class="pf-row2">
      <div class="${g.trial?"pf-hide":""}"><div class="pf-sec"><span>레벨</span><b>Lv.${lv}</b></div>

@@ -53,9 +53,11 @@
       const ref={cr:ijk.cr,cd:ijk.cd,el:this.elRefOf(id)};ref[ijk.main[0]]=ijk.main[1];
       Object.entries(Object.assign(ref,spec.stats||{})).forEach(([k,v])=>out[k]=+v);this.bonusKeysOf(id).filter(k=>k!=="el").forEach(k=>out.types[k]=(out.types[k]||0)+this.typeRef);
       return this.addChainStats(id,out,this.chainOf(id))}
-    /* 최종 스탯: 필드에 꺼낸 상태의 정보창 값. 에코(없으면 에코 0) + 상시 체인 스탯.
+    /* 에코도 스탯 직접 입력도 없으면 체험 세팅 기준 스탯으로 계산한다(무기·체인은 사용자 설정) */
+    usesTrialStats(id){const growth=this.state().growth[id]||{};return !!growth.trial||(!this.echoesOf(id).length&&!growth.stats)}
+    /* 최종 스탯: 필드에 꺼낸 상태의 정보창 값. 에코 + 상시 체인 스탯. 에코 미입력이면 체험 세팅 기준 스탯.
        스탯 직접 입력은 게임 화면 값을 옮겨 적은 것이라 체인 스탯을 더하지 않는다. */
-    finalStats(id){const growth=this.state().growth[id]||{};if(growth.trial)return this.trialStats(id);
+    finalStats(id){const growth=this.state().growth[id]||{};if(this.usesTrialStats(id))return this.trialStats(id);
       const sheet=this.sheetStats(id);if(!this.echoesOf(id).length&&growth.stats)return sheet;return this.addChainStats(id,sheet,this.chainOf(id))}
     /* 이잘키 기준 스탯에 n체인까지의 상시 체인 스탯을 더했을 때의 피해 배율 (체인 배율에서 이 몫을 뺀다) */
     chainStatMul(id,chain){const rows=this.db.chainStats(id).filter(row=>row.chain<=chain);if(!rows.length)return 1;

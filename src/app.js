@@ -2,6 +2,8 @@
 /* ---------- routing ---------- */
 const VIEWS=["plan","roster","invest","records","method","updates","cycle","data"];
 document.getElementById("cycleTab").hidden=!IS_ADMIN;
+// 로고 옆 버전: updates.js의 가장 최근 항목
+{const el=document.getElementById("appVer"),u=(window.UPDATES||[])[0];if(el&&u)el.textContent="v"+u.ver}
 function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});

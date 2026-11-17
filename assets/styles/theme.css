@@ -32,6 +32,9 @@ header.top::after{content:"";position:absolute;left:0;bottom:-1px;width:180px;he
 .brand .hex{width:30px;height:30px;color:var(--accent);flex:none;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--accent) 50%,transparent))}
 .brand h1{font-family:var(--f-body);font-weight:700;font-size:24px;letter-spacing:.01em;color:var(--accent);text-shadow:0 0 14px color-mix(in srgb,var(--accent) 35%,transparent)}
 .brand small{font-family:var(--f-num);letter-spacing:.14em}
+.brand .ver{color:var(--muted);font-family:var(--f-num);font-size:12px;letter-spacing:.04em;margin-left:-4px}
+.brand h1,.brand .ver{white-space:nowrap;flex:none}
+@media (max-width:600px){.brand{flex-wrap:wrap;row-gap:2px}}
 nav.tabs{gap:2px}
 nav.tabs a{border-radius:2px;border:0;border-bottom:2px solid transparent;padding:7px 14px}
 nav.tabs a[aria-current="page"]{background:linear-gradient(to top,color-mix(in srgb,var(--accent) 18%,transparent),transparent);color:var(--fg);border-bottom-color:var(--accent)}

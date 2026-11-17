@@ -248,7 +248,7 @@ $("#prof").addEventListener("change",e=>{
     a[i]=e2;return saveEchoes(profId,a)}
   if(e.target.dataset.st){const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({b:{}},g.stats||{});const v=e.target.value===""?null:+e.target.value;
     if(e.target.dataset.grp==="b"){st.b=Object.assign({},st.b);if(v==null)delete st.b[e.target.dataset.st];else st.b[e.target.dataset.st]=v}else{if(v==null)delete st[e.target.dataset.st];else st[e.target.dataset.st]=v}
-    persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);$("#pfScoreTag").textContent=scoreTag(profId);renderRoster();rerenderPlan();return}
+    persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);$("#pfScoreTag").textContent=scoreTag(profId);$("#pfNoEcho").hidden=!noEchoInput(profId);renderRoster();rerenderPlan();return}
   if(e.target.id==="pfLv"||e.target.id==="pfLvN")return setGrowth(profId,{lv:clamp(+e.target.value||90,1,90)});
   if(e.target.id==="pfTrial")return setGrowth(profId,{trial:e.target.checked});
   if(e.target.id==="pfOwn"){if(!!state.owned[profId]!==e.target.checked)toggleOwned(profId);renderProfile();}
