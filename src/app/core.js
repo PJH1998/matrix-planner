@@ -34,7 +34,7 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
   if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&CharDB.profile(id)))return 1;
   return 0;}
 function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
-  return (d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
+  return (d.ids||[]).includes(id)||(d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
 function teamMeets(k,t){const d=COND[k];const n=t.slots.filter(id=>id&&charMeets(k,id)).length;return n>=((d&&d.min)||1)}
 // 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
 function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return false;if(d.scope==="team")return teamMeets(k,t);

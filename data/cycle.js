@@ -36,7 +36,7 @@ window.MATRIX_CYCLE={
     {kind:"threat",dmg:-20,text:"받는 피해 20% 감소"}]},
   {name:"데니아",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다. 이상 효과 파티가 유리합니다.",effects:[
     {kind:"benefit",tags:["negative"],dmg:25,cond:"anomDmg",text:"받는 모든 이상 효과 피해 최종 25% 증가"},
-    {kind:"benefit",tags:["frost"],dmg:30,cond:"frost",text:"「서리의 매듭」을 받으면 받는 최종 피해 30% 증가 (15초)"}]},
+    {kind:"benefit",tags:["frostKnot"],dmg:30,cond:"frostKnot",text:"히유키의 「서리의 매듭」을 받으면 받는 최종 피해 30% 증가 (15초)"}]},
   {name:"크라운리스",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
     {kind:"benefit",tags:["unison"],dmg:40,cond:"unison",text:"합일 대응을 발동한 공명자가 주는 피해 최종 40% 증가 (30초)"}]},
   {name:"시길룸",res:"spectro",note:"회절 메인 딜러는 피하는 편이 좋습니다. 에코 어빌리티를 자주 맞히는 파티가 유리합니다.",effects:[
