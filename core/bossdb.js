@@ -6,7 +6,7 @@
    ===================================================================== */
 (function(g){
   const MP=g.MP;
-  const EMPTY={name:"",period:"",bosses:[],buffs:[],vigor2:[],emergency:null,dmgBonus:{},examples:[]};
+  const EMPTY={name:"",period:"",bosses:[],buffs:[],vigor2:[],emergency:null,dmgBonus:{},partyBonus:{},examples:[]};
   /* 보스 HP·점수 (2026-11-16 재보정 — 상위권 플레이 영상의 파티별 점수·보스 HP 14건)
      점수 = 준 피해(1R 보스 HP 단위) × 4,750점 × 라운드 점수 배율(1R 1.0 / 2R 1.1 / 3R 이후 1.25, 게임 표기).
      라운드별 보스 HP: 2R 1.77배, 3R 3.36배(영상의 라운드별 점수 ÷ 점수 배율), 4R 이후는 라운드마다 ×2.1로 가정(측정 없음).
@@ -28,6 +28,7 @@
     buff:id=>DB.buffs().find(b=>b.id===id),
     examples:()=>DB.defaultCycle().examples||[],
     dmgBonus:id=>(DB.cycle().dmgBonus||{})[id],
+    partyBonus:()=>DB.cycle().partyBonus||{},
     // 배치 가능 횟수: 기본 1, 2회 공명자 2, 긴급 공명자는 추가
     vigor(id){const c=DB.cycle();let v=(c.vigor2||[]).includes(id)?2:1;if(c.emergency&&c.emergency.id===id)v+=(c.emergency.extraVigor||1);return v},
     /* 전투 수치 */

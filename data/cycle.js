@@ -21,13 +21,14 @@
    vigor2            배치 2회 공명자 id 목록
    emergency         긴급 공명자 {id, extraVigor, note} (없으면 null)
    dmgBonus          공명자별 피해 증가 % {id: 수치}
+   partyBonus        공명 해방 후 파티 전체에 주는 피해 보너스 {id: {dmg, cond, text}} (그 공명자가 파티에 있으면 적용)
    source            출처 (주기 패널 아래 표시)
    examples          처음 방문자에게 보여 줄 예시 파티 [{slots:[id,id,id], buff:buffs의 id}]
    ===================================================================== */
 window.MATRIX_CYCLE={
  name:"S2 위험한 경지의 강습 · 4페이즈 (3.8)",
- period:"2026-11-19 ~ 3.8 버전 종료",
- endsAt:"2026-12-31T04:00:00+08:00",
+ period:"2026-11-19 ~ 2026-12-22",
+ endsAt:"2026-12-22T04:00:00+08:00",
  bosses:[
   {name:"폭주의 고릴라",res:"aero",note:"기류 메인 딜러는 피하는 편이 좋습니다. 조화도 파괴 파티가 유리합니다.",effects:[
     {kind:"benefit",tags:["tunability"],text:"조화도 파괴를 당하면 받는 피해 12.5% 증가 (전투 끝까지, 최대 4중첩)"},
@@ -53,6 +54,12 @@ window.MATRIX_CYCLE={
  vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling","lily"],
  emergency:{id:"lucilla",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
  dmgBonus:{roccia:20,brant:25,cantarella:25,camellya:25,phoebe:20,carlotta:25,zhezhi:20,yinlin:20,jinhsi:25,changli:25,jiyan:25,xiangliyao:25},
+ partyBonus:{
+  zhezhi:{dmg:30,cond:"skill",text:"절지 공명 해방 후 파티 공명 스킬 피해 +30% (30초)"},
+  yinlin:{dmg:30,cond:"lib",text:"음림 공명 해방 후 파티 공명 해방 피해 +30% (30초)"},
+  roccia:{dmg:20,cond:"havoc",text:"로코코 공명 해방 후 파티 인멸 피해 +20% (30초)"},
+  phoebe:{dmg:20,cond:"spectro",text:"페비 공명 해방 후 파티 회절 피해 +20% (30초)"}
+ },
  source:"게임 내 정보 (2026년 11월 19일 기준)",
  examples:[
  {slots:["camellya","sanhua","verina"],buff:"general"},

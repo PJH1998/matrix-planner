@@ -22,8 +22,10 @@
           const add=(receiver,party)=>{const amount=this.outroGain(giver,receiver,ids);if(amount<=0)return;gain[receiver]+=amount;if(receiver!==giver)from[receiver]+=amount;value+=this.characters.damage(receiver)*amount;links.push({from:giver,to:receiver,e:amount,party})};
           if(this.synOf(giver).p)ids.forEach(receiver=>add(receiver,1));else if(order.length>1)add(order[(order.indexOf(giver)+1)%order.length],0)});return {gain,from,links,val:value}};
       const a=run(ids),b=ids.length>2?run([ids[0],ids[2],ids[1]]):a;return a.val>=b.val?a:b}
-    circuitMul(team,id){const buff=this.selectedBuff(team);if(!buff)return {mul:1,hits:[]};let add=0;const hits=[];
-      (buff.effects||[]).forEach(effect=>{const value=+effect.dmg||0,weight=value?this.condWeight(effect.cond,team,id):0;if(weight>0){add+=value*weight;hits.push(effect.text+(weight<1?` (${Math.round(weight*100)}% 적용)`:""))}});return {mul:1+add/100,hits}}
+    // 파워 서킷 + 파티 보너스(공명 해방 후 파티 버프, cycle.partyBonus — 그 공명자가 파티에 있을 때)
+    circuitMul(team,id){const buff=this.selectedBuff(team),party=this.bossDb.partyBonus?this.bossDb.partyBonus():{};
+      const effects=[...((buff&&buff.effects)||[]),...team.slots.filter(x=>x&&party[x]).map(x=>party[x])];if(!effects.length)return {mul:1,hits:[]};let add=0;const hits=[];
+      effects.forEach(effect=>{const value=+effect.dmg||0,weight=value?this.condWeight(effect.cond,team,id):0;if(weight>0){add+=value*weight;hits.push(effect.text+(weight<1?` (${Math.round(weight*100)}% 적용)`:""))}});return {mul:1+add/100,hits}}
     setFxGain(effect,id){return this.characters.supports.setFxGain(effect,id)}
     // 메인 = 파티 딜러 중 개인 피해가 가장 큰 공명자 (딜러가 없으면 첫 공명자)
     mainDps(team){const ids=team.slots.filter(Boolean);if(!ids.length)return null;const map=this.charMap(),dealers=ids.filter(id=>map[id]&&map[id].role!=="support");
