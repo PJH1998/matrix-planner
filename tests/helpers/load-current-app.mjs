@@ -33,7 +33,8 @@ export function loadCurrentApp() {
   for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
-  for (const file of ["data/cycle.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js", "data/trial.js"]) run(context, file);
+  // 특성 테스트는 주기가 바뀌어도 값이 그대로여야 하므로 보관한 3.7 주기로 고정한다 (data/cycle.js는 문법 확인용으로만 먼저 읽는다)
+  for (const file of ["data/cycle.js", "data/archive/cycle-3.7-s2p3.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js", "data/trial.js"]) run(context, file);
   for (const file of ["core/chardb.js", "core/bossdb.js", "core/echodb.js"]) run(context, file);
 
   const appSource = fs.readFileSync(path.join(ROOT, "src/app/core.js"), "utf8");
