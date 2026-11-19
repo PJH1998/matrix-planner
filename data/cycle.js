@@ -25,23 +25,21 @@
    examples          처음 방문자에게 보여 줄 예시 파티 [{slots:[id,id,id], buff:buffs의 id}]
    ===================================================================== */
 window.MATRIX_CYCLE={
- name:"S2 적대의 선봉 · 3페이즈 (3.7)",
- period:"2026-10-07 ~ 2026-11-19",
- endsAt:"2026-11-19T04:00:00+08:00",
+ name:"S2 위험한 경지의 강습 (3.8)",
+ period:"2026-11-19 ~ 3.8 버전 종료",
+ endsAt:"2026-12-31T04:00:00+08:00",
  bosses:[
-  {name:"지옥불 기사",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["shield"],text:"공명자가 보호막을 가지고 있으면 받는 피해가 줄어듭니다. (보스의 화상 지속 피해가 HP 50% 초과 또는 보호막 보유 시 90% 감소)"},
-    {kind:"threat",round:"2R+",text:"공중에 있지 않은 주변 공명자에게 용융 지속 피해"}]},
-  {name:"봉정계유",res:"glacio",note:"응결 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["shield"],text:"공명자가 실드를 얻으면 보스가 받는 피해 증가 (최대 40%)"},
-    {kind:"benefit",tags:["dodge"],text:"회피 반격마다 공명 에너지 10 회복, 진동 강도 20% 감소 (2초 쿨타임)"},
-    {kind:"threat",round:"2R+",text:"공격력 30% 증가"}]},
+  {name:"폭주의 고릴라",res:"aero",note:"기류 메인 딜러는 피하는 편이 좋습니다. 조화도 파괴 파티가 유리합니다.",effects:[
+    {kind:"benefit",tags:["tunability"],text:"조화도 파괴를 당하면 받는 피해 12.5% 증가 (전투 끝까지, 최대 4중첩)"},
+    {kind:"threat",text:"받는 피해 20% 감소"}]},
+  {name:"데니아",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다. 이상 효과 파티가 유리합니다.",effects:[
+    {kind:"benefit",tags:["negative"],text:"받는 모든 이상 효과 피해 최종 25% 증가"},
+    {kind:"benefit",tags:["frost"],text:"「서리의 매듭」을 받으면 받는 최종 피해 30% 증가 (15초)"}]},
   {name:"크라운리스",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
-    {kind:"benefit",tags:["unison"],text:"합일 대응을 발동한 공명자에게 받는 모든 피해 40% 증가 (30초)"},
-    {kind:"threat",round:"2R+",text:"진동 강도 감소 효율 20% 감소"}]},
-  {name:"하늘의 기관 인형 - 겁살",res:"aero",note:"전도 이상 효과를 걸 수 있는 파티가 유리합니다.",effects:[
-    {kind:"benefit",tags:["dodge"],text:"회피 반격 명중 시 불굴 2중첩 (경직·제어 무효, 피격마다 1중첩 소모, 1초에 최대 1회)"},
-    {kind:"threat",round:"2R+",tags:["electro","negative"],text:"공격력 40% 증가. 전도 이상(Electro Flare) 상태에서는 해제"}]},
+    {kind:"benefit",tags:["unison"],text:"합일 대응을 발동한 공명자가 주는 피해 최종 40% 증가 (30초)"}]},
+  {name:"시길룸",res:"spectro",note:"회절 메인 딜러는 피하는 편이 좋습니다. 에코 어빌리티를 자주 맞히는 파티가 유리합니다.",effects:[
+    {kind:"benefit",tags:["echo"],text:"에코 어빌리티 명중 시 「항로 이탈」 1중첩: 받는 최종 피해 10%씩 증가, 5중첩이면 추가 30% (같은 이름의 에코는 1회만)"},
+    {kind:"threat",text:"받는 피해 최종 25% 감소"}]},
   {name:"매트릭스 미믹",res:null,hpMul:1.1,scoreMul:1.1,killBonus:1000,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
     {kind:"benefit",tags:["any"],text:"준 피해가 1.1배 점수로 계산, 처치 시 1,000점 (S2 한정)"},
     {kind:"benefit",text:"처치 후 15초간 파티 전체 피해·경직 무효"}]}
