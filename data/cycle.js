@@ -25,7 +25,7 @@
    examples          처음 방문자에게 보여 줄 예시 파티 [{slots:[id,id,id], buff:buffs의 id}]
    ===================================================================== */
 window.MATRIX_CYCLE={
- name:"S2 위험한 경지의 강습 (3.8)",
+ name:"S2 위험한 경지의 강습 · 4페이즈 (3.8)",
  period:"2026-11-19 ~ 3.8 버전 종료",
  endsAt:"2026-12-31T04:00:00+08:00",
  bosses:[
@@ -45,15 +45,15 @@ window.MATRIX_CYCLE={
     {kind:"benefit",text:"처치 후 15초간 파티 전체 피해·경직 무효"}]}
  ],
  buffs:[
-  {id:"general",name:"일반 강화",type:"일반 공격",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 일반 공격 피해 +20%",dmg:20,cond:"basic"}]},
-  {id:"negative",name:"강화: 이상 효과",type:"이상효과",effects:[{text:"이상 효과에 걸린 대상이 받는 모든 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"추가로 전도 피해 +30%",dmg:30,cond:"electro"}]},
-  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 스킬 피해 +40%",dmg:40,cond:"echo"},{text:"합일 대응 발동 시 모든 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +11% (2초, 최대 5중첩)",dmg:11,cond:"shield"}]},
-  {id:"tune",name:"강화: 조화도 파괴",type:"조화 밀집",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"해킹 이탈 부여 시 해당 공명자 피해 +30% (30초)",dmg:30,cond:"hack"}]}
+  {id:"general",name:"공용 강화",type:"일반",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 공명 해방 피해 +20%",dmg:20,cond:"lib"}]},
+  {id:"negative",name:"이상 효과 강화",type:"이상효과",effects:[{text:"이상 효과를 건 대상이 받는 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"적이 받는 서리 효과 피해 +80%",dmg:80,cond:"frost"}]},
+  {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 어빌리티 피해 +65%",dmg:65,cond:"echo"},{text:"합일 대응 발동 시 주는 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +25% (2초)",dmg:25,cond:"shield"}]},
+  {id:"tune",name:"조화도 파괴 강화",type:"조화",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"조화 파동 피해를 준 뒤 주는 피해 +30% (30초)",dmg:30,cond:"tuneW"}]}
  ],
  vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling","lily"],
- emergency:{id:"lynae",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
+ emergency:{id:"lucilla",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},
  dmgBonus:{roccia:20,brant:25,cantarella:25,camellya:25,phoebe:20,carlotta:25,zhezhi:20,yinlin:20,jinhsi:25,changli:25,jiyan:25,xiangliyao:25},
- source:"Game8, TOPUPlive의 3.7 종말 매트릭스 공략 (2026년 10월 기준)",
+ source:"게임 내 정보 (2026년 11월 19일 기준)",
  examples:[
  {slots:["camellya","sanhua","verina"],buff:"general"},
   {slots:["qingxiao","denia","mornye"],buff:"tune"},
