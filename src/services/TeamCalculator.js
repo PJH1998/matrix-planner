@@ -62,13 +62,16 @@
     teamScore(team){return (this.cache.get(team)||this.teamCalc(team)).total}
     skillMul(){return (this.skillLevels[this.state().skill]||this.skillLevels.top).mul}
     partyDamage(score){return Math.pow(Math.max(0,score)/this.strengthRef,this.damageExp)*this.skillMul()}
+    // 보스 효과(cycle.bosses[].effects[].dmg/cond) 배율: 효과마다 (1 + dmg × 파티 딜러 피해 중 조건 비중), 효과끼리는 곱한다 (최종 피해 배율)
+    bossMul(team,boss){const map=this.charMap(),dealers=team.slots.filter(id=>id&&map[id]&&map[id].role!=="support"),dmg=dealers.map(id=>this.characters.damage(id)),sum=dmg.reduce((a,b)=>a+b,0);
+      return (boss.effects||[]).reduce((mul,effect)=>{const value=+effect.dmg||0;if(!value)return mul;const weight=!effect.cond?1:sum>0?dealers.reduce((a,id,i)=>a+dmg[i]*this.condWeight(effect.cond,team,id),0)/sum:0;return mul*(1+value*weight/100)},1)}
     simulate(teams){const bosses=this.bossDb.bosses(),live=teams.filter(team=>team.slots.some(Boolean)),res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
       const bossHp=this.bossDb.hp;let bossIndex=0,round=1,hp=bossHp(bosses[0],1),progress=0,bad=0;
       teams.forEach((team,teamIndex)=>{if(!team.slots.some(Boolean))return;const main=this.mainDps(team),element=main&&this.charMap()[main].el;let damage=this.partyDamage(this.teamScore(team));
-        while(damage>1e-9&&round<=this.maxRounds){const boss=bosses[bossIndex],resistance=this.bossDb.resMul(boss,element);if(!res[teamIndex].hits.length&&resistance<1)bad++;
+        while(damage>1e-9&&round<=this.maxRounds){const boss=bosses[bossIndex],resistance=this.bossDb.resMul(boss,element),eff=resistance*this.bossMul(team,boss);if(!res[teamIndex].hits.length&&resistance<1)bad++;
           const maxHp=bossHp(boss,round),hit={name:boss.name,round,resisted:resistance<1,from:hp/maxHp*100,left:0,pts:0};res[teamIndex].hits.push(hit);const points=dealt=>this.bossDb.points(dealt,boss,round);
-          if(damage*resistance>=hp){damage-=hp/resistance;progress+=hp/maxHp;hit.pts=points(hp)+this.bossDb.killBonus(boss);bossIndex++;if(bossIndex>=bosses.length){bossIndex=0;round++}hp=bossHp(bosses[bossIndex],round)}
-          else{hp-=damage*resistance;progress+=damage*resistance/maxHp;hit.pts=points(damage*resistance);hit.left=hp/maxHp*100;damage=0}}});
+          if(damage*eff>=hp){damage-=hp/eff;progress+=hp/maxHp;hit.pts=points(hp)+this.bossDb.killBonus(boss);bossIndex++;if(bossIndex>=bosses.length){bossIndex=0;round++}hp=bossHp(bosses[bossIndex],round)}
+          else{hp-=damage*eff;progress+=damage*eff/maxHp;hit.pts=points(damage*eff);hit.left=hp/maxHp*100;damage=0}}});
       res.forEach(result=>result.pts=result.hits.reduce((sum,hit)=>sum+hit.pts,0));return {progress,res,bad,total:res.reduce((sum,result)=>sum+result.pts,0)}}
     permutations(values){if(values.length<=1)return [values];const out=[];values.forEach((value,index)=>this.permutations(values.slice(0,index).concat(values.slice(index+1))).forEach(row=>out.push([value].concat(row))));return out}
     bestOrder(){this.cache.clear();this.state().teams.forEach(team=>this.cache.set(team,this.teamCalc(team)));try{return this.bestOrderInternal()}finally{this.cache.clear()}}

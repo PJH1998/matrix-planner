@@ -25,6 +25,7 @@ const dmgShare=(id,types)=>CharDB.shareOf(id,types);
 // 효과 하나가 공명자 id에게 걸리는 비율(0~1). 피해 유형 조건(일반 공격 피해 +20% 등)은 그 공명자 피해 중 해당 유형 비중만큼만 적용한다.
 function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||!c)return 0;
   if(d.scope==="team")return teamMeets(k,t)?1:0;
+  if(d.mReq&&!d.mReq.some(x=>(synOf(id).m||[]).includes(x)))return 0;
   if(d.min&&t.slots.filter(x=>x&&(synOf(x).m||[]).some(m=>(d.m||[]).includes(m))).length<d.min)return 0;
   if((d.el||[]).includes(c.el))return 1;
   const S=synOf(id);
