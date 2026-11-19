@@ -4,7 +4,7 @@ MP.addChar({
   release:75, eid:1311,  // 출시 순서 · encore.moe 번호(이미지)
 
   // 반주·메커니즘
-  syn:{o:"합일 모드: 합일 보유 캐릭터 전체 피해 +20% (30초) · 전자 모드: 파티 전도 피해 +20% (20초)",ob:["all","el"],p:1,w:["skill"],m:["unison","flare"]},
+  syn:{o:"합일 모드: 합일 보유 캐릭터 전체 피해 +20% (30초) · 전자 모드: 파티 전도 피해 +20% (20초)",ob:["all","el"],p:1,w:["skill"],m:["unison","flare"],modes:[["unison"],["flare"]]},
   // 반주 버프 수치(%)
   outro:{v:{el:20},cond:{m:["unison"],to:1,v:{all:20}}},
   // 피해 비중(%)

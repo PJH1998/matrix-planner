@@ -4,7 +4,7 @@ MP.addChar({
   release:62, eid:1210,  // 출시 순서 · encore.moe 번호(이미지)
 
   // 반주·메커니즘
-  syn:{o:"파티 전체 피해 +10%, 조화 파동 이탈·불꽃 효과 부여 시 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW","burn"]},
+  syn:{o:"파티 전체 피해 +10%, 조화 파동 이탈·불꽃 효과 부여 시 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW","burn"],modes:[["burn"],["tuneW"]]},
   // 반주 버프 수치(%)
   outro:{v:{all:10},cond:{m:["burn","tuneW"],v:{all:20}}},
   // 피해 비중(%)

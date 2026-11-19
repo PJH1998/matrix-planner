@@ -50,7 +50,7 @@ window.MATRIX_CYCLE={
   {id:"general",name:"공용 강화",type:"일반",effects:[{text:"적이 받는 모든 피해 +20%",dmg:20},{text:"적이 받는 공명 해방 피해 +20%",dmg:20,cond:"lib"}]},
   {id:"negative",name:"이상 효과 강화",type:"이상효과",effects:[{text:"이상 효과를 건 대상이 받는 피해 +25% (30초)",dmg:25,cond:"negative"},{text:"적이 받는 서리 효과 피해 +80%",dmg:80,cond:"frostDmg"}]},
   {id:"basic",name:"기본 피해 강화",type:"에코 어빌리티 · 합일 · 실드",effects:[{text:"에코 어빌리티 피해 +65%",dmg:65,cond:"echo"},{text:"합일 대응 발동 시 주는 피해 +55% (30초)",dmg:55,cond:"unison"},{text:"실드 획득 시 피해 +25% (2초)",dmg:25,cond:"shield"}]},
-  {id:"tune",name:"조화도 파괴 강화",type:"조화",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"조화 파동 피해를 준 뒤 주는 피해 +30% (30초)",dmg:30,cond:"tuneW"}]}
+  {id:"tune",name:"조화도 파괴 강화",type:"조화",effects:[{text:"조화도 이탈 부여 시 파티 전체 피해 +25% (30초)",dmg:25,cond:"tunability"},{text:"조화 파동 피해를 준 공명자가 주는 피해 +30% (30초)",dmg:30,cond:"tuneWSelf"}]}
  ],
  vigor2:["shorekeeper","mornye","verina","suisui","baizhi","buling","lily"],
  emergency:{id:"lucilla",extraVigor:1,note:"이번 페이즈 한정 배치 횟수 +1"},

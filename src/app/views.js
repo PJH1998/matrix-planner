@@ -95,13 +95,14 @@ function teamWarnings(t){
   // 보스별 유리/불리: 보스 특성 태그(실드·합일·전자 효과 등)를 이 파티가 만족하면 유리, 메인 딜러 속성을 보스가 저항하면 불리
   const buff=selBuff(t);const btags=new Set(buff?(buff.effects||[]).map(e=>e.cond).filter(Boolean):[]);
   const md=mainDps(t),mel=md&&charMap[md].el;
-  // 이상 효과 쪽과 에코 쪽은 한 파티가 둘 중 하나로 굴린다(예: 루실라 서리/에코 모드). 둘 다 맞으면 파워 서킷으로 비교해 센 쪽만 표시
-  const grp=k=>k==="echo"?"echo":(k==="negative"||k==="anomDmg"||ANOM.includes(k))?"anom":null;
-  const meets=(cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[])).filter(x=>COND[x]&&teamMeets(x,t)).map(grp);
-  const drop=meets.includes("anom")&&meets.includes("echo")?(teamCalc({...t,buff:"negative"}).total>=teamCalc({...t,buff:"basic"}).total?"echo":"anom"):null;
+  // 모드가 둘인 공명자(syn.modes: 루실라 서리/에코, 에이메스 불꽃/조화 파동 등)는 한 모드로만 굴린다.
+  // 고른 파워 서킷과 겹치는 모드, 없으면 첫 모드 기준으로 유리 표시를 판정한다.
+  const bm=new Set(buff?(buff.effects||[]).flatMap(e=>{const d=COND[e.cond];return d?[...(d.m||[]),...(d.w||[]),...(d.el||[])]:[]}):[]);
+  const ov={};ids.forEach(id=>{const ms=synOf(id).modes;if(ms&&ms.length)ov[id]=ms.find(m=>m.some(x=>bm.has(x)))||ms[0]});
+  const meetsT=k=>{const d=COND[k];return ids.filter(id=>charMeets(k,id,ov[id])).length>=((d&&d.min)||1)};
   if(ids.length)(cycle.bosses||[]).forEach(b=>{
     const tags=(b.effects||[]).flatMap(f=>f.tags||[]).filter(x=>COND[x]);
-    const good=tags.filter(x=>teamMeets(x,t)&&grp(x)!==drop);
+    const good=tags.filter(x=>meetsT(x));
     const bad=b.res&&b.res===mel;
     if(bad)out.push(`<span class="chip bad" title="메인 딜러(${esc(charMap[md].name)}) 속성 ${EL[mel]}을 이 보스가 저항합니다">${esc(b.name)} 불리</span>`);
     else if(good.length)out.push(`<span class="chip g" title="보스 특성과 맞는 요소: ${esc([...new Set(good)].map(x=>COND[x].label).join(", "))}">${esc(b.name)} 유리</span>`);

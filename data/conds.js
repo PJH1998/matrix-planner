@@ -30,6 +30,7 @@ g.MP.CONDS={
   frazzle:{label:"광학 효과",scope:"team",m:["frazzle"]}, bane:{label:"암흑 효과",scope:"team",m:["bane"]},
   tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW"]},
   tuneD:{label:"조화 밀집",scope:"team",m:["tuneD"]}, tuneW:{label:"조화 파동",scope:"team",m:["tuneW"]},
+  tuneWSelf:{label:"조화 파동 피해를 준 공명자",scope:"char",dealer:1,m:["tuneW"]},
   hack:{label:"해킹",scope:"char",m:["hack"]},
   unison:{label:"합일",scope:"char",m:["unison"],min:2}, // 합일 대응: 합일 공명자 본인만, 파티에 합일 공명자가 2명 이상일 때
   shield:{label:"실드",scope:"team",m:["shield"]}
