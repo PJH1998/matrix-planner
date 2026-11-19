@@ -4,7 +4,8 @@ MP.addChar({
   release:57, eid:1508,  // 출시 순서 · encore.moe 번호(이미지)
 
   // 반주·메커니즘
-  syn:{o:"파티 전체 이상 효과·자기 폭발 최대 스택 +3 (20초)",ob:[],p:1,w:["lib"],m:["anom","bane"]},
+  shieldUp:0.9, // 실드 유지율(예측치, 0~1)
+  syn:{o:"파티 전체 이상 효과·자기 폭발 최대 스택 +3 (20초)",ob:[],p:1,w:["lib"],m:["anom","bane","shield"]},
   // 피해 비중(%)
   profile:{basic:2.7,heavy:4.3,skill:4.1,lib:84.5,intro:2.6,echo:1.8},
   // S0 기본 DPS

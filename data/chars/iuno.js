@@ -4,6 +4,7 @@ MP.addChar({
   release:51, eid:1410,  // 출시 순서 · encore.moe 번호(이미지)
 
   // 반주·메커니즘
+  shieldUp:0.9, // 실드 유지율(예측치, 0~1)
   syn:{o:"다음 캐릭터 강공격 피해 +50% (14초)",ob:["heavy"],w:["lib"],m:["shield"]},
   // 반주 버프 수치(%)
   outro:{v:{heavy:50}},

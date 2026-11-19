@@ -23,9 +23,12 @@
           if(this.synOf(giver).p)ids.forEach(receiver=>add(receiver,1));else if(order.length>1)add(order[(order.indexOf(giver)+1)%order.length],0)});return {gain,from,links,val:value}};
       const a=run(ids),b=ids.length>2?run([ids[0],ids[2],ids[1]]):a;return a.val>=b.val?a:b}
     // 파워 서킷 + 파티 보너스(공명 해방 후 파티 버프, cycle.partyBonus — 그 공명자가 파티에 있을 때)
+    // 효과 유지율: 실드 조건 효과는 파티 실드 공명자의 shieldUp 중 최댓값(없으면 effect.up), 그 밖엔 effect.up(없으면 1)
+    upOf(effect,team){const base=effect.up==null?1:+effect.up;if(effect.cond!=="shield")return base;
+      const best=Math.max(0,...team.slots.filter(Boolean).map(id=>this.db.shieldUp?this.db.shieldUp(id):0));return best>0?best:base}
     circuitMul(team,id){const buff=this.selectedBuff(team),party=this.bossDb.partyBonus?this.bossDb.partyBonus():{};
       const effects=[...((buff&&buff.effects)||[]),...team.slots.filter(x=>x&&party[x]).map(x=>party[x])];if(!effects.length)return {mul:1,hits:[]};let add=0;const hits=[];
-      effects.forEach(effect=>{const value=+effect.dmg||0,weight=value?this.condWeight(effect.cond,team,id):0;if(weight>0){add+=value*weight;hits.push(effect.text+(weight<1?` (${Math.round(weight*100)}% 적용)`:""))}});return {mul:1+add/100,hits}}
+      effects.forEach(effect=>{const value=+effect.dmg||0,up=this.upOf(effect,team),weight=value?this.condWeight(effect.cond,team,id)*up:0;if(weight>0){add+=value*weight;hits.push(effect.text+(weight<1?` (${Math.round(weight*100)}% 적용)`:""))}});return {mul:1+add/100,hits}}
     setFxGain(effect,id){return this.characters.supports.setFxGain(effect,id)}
     // 메인 = 파티 딜러 중 개인 피해가 가장 큰 공명자 (딜러가 없으면 첫 공명자)
     mainDps(team){const ids=team.slots.filter(Boolean);if(!ids.length)return null;const map=this.charMap(),dealers=ids.filter(id=>map[id]&&map[id].role!=="support");
@@ -64,7 +67,7 @@
     partyDamage(score){return Math.pow(Math.max(0,score)/this.strengthRef,this.damageExp)*this.skillMul()}
     // 보스 효과(cycle.bosses[].effects[].dmg/cond) 배율: 효과마다 (1 + dmg × 파티 딜러 피해 중 조건 비중), 효과끼리는 곱한다 (최종 피해 배율)
     bossMul(team,boss){const map=this.charMap(),dealers=team.slots.filter(id=>id&&map[id]&&map[id].role!=="support"),dmg=dealers.map(id=>this.characters.damage(id)),sum=dmg.reduce((a,b)=>a+b,0);
-      return (boss.effects||[]).reduce((mul,effect)=>{const value=+effect.dmg||0;if(!value)return mul;const weight=!effect.cond?1:sum>0?dealers.reduce((a,id,i)=>a+dmg[i]*this.condWeight(effect.cond,team,id),0)/sum:0;return mul*(1+value*weight/100)},1)}
+      return (boss.effects||[]).reduce((mul,effect)=>{const value=(+effect.dmg||0)*this.upOf(effect,team);if(!value)return mul;const weight=!effect.cond?1:sum>0?dealers.reduce((a,id,i)=>a+dmg[i]*this.condWeight(effect.cond,team,id),0)/sum:0;return mul*(1+value*weight/100)},1)}
     simulate(teams){const bosses=this.bossDb.bosses(),live=teams.filter(team=>team.slots.some(Boolean)),res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
       const bossHp=this.bossDb.hp;let bossIndex=0,round=1,hp=bossHp(bosses[0],1),progress=0,bad=0;
       teams.forEach((team,teamIndex)=>{if(!team.slots.some(Boolean))return;const main=this.mainDps(team),element=main&&this.charMap()[main].el;let damage=this.partyDamage(this.teamScore(team));

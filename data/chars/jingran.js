@@ -4,6 +4,7 @@ MP.addChar({
   release:74, eid:1212,  // 출시 순서 · encore.moe 번호(이미지)
 
   // 반주·메커니즘
+  shieldUp:0.6, // 실드 유지율(예측치, 0~1)
   syn:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy"],m:["shield"]},
   // 피해 비중(%)
   profile:{basic:0.7,heavy:84.1,skill:3.6,intro:1.3,outro:8.4,echo:1.9},
