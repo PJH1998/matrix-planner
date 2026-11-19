@@ -25,6 +25,7 @@ const dmgShare=(id,types)=>CharDB.shareOf(id,types);
 // 효과 하나가 공명자 id에게 걸리는 비율(0~1). 피해 유형 조건(일반 공격 피해 +20% 등)은 그 공명자 피해 중 해당 유형 비중만큼만 적용한다.
 function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||!c)return 0;
   if(d.scope==="team")return teamMeets(k,t)?1:0;
+  if(d.dealer&&c.role==="support")return 0;
   if(d.mReq&&!d.mReq.some(x=>(synOf(id).m||[]).includes(x)))return 0;
   if(d.min&&t.slots.filter(x=>x&&(synOf(x).m||[]).some(m=>(d.m||[]).includes(m))).length<d.min)return 0;
   if((d.el||[]).includes(c.el))return 1;
@@ -33,7 +34,7 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
     const w=(S.w||[]);const n=d.w.filter(x=>w.includes(x)).length;if(n)return n/Math.max(1,w.length);}
   if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&CharDB.profile(id)))return 1;
   return 0;}
-function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;const S=synOf(id);
+function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;if(d.dealer&&c.role==="support")return false;const S=synOf(id);
   return (d.ids||[]).includes(id)||(d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>(S.m||[]).includes(x));}
 function teamMeets(k,t){const d=COND[k];const n=t.slots.filter(id=>id&&charMeets(k,id)).length;return n>=((d&&d.min)||1)}
 // 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
