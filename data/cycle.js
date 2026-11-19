@@ -17,6 +17,7 @@
      name, type      표시 이름, 분류
      effects[]       text: 설명, dmg: 피해 증가 %, cond: 적용 조건 키(없으면 무조건)
                      up: 유지율(0~1). 시간제한 효과가 전투 중 켜져 있는 비율(예측치). 없으면 1(항상)
+                         cond:"shield" 효과는 파티 실드 공명자의 shieldUp(공명자 파일) 최댓값을 대신 쓴다
                      조건 키 목록은 index.html의 COND 표 참고
                      (basic heavy skill lib echo coord / glacio fusion electro aero spectro havoc /
                       negative frost burn erosion flare frazzle bane / tunability tuneD tuneW hack / unison shield)

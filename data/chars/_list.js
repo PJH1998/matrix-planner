@@ -9,6 +9,7 @@
              o  반주 요약 / ob 반주 버프 대상(basic·heavy·skill·lib·echo·coord·el·all)
              p  1이면 파티 전체 버프 / w 주력 피해 유형 / m 메커니즘(frost·burn·erosion·flare·frazzle·bane·anom·tuneD·tuneW·hack·unison·shield·echo·coord)
      outro {v, cond}            반주 버프 수치(%). cond: 파티에 메커니즘 m이 있으면 v 대신 cond.v (to:1이면 받는 쪽 본인이 m을 가져야 함)
+     shieldUp                   (선택) 실드 유지율 0~1 — 실드 조건 효과(파워 서킷 등)의 유지율로 쓴다. 파티 중 가장 높은 값
      profile                    피해 비중(%) — Prydwen Calculations Damage Profile. other = 이상 효과·조화도 파괴 등
      dps, chain                 S0 기본 DPS, 0~6체인 DPS 배율 (Prydwen Calculations, 2026-11)
      rot, dpsTeam               Prydwen 한 바퀴 시간(초) · dps를 잴 때 함께 넣은 파티원 id 목록(빈 목록 = 혼자 잰 값). 같은 자료 시점

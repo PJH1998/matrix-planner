@@ -33,7 +33,7 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const expected = [
     ["camellya", 27.944933011231065, 36.97499186422595],
     ["qingxiao", 66.23832843723189, 82.79791054653985],
-    ["jingran", 63.59063742236907, 71.16518308957548],
+    ["jingran", 63.59063742236907, 70.46568607792942],
     ["hsin", 70.21280676197273, 108.82985048105773],
   ];
 
@@ -45,8 +45,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.765934362208769);
-  closeTo(simulation.total, 42079.30246529725);
+  closeTo(simulation.progress, 6.758920774392114);
+  closeTo(simulation.total, 42014.43905177187);
   assert.equal(simulation.bad, 0);
 });
 

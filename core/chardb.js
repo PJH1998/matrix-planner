@@ -27,6 +27,7 @@
       const w=DT_KEYS.filter(k=>(p[k]||0)>=20).sort((a,b)=>p[b]-p[a]);return cache.syn[id]=w.length?Object.assign({},base,{w}):base},
     has:(id,ms)=>(DB.syn(id).m||[]).some(m=>ms.includes(m)),
     outro:id=>{const c=cur(id);return (c&&c.outroV)||raw(id).outro||null},
+    shieldUp:id=>+raw(id).shieldUp||0,
     needs:id=>{const c=cur(id);return (c&&c.needs)||raw(id).needs||null},
     supCond:id=>raw(id).supCond||null,
     /* 피해 비중 */
