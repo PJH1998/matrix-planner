@@ -23,8 +23,11 @@
     weaponPassive(id){const weapon=this.weapons.weaponOf(id);if(weapon.pct==null||!weapon.w)return 1;return this.clamp(weapon.pct/100/this.echoes.weaponStatRatio(id,weapon.w.id),.5,1.3)}
     rot(id){return this.db.rot(id)||this.fallbackRot}
     // Prydwen이 dps를 잴 때 넣은 파티원의 버프력(기준 세팅, 우리 계산식). 혼자 잰 값이면 1
-    refBuff(id){if(this.refBuffs[id]!=null)return this.refBuffs[id];const map=this.charMap(),team=(this.db.dpsTeam(id)||[]).filter(x=>map[x]&&x!==id);
-      return this.refBuffs[id]=team.length&&this.supports?this.supports.referenceBuff(id,team):1}
+    // 측정 파티에 모드 공명자가 있으면 이 공명자가 가장 많이 받는 모드 조합으로 본다. 본인도 모드 공명자인데 모드별 dps가 없으면 본인 모드도 고른다
+    refBuff(id){const key=id+"|"+this.db.modeOf(id);if(this.refBuffs[key]!=null)return this.refBuffs[key];const map=this.charMap(),team=(this.db.dpsTeam(id)||[]).filter(x=>map[x]&&x!==id);
+      if(!team.length||!this.supports)return this.refBuffs[key]=1;
+      const free=[...team,...(this.db.hasModes(id)&&!this.db.modeHas(id,"dps")?[id]:[])];
+      return this.refBuffs[key]=Math.max(...this.db.modeCombos(free).map(modes=>this.db.withModes(modes,()=>this.supports.referenceBuff(id,team))))}
     // 버프 전 한 바퀴 피해
     baseDamage(id){const dps=this.db.baseDps(id);if(!dps)return 0;const avg=this.averageDps();return avg*Math.pow(dps/avg,this.dpsExp)*this.rot(id)/this.refBuff(id)}
     erAtkMul(id){const erAtk=this.db.combatErAtk(id);if(!erAtk)return 1;

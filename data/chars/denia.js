@@ -3,10 +3,19 @@ MP.addChar({
   id:"denia", name:"데니아", el:"fusion", rar:5, role:"sub",
   release:67, eid:1211,  // 출시 순서 · encore.moe 번호(이미지)
 
-  // 반주·메커니즘
-  syn:{o:"불꽃 모드: 불꽃 효과 피해 +60% (30초) · 조화 밀집 모드: 다음 캐릭터 전체 피해 +15%, 조화 밀집 이탈 부여 시 +40% (16초)",ob:["all"],w:["lib"],m:["burn","tuneD"],modes:[["burn"],["tuneD"]]},
-  // 반주 버프 수치(%)
-  outro:{v:{all:15},cond:{m:["tuneD"],v:{all:40}}},
+  // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
+  // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명
+  // outro.cond.rx: 받는 쪽 본인이 메커니즘 m을 가져야 cond.v
+  modes:[
+    {id:"burn",name:"공명 모드 · 불꽃",icon:"SP_RoleLabelFire",
+      syn:{o:"적이 받는 불꽃 효과 피해 +60% (30초)",ob:["burn"],p:1,w:["lib"],m:["burn"]},
+      outro:{v:{burn:60}},
+      sets:[["오색찬란한 거품",5]]},
+    {id:"tuneD",name:"공명 모드 · 조화 밀집",icon:"SP_RoleLabelH2",
+      syn:{o:"다음 캐릭터 전체 피해 +15%, 그 캐릭터가 조화 밀집 · 이탈을 걸면 +40% (16초)",ob:["all"],w:["lib"],m:["tuneD"]},
+      outro:{v:{all:15},cond:{m:["tuneD"],rx:1,v:{all:40}}},
+      sets:[["마음을 엮은 꿈의 그림자",5]]},
+  ],
   // 피해 비중(%)
   profile:{basic:2.1,skill:1.7,lib:60.8,intro:1.7,echo:4.4,other:29.2},
   // S0 기본 DPS
@@ -30,8 +39,7 @@ MP.addChar({
   gb:1211,
   // 고유 스탯 노드 합계
   nodes:{cd:16,"atk%":12},
-  // 주력 에코 세트 [세트, 개수, …]
-  sets:[["오색찬란한 거품",5],["마음을 엮은 꿈의 그림자",5]],
+  // 주력 에코 세트는 모드별(modes[].sets)
 
   // 무기 종류
   wtype:5,

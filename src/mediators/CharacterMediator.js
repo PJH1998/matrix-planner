@@ -9,6 +9,9 @@
     info(id){return this.characterMap[id]||null}
     growth(id){return this.getState().growth[id]||{}}
     ensureGrowth(id){const state=this.getState();return state.growth[id]||(state.growth[id]={})}
+    // 공명 모드별 에코·세트·스탯 직접 입력 저장 위치: 0번 모드 = growth, 그 밖 = growth.alt[모드] (EchoCalculator.slot과 같은 규칙)
+    slot(id){const growth=this.growth(id),mode=this.db.modeOf?this.db.modeOf(id):0;return mode>0?(((growth.alt||{})[mode])||{}):growth}
+    ensureSlot(id){const growth=this.ensureGrowth(id),mode=this.db.modeOf?this.db.modeOf(id):0;if(!(mode>0))return growth;growth.alt=growth.alt||{};return growth.alt[mode]||(growth.alt[mode]={})}
     patchGrowth(id,patch){const growth=this.ensureGrowth(id);Object.assign(growth,patch);return growth}
     isOwned(id){return !!this.getState().owned[id]}
     setOwned(id,owned){this.getState().owned[id]=!!owned;return !!owned}

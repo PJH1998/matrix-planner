@@ -134,3 +134,12 @@ table.rt{min-width:0}
 .upd-l ul{margin:2px 0 4px;padding-left:18px;color:var(--muted);font-size:14px}
 nav.tabs a.dot{position:relative}
 nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;height:7px;border-radius:50%;background:#ff8a65;box-shadow:0 0 6px #ff8a65}
+/* 공명 모드 전환 (모드가 둘인 공명자) — 게임 아이콘은 흰색 선 그림이라 어두운 바탕 위에 둔다 */
+.pf-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;border:1px solid rgba(230,195,106,.35);border-radius:10px;background:rgba(230,195,106,.05)}
+.pf-mode-l{font-size:13px;font-weight:700;color:#e6c36a}
+.mseg button{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.mseg .micon{width:18px;height:18px;flex:none;opacity:.75}
+.mseg button[aria-pressed="true"] .micon{opacity:1}
+.pf-mode-n{flex-basis:100%;margin:0;font-size:12.5px;color:#9aa6b1;line-height:1.5}
+#tip .tmode{display:flex;align-items:center;gap:6px;margin:10px 0 4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.14);color:#f3e3b5;font-size:14px}
+#tip .tmode .micon{width:20px;height:20px;background:rgba(0,0,0,.35);border-radius:6px;padding:2px}

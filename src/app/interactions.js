@@ -198,8 +198,9 @@ $("#prof").addEventListener("click",e=>{
   const d=$("#prof");if(e.target===d){d.close();return}
   if(e.target.id==="pfPick"){$("#pfFile").click();return}
   if(e.target.id==="pfEOpen"){$("#pfEFile").click();return}
-  if(e.target.id==="pfStClear"){const g=state.growth[profId]||{};delete g.stats;return setGrowth(profId,{})}
+  if(e.target.id==="pfStClear"){appMediator.echoes.clearStats(profId);return setGrowth(profId,{})}
   const pt=e.target.closest("[data-ptab]");if(pt){pfTabSel=pt.dataset.ptab;return renderProfile()}
+  const pm=e.target.closest("[data-pmode]");if(pm){CharDB.setView(profId,+pm.dataset.pmode);pfTabSel=null;echoSel=null;echoEdit=null;renderProfile();renderRoster();return}
   if(e.target.id==="pfEClear"){Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
   const ee=e.target.closest("[data-eedit]");if(ee){const i=+ee.dataset.eedit;echoEdit=echoEdit===i?null:i;return renderProfile()}
   const ed=e.target.closest("[data-edel]");if(ed){const i=+ed.dataset.edel;const a=echoSlots(profId);a[i]=null;delete echoMsg[profId+":"+i];if(echoEdit===i)echoEdit=null;return saveEchoes(profId,a)}
@@ -246,7 +247,7 @@ $("#prof").addEventListener("change",e=>{
       const cur=subs[j]||{k:"",v:0};if(ds.esk!=null){cur.k=T.value;const t=EchoDB.subTiers(T.value);if(t&&!cur.v)cur.v=t[0]}else cur.v=+T.value||0;
       subs[j]=cur.k?cur:null;e2.subs=subs.filter(Boolean)}
     a[i]=e2;return saveEchoes(profId,a)}
-  if(e.target.dataset.st){const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({b:{}},g.stats||{});const v=e.target.value===""?null:+e.target.value;
+  if(e.target.dataset.st){const st=appMediator.echoes.ensureStats(profId);const v=e.target.value===""?null:+e.target.value;
     if(e.target.dataset.grp==="b"){st.b=Object.assign({},st.b);if(v==null)delete st.b[e.target.dataset.st];else st.b[e.target.dataset.st]=v}else{if(v==null)delete st[e.target.dataset.st];else st[e.target.dataset.st]=v}
     persist();$("#pfStSum").textContent=statSum(profId);$("#pfScore").textContent=charScore(profId).toFixed(1);$("#pfScoreTag").textContent=scoreTag(profId);$("#pfNoEcho").hidden=!noEchoInput(profId);renderRoster();rerenderPlan();return}
   if(e.target.id==="pfLv"||e.target.id==="pfLvN")return setGrowth(profId,{lv:clamp(+e.target.value||90,1,90)});
