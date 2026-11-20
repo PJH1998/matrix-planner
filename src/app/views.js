@@ -252,7 +252,7 @@ function echoHTML(id){
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=sheetStats(id);
   const support=c.role==="support",sp=support?echoCalculator.supportProgress(id):null;
-  const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
+  const erm=echoCalculator.erMin(id,eb);
   {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
   const erLow=X.er+0.05<erm.min;
   // 막대: 금색 눈금 = 기준(공식 가이드 추천 → 이잘키). 눈금은 막대의 77% 위치
@@ -360,7 +360,7 @@ async function ocrStats(blob){
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
 window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
-window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
+window.mpDebug={specUp:(id,o)=>id?specUp.forChar(id):specUp.table(o||{}),teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
 
 /* ---------- profile dialog ---------- */
 let profId=null;

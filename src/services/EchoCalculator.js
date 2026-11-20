@@ -85,6 +85,10 @@
       return this.echoDb.refBuild(Object.assign(this.context(id),{ijk,elRef:this.elRefOf(id),typeRef:this.typeRef,typeKeys:this.bonusKeysOf(id).filter(k=>k!=="el"),base:this.db.base(id)||[11000,400,1150],weaponAtk:weapon?weapon[0]:0,counts:this.echoDb.refCounts(id)}))}
     factor(id){const build=this.build(id);if(!build)return null;const sheet=build.screen,scale=this.scaleOf(id),weights=this.dmgWeights(id),f=this.clamp(this.echoDb.dmg(sheet,scale,weights)/this.refDmg(id),.4,2);
       return {f,sc:scale,crit:1+Math.min(sheet.cr,100)/100*(sheet.cd/100-1),bonus:sheet.el,echo:build}}
+    /* 공명 효율 최소치(CharDB.erMin)에 지금 에코 세트 보정(erAdj)을 더한 값. build를 주면 그 세팅 기준 */
+    erMin(id,build){const erm=this.db.erMin(id),eb=build||this.build(id);
+      if(eb)(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});return erm}
+    erOk(id){return this.sheetStats(id).er+.05>=this.erMin(id).min}
     supportTargets(id){const targets=Object.assign({},this.db.supportTargets(id)||{}),growth=this.state().growth[id]||{},chain=+growth.chain||0,set=this.setOf(id);
       this.db.supportTargetAdjust(id).forEach(rule=>{if(chain>=rule.chain&&(!rule.set||set.a===rule.set||set.b===rule.set||set.c===rule.set))targets.er=rule.er});
       return targets}

@@ -124,6 +124,9 @@ const MAX_ROUNDS=teamCalculator.maxRounds,S_REF=teamCalculator.strengthRef,DMG_E
 const skillMul=()=>teamCalculator.skillMul(),partyDamage=score=>teamCalculator.partyDamage(score),mainDps=t=>teamCalculator.mainDps(t),simulate=teams=>teamCalculator.simulate(teams);
 const permutations=a=>teamCalculator.permutations(a),bestOrder=()=>teamCalculator.bestOrder(),bestOrder_=()=>teamCalculator.bestOrderInternal();
 const pairLinks=(a,b)=>teamCalculator.pairLinks(a,b),teamSynergy=t=>teamCalculator.teamSynergy(t);
+// 스펙업 효율(에코 다시 깎기): 공명자별 결과와 전체 표를 한곳에서 만든다. 공명자 스펙만 보고 주기·파티는 넣지 않는다
+const specUp=new window.MP.SpecUpManager({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,
+  echoes:echoCalculator,characters:characterCalculator});
 function clamp(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a))}
 
 /* ---------- persistence ---------- */
