@@ -3,11 +3,21 @@ MP.addChar({
   id:"lucilla", name:"루실라", el:"glacio", rar:5, role:"sub",
   release:69, eid:1109,  // 출시 순서 · encore.moe 번호(이미지)
 
-  // 반주·메커니즘
-  syn:{o:"서리 모드: 서리 효과 피해 +60% (30초) · 에코 모드: 다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["basic"],m:["frost","echo"],modes:[["frost"],["echo"]]},
-  // 반주 버프 수치(%)
-  outro:{v:{echo:50}},
-  // 피해 비중(%)
+  // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
+  // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명
+  modes:[
+    {id:"frost",name:"공명 모드 · 서리",icon:"SP_RoleLabelI5",
+      syn:{o:"적이 받는 서리 효과 피해 +60% (30초)",ob:["frost"],p:1,w:["basic"],m:["frost"]},
+      outro:{v:{frost:60}},
+      sets:[["소리 없이 내려앉은 기도의 눈",5]]},
+    {id:"echo",name:"공명 모드 · 에코",icon:"SP_RoleLabelI4",
+      syn:{o:"다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["echo"],m:["echo"]},
+      outro:{v:{echo:50}},
+      // 피해 비중: 모드별 측정값이 없어 서리 모드 값에서 일반 공격 몫을 에코 어빌리티로 옮긴 추정치(에코 모드의 생생한 기억·망각은 에코 어빌리티 피해)
+      profile:{skill:7.7,intro:1.3,echo:35,other:56},
+      sets:[["떠오르는 구름",5]]},
+  ],
+  // 피해 비중(%) — 서리 모드 기준
   profile:{basic:31.3,skill:7.7,intro:1.3,echo:3.7,other:56},
   // S0 기본 DPS
   dps:91534,
@@ -28,8 +38,7 @@ MP.addChar({
   gb:1109,
   // 고유 스탯 노드 합계
   nodes:{cr:8,"atk%":12},
-  // 주력 에코 세트 [세트, 개수, …]
-  sets:[["소리 없이 내려앉은 기도의 눈",5],["떠오르는 구름",5]],
+  // 주력 에코 세트는 모드별(modes[].sets)
 
   // 무기 종류
   wtype:5,

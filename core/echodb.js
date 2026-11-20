@@ -159,6 +159,7 @@
     subRange:key=>(MP.ECHO_SUB||{})[key]||null,           // 부옵 [최소, 최대]
     subTiers:key=>(MP.ECHO_SUB_TIERS||{})[key]||null,
     subKeys:()=>Object.keys(MP.ECHO_SUB||{}),
+    subOdds:key=>(MP.ECHO_SUB_ODDS||{})[key]||null,       // 수치 단계별 가중치 (공식 확률 공시, subTiers와 같은 순서)
     names:()=>MP.ECHO_NAMES||[],
     /* 공명자 연결 — 공명자 데이터는 CharDB를 거친다 */
     charSets:id=>MP.CharDB.sets(id),                       // [[세트, 개수, …], …] 위에 있을수록 정배

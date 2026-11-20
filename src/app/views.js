@@ -6,6 +6,12 @@ function tokenHTML(c,extra=""){
   const pic=hasPic(c.id),sq=gameImg.char.has(c.id);
   return CharacterCard.token({character:c,bonus,pictureUrl:pic?picUrl(c.id):"",hasPicture:pic,squarePicture:sq,elementName:EL[c.el],extra,escape:esc});
 }
+// 공명 모드 아이콘: 배포 때 받은 img/mode/<icon>.webp, 없으면 encore.moe 원본
+const modeIconUrl=icon=>!icon?"":gameImg.mode&&gameImg.mode.has(icon)?assetUrl(`img/mode/${icon}.webp`):`https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Atlas/RoleLabel/${icon}.webp`;
+const modeIcon=(m,cls="micon")=>m&&m.icon?`<img class="${cls}" src="${modeIconUrl(m.icon)}" alt="" draggable="false" onerror="this.remove()">`:"";
+// 파티 슬롯 배지: 파티 계산이 고른 모드 (CharDB.withModes 안에서 부른다)
+function modeBadge(id){if(!CharDB.hasModes(id))return "";const m=CharDB.modes(id)[CharDB.modeOf(id)];
+  return `<span class="mbadge" title="${esc(m.name)} — 이 파티 조합에 가장 좋은 모드로 계산합니다. 에코 세팅도 이 모드 것을 씁니다">${modeIcon(m)}<b>${esc(m.short)}</b></span>`}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderFilter(){
   const box=$("#elFilter");
@@ -58,12 +64,18 @@ function synChips(t){
 /* ---------- hover overlay ---------- */
 const tip=document.createElement("div");tip.id="tip";tip.setAttribute("role","tooltip");document.body.appendChild(tip);
 function tipHTML(id){
-  const c=charMap[id],S=synOf(id);if(!c)return"";
-  const ob=(S.ob||[]).map(t=>t==="el"?EL[c.el]+" 피해":DT[t]).filter(Boolean);
+  const c=charMap[id];if(!c)return"";
+  if(CharDB.hasModes(id))return CharDB.modes(id).map(m=>CharDB.withModes({[id]:m.i},()=>tipBody(id,m))).join("");
+  return tipBody(id,null);
+}
+function tipBody(id,mode){
+  const c=charMap[id],S=synOf(id),first=!mode||mode.i===0;
+  const ob=(S.ob||[]).map(t=>t==="el"?EL[c.el]+" 피해":DT[t]||(MT[t]&&MT[t]+" 피해")).filter(Boolean);
   const ROLE={dps:"메인 딜러",sub:"서브 딜러",support:"서포터"};
   const trial=state.owned[id]&&isTrial(id);
-  return `<div class="th"><b>${esc(c.name)}</b><span class="elx" style="--ec:var(--${c.el})">${UIIcon.element(c.el)}${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span>${trial?`<span class="chip tipTrial">체험 세팅</span>`:""}</div>
-  ${trial?`<div class="tr"><p class="tipTrialTxt">육성하지 않은 체험 세팅으로 계산 중 (90레벨 · 상시 무기 R1 · 공식 가이드 추천 스탯)</p></div>`:""}
+  return `${first?`<div class="th"><b>${esc(c.name)}</b><span class="elx" style="--ec:var(--${c.el})">${UIIcon.element(c.el)}${EL[c.el]}</span><span class="chip">${ROLE[c.role]||""}</span>${trial?`<span class="chip tipTrial">체험 세팅</span>`:""}</div>
+  ${trial?`<div class="tr"><p class="tipTrialTxt">육성하지 않은 체험 세팅으로 계산 중 (90레벨 · 상시 무기 R1 · 공식 가이드 추천 스탯)</p></div>`:""}`:""}
+  ${mode?`<div class="tmode">${modeIcon(mode)}<b>${esc(mode.name)}</b></div>`:""}
   <div class="tr"><span class="tl"><span>반주 스킬</span><span>${S.p?"파티 전체":"다음 캐릭터"}</span></span><p>${esc(S.o||"정보 없음").replace(/(\d+(?:\.\d+)?%)/g,"<em>$1</em>")}</p>${ob.length?`<div class="tc">${ob.map(x=>`<span class="chip g">${esc(x)} ↑</span>`).join("")}</div>`:""}</div>
   ${(S.w||[]).length?`<div class="tr"><span class="tl">주력 피해</span><div class="tc">${S.w.map(x=>`<span class="chip">${DT[x]}</span>`).join("")}</div></div>`:""}
   ${(S.m||[]).length?`<div class="tr"><span class="tl">메커니즘</span><div class="tc">${S.m.map(x=>`<span class="chip syn">${MT[x]}</span>`).join("")}</div></div>`:""}`;
@@ -95,11 +107,8 @@ function teamWarnings(t){
   // 보스별 유리/불리: 보스 특성 태그(실드·합일·전자 효과 등)를 이 파티가 만족하면 유리, 메인 딜러 속성을 보스가 저항하면 불리
   const buff=selBuff(t);const btags=new Set(buff?(buff.effects||[]).map(e=>e.cond).filter(Boolean):[]);
   const md=mainDps(t),mel=md&&charMap[md].el;
-  // 모드가 둘인 공명자(syn.modes: 루실라 서리/에코, 에이메스 불꽃/조화 파동 등)는 한 모드로만 굴린다.
-  // 고른 파워 서킷과 겹치는 모드, 없으면 첫 모드 기준으로 유리 표시를 판정한다.
-  const bm=new Set(buff?(buff.effects||[]).flatMap(e=>{const d=COND[e.cond];return d?[...(d.m||[]),...(d.w||[]),...(d.el||[])]:[]}):[]);
-  const ov={};ids.forEach(id=>{const ms=synOf(id).modes;if(ms&&ms.length)ov[id]=ms.find(m=>m.some(x=>bm.has(x)))||ms[0]});
-  const meetsT=k=>{const d=COND[k];return ids.filter(id=>charMeets(k,id,ov[id])).length>=((d&&d.min)||1)};
+  // 공명 모드 공명자는 파티 계산이 고른 모드 기준 (renderTeams가 teamCalculator.inModes로 감싸서 부른다)
+  const meetsT=k=>{const d=COND[k];return ids.filter(id=>charMeets(k,id)).length>=((d&&d.min)||1)};
   if(ids.length)(cycle.bosses||[]).forEach(b=>{
     const tags=(b.effects||[]).flatMap(f=>f.tags||[]).filter(x=>COND[x]);
     const good=tags.filter(x=>meetsT(x));
@@ -123,7 +132,7 @@ function renderTeams(){
   simCache=simulate(state.teams);
   const order=state.teams.map((t,i)=>({t,i,s:teamScore(t)}));
   const box=$("#teams");
-  box.innerHTML=state.teams.map((t,i)=>{
+  box.innerHTML=state.teams.map((t,i)=>teamCalculator.inModes(t,()=>{
     const els=[...new Set(t.slots.filter(Boolean).map(id=>charMap[id]&&charMap[id].el).filter(Boolean))];
     const sc=teamScore(t);
     const sy=teamSynergy(t);
@@ -133,7 +142,7 @@ function renderTeams(){
       const l=sy.links.filter(x=>x.i===si-1&&x.j===si).map(x=>x.txt);return `<span class="lnk ${on?"on":""}" title="${esc(on?l.join("\n"):"연결된 시너지 없음")}">${on?"✓":""}</span>`};
     return `<div class="team${sy.adj.wrap?" wrap":""}" data-team="${i}">
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
-      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" data-drag="1" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c)}</div>`:""}</div>`}).join("")}
+      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" data-drag="1" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c,modeBadge(c.id))}</div>`:""}</div>`}).join("")}
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
@@ -144,7 +153,7 @@ function renderTeams(){
       <div class="fcast">${fcastHTML(i)}</div>
       <div class="synbox">${chips||`<span class="none">시너지 없음</span>`}</div>
     </div>`;
-  }).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
+  })).join("") || `<p class="hint">파티가 없습니다. “+ 파티 추가”를 누르세요.</p>`;
 }
 
 /* ---------- render: intel ---------- */
@@ -195,18 +204,18 @@ function toggleOwned(id){const on=appMediator.characters.toggleOwned(id);
 /* ---------- profile: stats ---------- */
 const BASE_STATS=[["hp","HP",""],["atk","공격력",""],["def","방어력",""],["er","공명 효율","%"],["cr","크리티컬","%"],["cd","크리티컬 피해","%"]];
 function statSum(id){const c=charMap[id];if(c.role==="support"){const p=echoCalculator.supportProgress(id);return `지원 기준 ${p.met}/${p.total} 충족`}
-  const g=state.growth[id]||{},src=g.trial?"체험 세팅":echoesOf(id).length?"에코 세팅 사용 중":g.stats?"직접 입력":"에코 미입력 · 체험 세팅으로 계산";return `공명력 ${charScore(id).toFixed(0)} (${src})`}
+  const g=state.growth[id]||{},src=g.trial?"체험 세팅":echoesOf(id).length?"에코 세팅 사용 중":appMediator.echoes.stats(id)?"직접 입력":"에코 미입력 · 체험 세팅으로 계산";return `공명력 ${charScore(id).toFixed(0)} (${src})`}
 // 개인 점수 이름: 딜러 공명력 / 서포터 협주력. 표시 꼬리표: 체험 · 에코 미입력
 function scoreName(id){return charMap[id]&&charMap[id].role==="support"?"협주력":"공명력"}
 function scoreTag(id){const g=state.growth[id]||{};if(g.trial)return "체험";return noEchoInput(id)?"체험 세팅":""}
 // 에코도 스탯 직접 입력도 없는 보유 공명자 → 체험 세팅 기준 스탯으로 계산 중
-function noEchoInput(id){const g=state.growth[id]||{};return !g.trial&&!echoesOf(id).length&&!g.stats}
+function noEchoInput(id){const g=state.growth[id]||{};return !g.trial&&!echoesOf(id).length&&!appMediator.echoes.stats(id)}
 function trialChainNote(id){const ch=CharDB.trialSpec(id).chain;return ch==null?" · 공명 체인은 지금 설정":` · ${ch}체인`}
 
 /* ---------- profile: 에코 세팅 ----------
    에코 5칸(카드) + 세트 구성(5세트 / 3+2세트 / 데이터가 지원하는 1+2+2세트) + 요약 줄. */
 let pfTabSel=null,echoSel=null,echoEdit=null;const echoMsg={};
-function pfTab(id){if(pfTabSel)return pfTabSel;const g=state.growth[id]||{};return g.stats&&!echoesOf(id).length?"stat":"echo"}
+function pfTab(id){if(pfTabSel)return pfTabSel;return appMediator.echoes.stats(id)&&!echoesOf(id).length?"stat":"echo"}
 function echoSlots(id){return appMediator.echoes.slots(id)}
 // 세트 구성. 저장값이 없으면 공명자의 주력 세트(3+2 등)를 기본으로
 const SLOT_COST=[4,3,3,1,1];
@@ -237,13 +246,13 @@ function echoHTML(id){
     return `<div class="ecard${sel}" data-eslot="${i}">${head}
       <div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
       ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
-      <div class="ec-subs">${subs}</div>${msg}</div>`};
-  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음</span></div>`;
+      <div class="ec-subs">${subs}</div>${(state.growth[id]||{}).trial?"":`<div class="su-badge wait" data-subadge="${i}"><span>스펙업 계산 중…</span></div>`}${msg}</div>`};
+  const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음 · 아래 배지 = 같은 코스트·주옵으로 새로 깎았을 때 더 좋을 확률과 에코 1개당 기대 상승</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 지원 기준은 비전투 최종 스탯으로 확인하며, 공명 효율에 연동된 파티 버프와 에코 세트 효과는 파티 계산에 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
 function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)return "";const sf=statFactor(id);const sc=scaleOf(id);const I=ijkOf(id);const gd=CharDB.guide(id)||{};const X=sheetStats(id);
   const support=c.role==="support",sp=support?echoCalculator.supportProgress(id):null;
-  const erm=CharDB.erMin(id);(erm.adj||[]).forEach(a=>{const x=eb.sets.find(z=>z.name===a.set);if(x&&x.c>=a.n){erm.min+=a.d;erm.adjText=`${a.set} ${a.n}세트 ${a.d>0?"+":""}${a.d}`}});
+  const erm=echoCalculator.erMin(id,eb);
   {const m=(erm.note||"").match(/(\d)체인 이상/);const ch=+((state.growth[id]||{}).chain)||0;if(m&&ch>=+m[1])erm.note+=` — 지금 ${ch}돌이라 실제 요구치는 더 낮을 수 있음`}
   const erLow=X.er+0.05<erm.min;
   // 막대: 금색 눈금 = 기준(공식 가이드 추천 → 이잘키). 눈금은 막대의 77% 위치
@@ -270,7 +279,7 @@ function echoEditHTML(e,i){const M=(EchoDB.mainStats(e.cost)||{}).main||{};
   return `<div class="eedit"><select data-emk="${i}" aria-label="주옵">${mainOpts}</select><input type="number" step="any" data-emv="${i}" value="${e.main.v}" aria-label="주옵 수치">
     ${e.main.k==="el"?`<select data-eme="${i}" aria-label="속성">${EL_ORDER.map(x=>`<option value="${x}"${x===e.main.elem?" selected":""}>${EL[x]} 피해</option>`).join("")}</select><span></span>`:""}
     ${[0,1,2,3,4].map(j=>row(j,(e.subs||[])[j])).join("")}</div>`}
-function saveEchoes(id,arr){const g=state.growth[id]=state.growth[id]||{};g.echoes=arr.some(Boolean)?arr:undefined;if(!g.echoes)delete g.echoes;
+function saveEchoes(id,arr){appMediator.echoes.setEchoes(id,arr);
   persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})} // 입력칸 change·blur 처리 중에 다시 그리지 않도록 다음 프레임에
 function saveEchoSet(id,patch){appMediator.echoes.patchSet(id,echoSetOf(id),patch);persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})}
 function newEcho(id,i){const cost=SLOT_COST[i]||1;const M=(EchoDB.mainStats(cost)||{}).main||{};const k=cost===4?"cr":cost===3?"el":"atk%";
@@ -296,7 +305,7 @@ async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식
     delete echoMsg[key];echoSel=null;saveEchoes(id,arr);
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
-  const c=charMap[id];const st=(state.growth[id]||{}).stats||{};const b=st.b||{};
+  const c=charMap[id];const st=appMediator.echoes.stats(id)||{};const b=st.b||{};
   const I=ijkOf(id),sc=scaleOf(id),gd=CharDB.guide(id)||{},targets=echoCalculator.supportTargets(id),mainRef=gd[sc]||I.main[1];
   const ph=(k,grp)=>grp?`${k==="el"?elRefOf(id):TYPE_REF}`:c.role==="support"?targets[k]!=null?`${targets[k]}`:"–":k===sc?`${mainRef}`:k==="cr"?`${I.cr}`:k==="cd"?`${I.cd}`:"–";
   const row=(k,label,unit,val,grp,icon)=>`<label class="sr">${icon?`<img src="${icon}" alt="">`:`<i class="noi"></i>`}<span>${label}</span><input type="number" step="any" min="0" data-st="${k}" ${grp?`data-grp="b"`:""} value="${val??""}" placeholder="${ph(k,grp)}"><em>${unit}</em></label>`;
@@ -344,18 +353,22 @@ async function ocrStats(blob){
     const {data}=await T.recognize(cv,"kor+eng");const got=parseStats(data.text,bonusKeysOf(profId));
     const keys=Object.keys(got).filter(k=>k!=="b");const bkeys=Object.keys(got.b);
     if(!keys.length&&!bkeys.length)throw new Error("스탯을 찾지 못했습니다. 항목 이름과 숫자가 함께 보이게 캡처해 주세요.");
-    const g=state.growth[profId]=state.growth[profId]||{};const st=g.stats=Object.assign({},g.stats||{});st.b=Object.assign({},st.b||{},got.b);keys.forEach(k=>st[k]=got[k]);
+    const st=appMediator.echoes.ensureStats(profId);st.b=Object.assign({},st.b||{},got.b);keys.forEach(k=>st[k]=got[k]);
     persist();renderProfile();renderRoster();rerenderPlan();
     const mm=$("#pfOcr");if(mm)mm.textContent=`인식 완료: ${[...keys.map(k=>(BASE_STATS.find(x=>x[0]===k)||[,k])[1]),...bkeys.map(k=>BONUS_KEYS[k]+" 보너스")].join(", ")}. 숫자가 맞는지 확인해 주세요.`;
     return got;
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
 window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
-window.mpDebug={teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
+window.mpDebug={specUp:(id,o)=>id?specUp.forChar(id):specUp.table(o||{}),teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
 
 /* ---------- profile dialog ---------- */
 let profId=null;
 function openProfile(id){if(profId!==id){pfTabSel=null;echoSel=null;echoEdit=null}profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
+// 공명 모드 전환: 모드마다 에코 세팅·스탯 직접 입력을 따로 저장한다. 화면의 점수·에코는 고른 모드 기준(CharDB.setView)
+function profModeBar(id){if(!CharDB.hasModes(id))return "";const cur=CharDB.viewMode(id),ms=CharDB.modes(id);
+  return `<div class="pf-mode"><span class="pf-mode-l">공명 모드</span><div class="seg2 mseg" role="group" aria-label="공명 모드">${ms.map(m=>`<button type="button" data-pmode="${m.i}" aria-pressed="${m.i===cur}" title="${esc(m.name)}${m.i===0?" (게임 기본 모드)":""}">${modeIcon(m)}${esc(m.short)}</button>`).join("")}</div>
+    <p class="pf-mode-n">${esc(ms[cur].name)}의 에코 세팅입니다. 모드마다 따로 저장하고, 파티 편성에서는 조합에 맞는 모드를 자동으로 골라 그 모드의 세팅으로 계산합니다.</p></div>`}
 function setGrowth(id,patch){appMediator.characters.patchGrowth(id,patch);persist();renderProfile();renderRoster();rerenderPlan();}
 function renderProfile(){
   const id=profId,c=charMap[id];if(!c)return;const g=state.growth[id]||{};const wp=weaponOf(id);const lv=g.lv??90,ch=+g.chain||0;
@@ -387,8 +400,9 @@ function renderProfile(){
     <div class="seg" id="pfR" style="max-width:420px">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" aria-pressed="${wp.ref===n}">R${n}</button>`).join("")}</div>
     </div>
    </div>
-   <div class="pf-s${g.trial?" pf-dim":""}">${statsHTML(id)}<input type="file" accept="image/*" id="pfEFile" multiple hidden></div>
+   <div class="pf-s${g.trial?" pf-dim":""}">${profModeBar(id)}${statsHTML(id)}<input type="file" accept="image/*" id="pfEFile" multiple hidden></div>
    </form>`;
+  queueSpecBadges(id);
 }
 /* ---------- render: cycle/data ---------- */
 function unknownConds(){return [...new Set((cycle.buffs||[]).flatMap(b=>(b.effects||[]).map(e=>e.cond)).concat((cycle.bosses||[]).flatMap(b=>(b.effects||[]).flatMap(f=>f.tags||[]))).filter(k=>k&&!COND[k]&&!['dodge','any'].includes(k)))]}
@@ -424,7 +438,12 @@ function investCandidates(id){const c=charMap[id];if(!c)return [];const g=state.
   if(top&&WMAP[top.id].q===5&&(!wp.w||wp.w.id!==top.id))out.push({label:`무기 ${WMAP[top.id].name} (R1)`,patch:{wid:top.id,wr:5,ref:1},cost:PULLS.weapon,wid:top.id});
   else if(wp.w&&wp.w.q===5&&wp.ref<5)out.push({label:`${wp.w.name} 재련 R${wp.ref} → R${wp.ref+1}`,patch:{ref:wp.ref+1},cost:PULLS.weapon,wid:wp.w.id});
   return out;}
-function renderInvest(){const body=$("#invBody");if(!body)return;
+// 투자 효율 탭: 뽑기 투자(체인·무기) | 에코 스펙업
+let invMode="pull";
+function renderInvest(){document.querySelectorAll("[data-invmode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.invmode===invMode)));
+  const pull=$("#invPull"),spec=$("#invSpec");if(pull)pull.hidden=invMode!=="pull";if(spec)spec.hidden=invMode!=="spec";
+  if(invMode==="spec")renderSpecUp();else renderPull()}
+function renderPull(){const body=$("#invBody");if(!body)return;
   const scope=$("#invScope").value;const inTeam=new Set(state.teams.flatMap(t=>t.slots.filter(Boolean)));
   const ids=(scope==="team"?[...inTeam]:chars.filter(c=>state.owned[c.id]).map(c=>c.id)).filter(id=>charMap[id]);
   const base=totalNow();const rows=[];
@@ -445,6 +464,52 @@ function drawInvest(){const body=$("#invBody");const base=totalNow();const rows=
     <td class="score">${r.inTeam?`<b class="${r.dT>0?"up":""}">${r.dT>=0?"+":""}${Math.round(r.dT).toLocaleString()}점</b> <small>(${base?((r.dT/base)*100).toFixed(1):0}%)</small>`:`<span class="mut">편성 밖</span>`}</td>
     <td class="score">+${r.dC.toFixed(1)}%</td><td class="score">≈ ${r.k.cost}연차</td>
     <td class="score">${r.eff!=null?`<b>+${Math.round(r.eff).toLocaleString()}점</b>`:`+${r.effC.toFixed(1)}%`}</td></tr>`}).join("")||`<tr><td colspan="7" class="mut">${scope==="team"?"편성된 공명자가 없습니다. 배치 화면에서 파티를 먼저 짜 주세요.":"보유 공명자가 없습니다."}</td></tr>`;}
+
+/* ---------- 에코 스펙업 (SpecUpManager) ----------
+   공명자별로 나눠 계산하면서 표를 채운다(처음 계산이 길 수 있어 화면이 멈추지 않게). 결과는 매니저가 공명자·모드별로 캐싱한다 */
+let suToken=0;
+const SU_SKIP={noEcho:"에코 미입력",trial:"체험 세팅",unknown:"알 수 없음"};
+const suPct=p=>p<=0?"0%":p<.001?"0.1% 미만":p<.1?(p*100).toFixed(1)+"%":Math.round(p*100)+"%";
+const suTries=t=>t==null?"—":t>=200?"200개 이상":(t<10?t.toFixed(1):Math.round(t))+"개";
+function suModeTag(id,mode){if(mode==null||!CharDB.hasModes(id))return "";const m=CharDB.modes(id)[mode];return m?`<span class="su-mode" title="${esc(m.name)}의 에코 세팅">${modeIcon(m)}${esc(m.short)}</span>`:""}
+function suIds(){const scope=$("#invScope").value;
+  return (scope==="team"?[...new Set(state.teams.flatMap(t=>t.slots.filter(Boolean)))]:chars.filter(c=>state.owned[c.id]).map(c=>c.id)).filter(id=>charMap[id])}
+function renderSpecUp(){const body=$("#suBody");if(!body)return;const my=++suToken,ids=suIds(),done=[];let i=0;
+  const step=()=>{if(my!==suToken)return;const t0=performance.now();
+    while(i<ids.length&&performance.now()-t0<25){done.push(...specUp.forCharAll(ids[i]));i++}
+    drawSpecUp(done,i,ids.length);if(i<ids.length)setTimeout(step,0)};
+  step()}
+function drawSpecUp(results,done,total){const body=$("#suBody"),foot=$("#suFoot");if(!body)return;
+  const rows=specUp.rows(results).filter(r=>r.p>0||r.erCut>0);const none=specUp.rows(results).length-rows.length;
+  body.innerHTML=rows.map((r,i)=>{const c=charMap[r.id];
+    const er=r.erCut>.01?`<span class="su-er" title="이 칸을 바꾸면 공명 효율 최소치를 못 채우는 경우가 ${suPct(r.erCut)} 있어, 그 경우는 좋아진 것으로 세지 않았습니다">⚡</span>`:"";
+    return `<tr class="su-row" data-su="${r.id}|${r.mode==null?"":r.mode}|${r.index}" tabindex="0">
+    <td class="score">${i+1}</td>
+    <td><span class="nmc"><span class="pt"><span class="th" ${hasPic(r.id)?`style="background-image:url('${picUrl(r.id)}')"`:""}></span></span>${esc(c.name)}${suModeTag(r.id,r.mode)}</span></td>
+    <td><span class="su-slot">${r.set?`<img class="su-set" src="${setIconUrl(r.set)}" alt="" title="${esc(r.set)}" onerror="this.style.visibility='hidden'">`:""}<b>${r.cost}코</b> ${esc(echoLab(r.main,r.elem))} <small>${r.index+1}번 칸</small>${er}</span></td>
+    <td class="score">${suPct(r.p)}</td>
+    <td class="score">${r.p>0?`+${r.gain.toFixed(1)}%`:"—"}</td>
+    <td class="score"><b class="${r.eff>0?"up":""}">+${r.eff.toFixed(2)}%</b></td>
+    <td class="score">${suTries(r.tries)}</td></tr>`}).join("")||(done>=total?`<tr><td colspan="7" class="mut">${total?"에코를 입력한 공명자가 없습니다. 공명자 프로필의 에코 탭에서 에코를 입력해 주세요.":$("#invScope").value==="team"?"편성된 공명자가 없습니다.":"보유 공명자가 없습니다."}</td></tr>`:"");
+  const skipped=results.filter(r=>r.skip);
+  const parts=[];if(done<total)parts.push(`<span class="su-prog">계산 중 ${done}/${total}</span>`);
+  if(none)parts.push(`<span>새로 깎아도 좋아질 확률이 거의 없는 칸 ${none}개는 뺐습니다.</span>`);
+  if(skipped.length)parts.push(`<span>계산하지 않음: ${skipped.map(r=>`<button type="button" class="su-skip" data-suopen="${r.id}" title="${SU_SKIP[r.skip]||""} — 눌러서 에코 입력">${esc(charMap[r.id].name)}<small>${SU_SKIP[r.skip]||""}</small></button>`).join("")}</span>`);
+  foot.innerHTML=parts.join(" ")}
+function openSpecRow(key){const [id,mode,index]=key.split("|");if(!charMap[id])return;if(mode!=="")CharDB.setView(id,+mode);
+  openProfile(id);pfTabSel="echo";echoSel=+index;echoEdit=null;renderProfile();renderRoster();
+  setTimeout(()=>{const card=document.querySelector("#prof .ecard.sel");if(card)card.scrollIntoView({block:"center"})},0)}
+/* 프로필 에코 탭 배지: 지금 보고 있는 모드의 칸별 결과. 렌더 뒤에 계산해서 채운다 */
+function queueSpecBadges(id){if(!document.querySelector("[data-subadge]"))return;const mode=CharDB.hasModes(id)?CharDB.viewMode(id):null;
+  setTimeout(()=>{if(profId!==id||(mode!=null&&CharDB.viewMode(id)!==mode))return;const r=specUp.forChar(id);
+    // 먼저 깎기: 에코 1개당 기대 상승이 0.1% 이상인 칸 중 최고. 0.05% 미만은 바꿔도 거의 안 오르는 칸
+    const best=r.slots.reduce((a,b)=>b.eff>=.1&&(!a||b.eff>a.eff)?b:a,null);
+    document.querySelectorAll("[data-subadge]").forEach(el=>{const s=r.slots.find(x=>x.index===+el.dataset.subadge);if(!s){el.remove();return}
+      const top=best&&best.index===s.index,low=s.eff<.05;el.className="su-badge"+(top?" top":low?" low":"");el.closest(".ecard")?.classList.toggle("su-first",top);
+      el.title=`새로 깎으면 지금보다 좋아질 확률 ${suPct(s.p)} · 좋아지면 평균 +${s.gain.toFixed(1)}% · 에코 1개당 기대 +${s.eff.toFixed(2)}% · 평균 ${suTries(s.tries)}`+(s.erCut>.01?" · 공명 효율 최소치를 깨는 경우는 뺐습니다":"");
+      const er=s.erCut>.01?`<i class="su-er">⚡</i>`:"";
+      el.innerHTML=low?`<span>${s.p<.005?"교체 불필요":"교체 효과 거의 없음"}${er}</span><span>확률 <b>${suPct(s.p)}</b></span>`
+        :`${top?`<em>먼저 깎기</em>`:""}<span>더 좋을 확률 <b>${suPct(s.p)}</b>${er}</span><span>1개당 <b>+${s.eff.toFixed(2)}%</b></span>`})},0)}
 
 /* ---------- 주기별 기록 ---------- */
 function snapRecord(){const sim=simCache||simulate(state.teams);

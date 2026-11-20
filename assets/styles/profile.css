@@ -134,3 +134,61 @@ table.rt{min-width:0}
 .upd-l ul{margin:2px 0 4px;padding-left:18px;color:var(--muted);font-size:14px}
 nav.tabs a.dot{position:relative}
 nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;height:7px;border-radius:50%;background:#ff8a65;box-shadow:0 0 6px #ff8a65}
+/* 공명 모드 전환 (모드가 둘인 공명자) — 게임 아이콘은 흰색 선 그림이라 어두운 바탕 위에 둔다 */
+.pf-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;border:1px solid rgba(230,195,106,.35);border-radius:10px;background:rgba(230,195,106,.05)}
+.pf-mode-l{font-size:13px;font-weight:700;color:#e6c36a}
+.mseg button{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.mseg .micon{width:18px;height:18px;flex:none;opacity:.75}
+.mseg button[aria-pressed="true"] .micon{opacity:1}
+.pf-mode-n{flex-basis:100%;margin:0;font-size:12.5px;color:#9aa6b1;line-height:1.5}
+#tip .tmode{display:flex;align-items:center;gap:6px;margin:10px 0 4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.14);color:#f3e3b5;font-size:14px}
+#tip .tmode .micon{width:20px;height:20px;background:rgba(0,0,0,.35);border-radius:6px;padding:2px}
+/* 에코 스펙업 (투자 효율 탭 · 프로필 에코 카드 배지) */
+.su-note{font-size:12.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.55}
+.su-note a{color:var(--accent)}
+.su-row{cursor:pointer}
+.su-row:hover td{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.su-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.su-mode{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 8px 1px 3px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:999px;font-size:11.5px;font-weight:700;color:var(--accent);vertical-align:middle;white-space:nowrap}
+.su-mode .micon{width:16px;height:16px;flex:none}
+.su-slot{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.su-slot small{color:var(--muted)}
+.su-set{width:20px;height:20px;flex:none}
+.su-er{cursor:help;font-size:13px}
+.su-foot{margin:10px 0 0;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px;line-height:1.6}
+.su-prog{color:var(--accent);font-weight:700}
+.su-skip{border:1px solid var(--line);background:none;color:var(--fg);border-radius:999px;padding:2px 9px;margin:0 4px 4px 0;font-size:12px;cursor:pointer}
+.su-skip:hover{border-color:var(--accent)}
+.su-skip small{color:var(--muted);margin-left:4px}
+.su-badge{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;align-items:center;padding:5px 8px;border-radius:7px;background:rgba(255,255,255,.05);font-size:11.5px;color:#9aa6b1;cursor:help}
+.su-badge b{color:#eef2f5;font-family:var(--f-num);white-space:nowrap}
+.su-badge.wait{cursor:default;opacity:.6}
+.su-badge.top{background:rgba(230,195,106,.15);color:#e6c36a}
+.su-badge.top b{color:#e6c36a}
+.su-badge.low{opacity:.65}
+.ecard.su-first{border-color:rgba(230,195,106,.6);position:relative;animation:su-glow 3.6s ease-in-out infinite}
+/* 먼저 깎기 칸: 금빛 빛줄기가 테두리를 한 바퀴 돌고 잠깐 쉰다 (conic-gradient 각도를 @property로 애니메이션) */
+@property --su-a{syntax:"<angle>";inherits:false;initial-value:0deg}
+.ecard.su-first::after,.ecard.su-first::before{content:"";position:absolute;border-radius:inherit;pointer-events:none;
+  background:conic-gradient(from var(--su-a),transparent 0deg 200deg,rgba(230,195,106,.25) 260deg,rgba(255,221,140,.85) 320deg,#fff3c4 348deg,#ffffff 356deg,transparent 360deg);
+  animation:su-sweep 3.6s cubic-bezier(.5,.1,.4,1) infinite}
+/* 테두리 빛줄기: 테두리 두께만 남기고 가운데를 잘라낸다 */
+.ecard.su-first::after{inset:-1.5px;padding:2.5px;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+/* 은은한 번짐: 같은 빛을 카드 뒤에서 흐리게 */
+.ecard.su-first::before{inset:-3px;z-index:-1;filter:blur(7px)}
+@keyframes su-sweep{0%{--su-a:0deg;opacity:0}6%{opacity:1}50%{--su-a:360deg;opacity:1}58%,100%{--su-a:360deg;opacity:0}}
+@keyframes su-glow{0%,100%{box-shadow:0 0 0 rgba(230,195,106,0)}30%{box-shadow:0 0 14px rgba(230,195,106,.35),inset 0 0 10px rgba(230,195,106,.08)}60%{box-shadow:0 0 4px rgba(230,195,106,.12)}}
+@media (prefers-reduced-motion:reduce){.ecard.su-first{animation:none;box-shadow:0 0 8px rgba(230,195,106,.25)}.ecard.su-first::after,.ecard.su-first::before{animation:none;opacity:0}}
+.ec-subs{margin-bottom:6px}
+@media (max-width:640px){.su-slot small{display:none}}
+.inv.su td:nth-child(2){white-space:nowrap}
+.su-badge em{flex-basis:100%;font-style:normal;font-weight:700}
+.su-badge i.su-er{font-style:normal;margin-left:3px}
+:root[data-theme="light"] .su-mode .micon{background:#2a2a22;border-radius:50%;padding:1px}
+@media (max-width:640px){
+  .inv.su th:nth-child(5),.inv.su td:nth-child(5),.inv.su th:nth-child(7),.inv.su td:nth-child(7){display:none}
+  table.inv.su{min-width:0;word-break:keep-all}.su-slot b{white-space:nowrap}.inv.su td .nmc{gap:4px;flex-wrap:wrap}.inv.su .pt{display:none}.inv.su td,.inv.su th{padding-left:4px;padding-right:4px;font-size:13px}.inv.su td b.up{font-size:13.5px}.inv.su td:nth-child(2){white-space:normal}
+  .su-mode{font-size:0;gap:0;padding:1px}.su-mode .micon{width:15px;height:15px}
+  .su-slot{white-space:normal;gap:3px}.su-set{width:16px;height:16px}
+}

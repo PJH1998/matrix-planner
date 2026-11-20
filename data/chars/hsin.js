@@ -3,11 +3,18 @@ MP.addChar({
   id:"hsin", name:"여우의 별자리", el:"electro", rar:5, role:"dps",
   release:75, eid:1311,  // 출시 순서 · encore.moe 번호(이미지)
 
-  // 반주·메커니즘
-  syn:{o:"합일 모드: 합일 보유 캐릭터 전체 피해 +20% (30초) · 전자 모드: 파티 전도 피해 +20% (20초)",ob:["all","el"],p:1,w:["skill"],m:["unison","flare"],modes:[["unison"],["flare"]]},
-  // 반주 버프 수치(%)
-  outro:{v:{el:20},cond:{m:["unison"],to:1,v:{all:20}}},
-  // 피해 비중(%)
+  // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
+  // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명
+  // outro.cond.to: 받는 쪽 본인이 m을 갖고 파티에 m 공명자가 2명 이상일 때 · noSelf: 반주를 쓴 본인은 받지 않음
+  modes:[
+    {id:"unison",name:"공명 모드 · 합일",icon:"SP_RoleLabelI8",
+      syn:{o:"합일을 얻은 파티원(여우의 별자리 제외) 전체 피해 +20% (30초)",ob:["all"],p:1,w:["skill"],m:["unison"]},
+      outro:{v:{},cond:{m:["unison"],to:1,v:{all:20}},noSelf:1}},
+    {id:"flare",name:"공명 모드 · 전자",icon:"SP_RoleLabelI9",
+      syn:{o:"여우의 별자리를 제외한 파티 전도 피해 +20% (20초)",ob:["el"],p:1,w:["skill"],m:["flare"]},
+      outro:{v:{el:20},noSelf:1}},
+  ],
+  // 피해 비중(%) — 합일 모드 기준(Prydwen 측정 파티: 쇄명·파수인)
   profile:{basic:7.6,skill:85.9,lib:2.1,outro:1.7,echo:2.6},
   // S0 기본 DPS
   dps:215294,

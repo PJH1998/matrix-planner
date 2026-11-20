@@ -1,11 +1,12 @@
 // 배포 때 encore.moe에서 게임 이미지를 받아 사이트에 함께 올린다.
 // 사용법: node scripts/fetch-assets.mjs <출력 폴더> <캐시 폴더>
 //   출력: <출력>/char/{id}.webp (정사각형 얼굴), <출력>/card/{id}.webp (편성용 세로 카드),
-//         <출력>/weapon/{무기 id}.webp, <출력>/index.json (받은 파일 목록)
+//         <출력>/weapon/{무기 id}.webp, <출력>/set/{세트 번호}.webp, <출력>/mode/{공명 모드 아이콘}.webp,
+//         <출력>/index.json (받은 파일 목록)
 // 캐시 폴더에 이미 있는 파일은 다시 받지 않는다. 일부가 실패해도 배포는 계속한다(사이트가 기존 이미지로 대체).
 //
 // 목록만 쓰기: node scripts/fetch-assets.mjs --manifest <파일>
-//   이미지를 받지 않고, 받을 이미지를 정하는 값(공명자 eid · 무기 아이콘 · 세트 아이콘)만 JSON으로 쓴다.
+//   이미지를 받지 않고, 받을 이미지를 정하는 값(공명자 eid · 무기 아이콘 · 세트 아이콘 · 공명 모드 아이콘)만 JSON으로 쓴다.
 //   배포 워크플로가 이 파일을 해시해 이미지 캐시 키로 쓴다. 수치만 고친 배포에서는 캐시가 유지된다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -56,6 +57,8 @@ const CHAR_EID = Object.fromEntries(MP.CHAR_LIST.map((id) => [id, MP._chars[id] 
 const WEAPONS = ctx.window.WEAPONS || [];
 run('data/echoes.js');
 const SET_ICON = MP.ECHO_SET_ICON || {};
+// 공명 모드 아이콘(공명자 파일의 modes[].icon) — 여러 공명자가 같은 아이콘을 쓴다
+const MODE_ICON = [...new Set(MP.CHAR_LIST.flatMap((id) => ((MP._chars[id] || {}).modes || []).map((m) => m.icon)).filter(Boolean))].sort();
 
 if (MANIFEST) {
   const byFirst = (a, b) => String(a[0]).localeCompare(String(b[0]));
@@ -63,9 +66,10 @@ if (MANIFEST) {
     char: Object.entries(CHAR_EID).sort(byFirst),
     weapon: WEAPONS.map(([wid, , , , icon]) => [wid, icon || null]).sort(byFirst),
     set: Object.values(SET_ICON).map(([sid, icon]) => [sid, icon]).sort(byFirst),
+    mode: MODE_ICON,
   };
   fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
-  console.log(`image manifest: char ${manifest.char.length}, weapon ${manifest.weapon.length}, set ${manifest.set.length} → ${MANIFEST}`);
+  console.log(`image manifest: char ${manifest.char.length}, weapon ${manifest.weapon.length}, set ${manifest.set.length}, mode ${manifest.mode.length} → ${MANIFEST}`);
   process.exit(0);
 }
 
@@ -89,6 +93,11 @@ const setFails = await pool(Object.values(SET_ICON), 6, async ([sid, icon]) => {
   await download(`${SICON}${icon}.webp`, path.join(CACHE, 'set', `${sid}.webp`));
 });
 
+const MICON = 'https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Atlas/RoleLabel/';
+const modeFails = await pool(MODE_ICON, 4, async (icon) => {
+  await download(`${MICON}${icon}.webp`, path.join(CACHE, 'mode', `${icon}.webp`));
+});
+
 // 직접 넣은 이미지(img-manual/char|card|weapon/*.webp)가 있으면 encore.moe 이미지보다 우선한다.
 const MANUAL = 'img-manual';
 for (const kind of ['char', 'card', 'weapon']) {
@@ -99,7 +108,7 @@ for (const kind of ['char', 'card', 'weapon']) {
 }
 
 const index = {};
-for (const kind of ['char', 'card', 'weapon', 'set']) {
+for (const kind of ['char', 'card', 'weapon', 'set', 'mode']) {
   const src = path.join(CACHE, kind);
   const files = fs.existsSync(src) ? fs.readdirSync(src).filter((f) => f.endsWith('.webp') && have(path.join(src, f))) : [];
   fs.mkdirSync(path.join(OUT, kind), { recursive: true });
@@ -108,5 +117,5 @@ for (const kind of ['char', 'card', 'weapon', 'set']) {
 }
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index));
 
-console.log(`img: char ${index.char.length}, card ${index.card.length}, weapon ${index.weapon.length}, set ${index.set.length}`);
-for (const f of [...charFails, ...weaponFails, ...setFails]) console.log('  실패:', f);
+console.log(`img: char ${index.char.length}, card ${index.card.length}, weapon ${index.weapon.length}, set ${index.set.length}, mode ${index.mode.length}`);
+for (const f of [...charFails, ...weaponFails, ...setFails, ...modeFails]) console.log('  실패:', f);
