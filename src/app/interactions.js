@@ -135,6 +135,11 @@ $("#poolSort").addEventListener("change",e=>{state.poolSort=e.target.value;persi
 $("#rosterSort").addEventListener("change",e=>{state.rosterSort=e.target.value;persist();renderRoster()});
 document.querySelector(".rview").addEventListener("click",e=>{const b=e.target.closest("[data-rview]");if(!b)return;state.rosterView=b.dataset.rview;persist();renderRoster()});
 $("#invScope").addEventListener("change",renderInvest);
+// 뽑기 투자 | 에코 스펙업 전환, 스펙업 표의 줄·미입력 공명자를 누르면 그 공명자의 에코 화면
+document.querySelector(".invmode").addEventListener("click",e=>{const b=e.target.closest("[data-invmode]");if(!b||b.dataset.invmode===invMode)return;invMode=b.dataset.invmode;renderInvest()});
+$("#invSpec").addEventListener("click",e=>{const row=e.target.closest("[data-su]");if(row)return openSpecRow(row.dataset.su);
+  const sk=e.target.closest("[data-suopen]");if(sk){openProfile(sk.dataset.suopen);pfTabSel="echo";renderProfile()}});
+$("#invSpec").addEventListener("keydown",e=>{const row=e.target.closest("[data-su]");if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openSpecRow(row.dataset.su)}});
 document.querySelector("table.inv thead").addEventListener("click",e=>{const b=e.target.closest(".thsort");if(!b)return;
   if(invSort.k===b.dataset.k)invSort.dir*=-1;else{invSort.k=b.dataset.k;invSort.dir=-1}drawInvest();});
 window.addEventListener("hashchange",()=>{const h=location.hash;if(h==="#invest")renderInvest();if(h==="#records")renderRecords();});
