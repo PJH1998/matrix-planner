@@ -7,6 +7,7 @@
        gain  좋아졌을 때 개인 점수가 평균 몇 % 오르는지
        eff   p × gain = 새 에코 1개당 기대 상승률(%)  ← 정렬 기준
        tries 1/p (좋은 에코가 나올 때까지 평균 몇 개를 깎아야 하는지)
+       erCut 점수는 올랐지만 공명 효율 최소치가 깨져서 빼버린 비율 (화면에서 「공명 효율 유지 조건」 표시)
      순수하게 공명자 스펙만 본다: 이번 주기 보스·파워 서킷·파티 편성은 넣지 않는다(주기마다 표가 달라지지 않게).
      공명 체인·무기는 돈이 드는 성장이라 투자 효율 탭이 다루고, 주파수 조정기 재구성도 넣지 않는다.
      공명 효율이 모자란 공명자를 위로 올리지 않는다(경고는 따로 한다).
@@ -41,14 +42,14 @@
     // 에코 한 칸의 효율 (지금 모드 기준)
     slotEff(id,index){const list=this.echoes.slot(id).echoes||[],cur=list[index];if(!cur||!cur.main)return null;
       const base=this.characters.score(id),erBefore=this.echoes.erOk(id),random=this.rng(this.hash(`${id}|${this.db.modeOf(id)}|${index}`));
-      let hits=0,sum=0;
+      let hits=0,sum=0,cut=0;
       for(let s=0;s<this.samples;s++){const echo=this.freshEcho(cur,this.rollSubs(random));
-        // 공명 효율은 점수가 오른 경우에만, 지금 최소치를 채우고 있을 때만 확인한다
-        const d=this.withEcho(id,index,echo,()=>{const score=this.characters.score(id),d=base>0?(score/base-1)*100:0;return d>1e-9&&(!erBefore||this.echoes.erOk(id))?d:0});
-        if(d>0){hits++;sum+=d}}
+        // 공명 효율은 점수가 오른 경우에만, 지금 최소치를 채우고 있을 때만 확인한다 (깨지면 cut: 점수는 올라도 좋아진 것으로 안 셈)
+        const d=this.withEcho(id,index,echo,()=>{const score=this.characters.score(id),d=base>0?(score/base-1)*100:0;if(!(d>1e-9))return 0;if(erBefore&&!this.echoes.erOk(id))return -1;return d});
+        if(d>0){hits++;sum+=d}else if(d<0)cut++}
       const p=hits/this.samples,gain=hits?sum/hits:0;
-      return {index,cost:cur.cost,main:cur.main.k,set:(this.echoes.echoesOf(id)[list.slice(0,index).filter(e=>e&&e.main).length]||{}).set||null,
-        p,gain,eff:p*gain,tries:p>0?1/p:null}}
+      return {index,cost:cur.cost,main:cur.main.k,elem:cur.main.elem||null,set:(this.echoes.echoesOf(id)[list.slice(0,index).filter(e=>e&&e.main).length]||{}).set||null,
+        p,gain,eff:p*gain,tries:p>0?1/p:null,erCut:cut/this.samples}}
     /* 결과 캐시: 공명자·모드마다 따로 둔다. 그 공명자의 입력(서명)이 바뀐 것만 다시 계산한다.
        개인 점수는 그 공명자 자신의 육성 데이터(공통: 레벨·체인·무기·체험 세팅 / 모드별: 에코·세트·스탯 직접 입력)로만 정해진다.
        예외: 서포터 협주력은 정석 파트너의 메커니즘을 보므로, 파트너가 모드 공명자면 파트너가 보고 있는 모드도 서명에 넣는다 */
@@ -75,8 +76,9 @@
     table({scope="owned",ids}={}){const state=this.state();
       const list=(ids||(scope==="team"?[...new Set(state.teams.flatMap(t=>t.slots.filter(Boolean)))]:Object.keys(state.owned||{}).filter(id=>state.owned[id]))).filter(id=>this.charMap()[id]);
       const chars=list.flatMap(id=>this.forCharAll(id));
-      const rows=chars.flatMap(c=>c.slots.map(s=>Object.assign({id:c.id,mode:c.mode,erOk:c.erOk},s))).sort((a,b)=>b.eff-a.eff);
-      return {chars:chars.filter(c=>!c.skip),rows,skipped:chars.filter(c=>c.skip).map(c=>({id:c.id,skip:c.skip}))}}
+      return {chars:chars.filter(c=>!c.skip),rows:this.rows(chars),skipped:chars.filter(c=>c.skip).map(c=>({id:c.id,skip:c.skip}))}}
+    // 공명자별 결과들을 칸 단위 행으로 합쳐 정렬 (화면이 나눠 계산하며 표를 채울 때도 쓴다)
+    rows(chars){return chars.flatMap(c=>c.slots.map(s=>Object.assign({id:c.id,mode:c.mode,erOk:c.erOk},s))).sort((a,b)=>b.eff-a.eff)}
   }
   g.MP.SpecUpManager=SpecUpManager;
 })(typeof window!=="undefined"?window:globalThis);
