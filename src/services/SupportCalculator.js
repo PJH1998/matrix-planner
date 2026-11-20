@@ -24,12 +24,20 @@
     setFxGain(effect,id){const c=this.charMap()[id];if(!c)return 0;const value=effect.v/100;
       if(effect.k==="atk%")return value/this.atkBase;if(effect.k==="el")return effect.elem&&effect.elem!==c.el?0:value/this.config.bonusBase;if(effect.k==="all")return value/this.config.bonusBase;
       if(this.echoDb.DMG_TYPES.includes(effect.k))return value*this.db.typeShare(id,effect.k)/this.config.bonusBase;return 0}
-    /* 반주 버프 */
+    /* 반주 버프
+       cond.to: 받는 쪽 본인이 m을 갖고 파티에 m 공명자가 2명 이상 · cond.rx: 받는 쪽 본인이 m을 가짐 · 그 밖: 다른 파티원 중 m이 있음
+       noSelf: 반주를 쓴 본인은 받지 않음(파티 전체 반주) */
     outroValues(giver,ids,receiver){const outro=this.db.outro(giver);if(!outro)return null;if(!outro.cond)return outro.v;
       if(outro.cond.to)return receiver&&this.db.has(receiver,outro.cond.m)&&ids.filter(id=>this.db.has(id,outro.cond.m)).length>=2?outro.cond.v:outro.v;
+      if(outro.cond.rx)return receiver&&this.db.has(receiver,outro.cond.m)?outro.cond.v:outro.v;
       return ids.some(id=>id!==giver&&this.db.has(id,outro.cond.m))?outro.cond.v:outro.v}
-    outroGain(giver,receiver,ids,ref){const values=this.outroValues(giver,ids,receiver);if(!values)return 0;const map=this.charMap(),cg=map[giver],cr=map[receiver];if(!cg||!cr)return 0;let gain=0;
-      Object.entries(values).forEach(([key,value])=>{if(key==="all")gain+=value;else if(key==="el"){if(cg.el===cr.el)gain+=value/this.config.bonusBase}else gain+=value*this.db.typeShare(receiver,key)/this.config.bonusBase});
+    outroSkipsSelf(giver){const outro=this.db.outro(giver);return !!(outro&&outro.noSelf)}
+    /* 키: all 전체 피해 부스트 · el 같은 속성 피해 보너스 · 피해 유형(basic 등) 보너스 · 이상 효과(frost·burn 등) 피해 부스트
+       이상 효과 부스트는 그 이상 효과를 거는 공명자의 이상 효과 피해(피해 비중 other)에만 붙는다 */
+    outroGain(giver,receiver,ids,ref){if(giver===receiver&&this.outroSkipsSelf(giver))return 0;const values=this.outroValues(giver,ids,receiver);if(!values)return 0;const map=this.charMap(),cg=map[giver],cr=map[receiver];if(!cg||!cr)return 0;let gain=0;const anom=g.MP.ANOM||[];
+      Object.entries(values).forEach(([key,value])=>{if(key==="all")gain+=value;else if(key==="el"){if(cg.el===cr.el)gain+=value/this.config.bonusBase}
+        else if(anom.includes(key)){if(this.db.has(receiver,[key]))gain+=value*this.db.share(receiver,"other")}
+        else gain+=value*this.db.typeShare(receiver,key)/this.config.bonusBase});
       return gain/100*this.buffChainMul(giver,ref)}
     /* 한 공명자가 파티원에게 주는 반주 외 버프 목록 [{kind: sup|set|weapon, to, e, …}]. ref면 기준 세팅(세트 차이 0, 기본 추천 무기) */
     giverBuffs(giver,ids,main,context,ref){const map=this.charMap(),out=[];

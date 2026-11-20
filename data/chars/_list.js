@@ -8,7 +8,14 @@
      syn   {o, ob, p, w, m}     반주·메커니즘 (출처: encore.moe 반주·고유 스킬 설명)
              o  반주 요약 / ob 반주 버프 대상(basic·heavy·skill·lib·echo·coord·el·all)
              p  1이면 파티 전체 버프 / w 주력 피해 유형 / m 메커니즘(frost·burn·erosion·flare·frazzle·bane·anom·tuneD·tuneW·hack·unison·shield·echo·coord)
-     outro {v, cond}            반주 버프 수치(%). cond: 파티에 메커니즘 m이 있으면 v 대신 cond.v (to:1이면 받는 쪽 본인이 m을 가져야 함)
+     outro {v, cond, noSelf}    반주 버프 수치(%). cond: 파티에 메커니즘 m이 있으면 v 대신 cond.v
+                                  (to:1 받는 쪽 본인이 m을 갖고 파티에 m 공명자 2명 이상 · rx:1 받는 쪽 본인이 m을 가짐)
+                                v 키: all 전체 피해 · el 같은 속성 피해 · basic 등 피해 유형 · frost·burn 등 이상 효과 피해 부스트(그 이상 효과를 거는 공명자만)
+                                noSelf:1 파티 전체 반주를 쓴 본인은 받지 않음 ("○○를 제외한 파티 내 캐릭터")
+     modes [{id, name, icon, …}] 공명 모드(루실라·에이메스·데니아·여우의 별자리·린네). 0번 = 게임 기본 모드
+                                name: 게임 공식 명칭("공명 모드 · 서리") · icon: encore.moe RoleLabel 아이콘 파일 이름
+                                모드마다 다른 필드(syn·outro·sets·profile·dps·amp·supCond 등)를 여기 적으면 그 모드일 때 공통 값 대신 쓴다
+                                파티 계산은 모드 조합을 모두 계산해 가장 좋은 조합을 고르고, 에코 세팅도 모드별로 따로 저장한다
      shieldUp                   (선택) 실드 유지율 0~1 — 실드 조건 효과(파워 서킷 등)의 유지율로 쓴다. 파티 중 가장 높은 값
      profile                    피해 비중(%) — Prydwen Calculations Damage Profile. other = 이상 효과·조화도 파괴 등
      dps, chain                 S0 기본 DPS, 0~6체인 DPS 배율 (Prydwen Calculations, 2026-11)

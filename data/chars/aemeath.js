@@ -3,11 +3,18 @@ MP.addChar({
   id:"aemeath", name:"에이메스", el:"fusion", rar:5, role:"dps",
   release:62, eid:1210,  // 출시 순서 · encore.moe 번호(이미지)
 
-  // 반주·메커니즘
-  syn:{o:"파티 전체 피해 +10%, 조화 파동 이탈·불꽃 효과 부여 시 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW","burn"],modes:[["burn"],["tuneW"]]},
-  // 반주 버프 수치(%)
-  outro:{v:{all:10},cond:{m:["burn","tuneW"],v:{all:20}}},
-  // 피해 비중(%)
+  // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
+  // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명
+  // outro.cond.rx: 받는 쪽 본인이 메커니즘 m을 가져야 cond.v · noSelf: 반주를 쓴 본인은 받지 않음
+  modes:[
+    {id:"tuneW",name:"공명 모드 · 조화 파동",icon:"SP_RoleLabelI1",
+      syn:{o:"에이메스를 제외한 파티 전체 피해 +10%, 조화 파동 · 이탈을 건 캐릭터는 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["tuneW"]},
+      outro:{v:{all:10},cond:{m:["tuneW"],rx:1,v:{all:20}},noSelf:1}},
+    {id:"burn",name:"공명 모드 · 불꽃",icon:"SP_RoleLabelFire",
+      syn:{o:"에이메스를 제외한 파티 전체 피해 +10%, 불꽃 효과를 건 캐릭터는 +20% (20초)",ob:["all"],p:1,w:["lib"],m:["burn"]},
+      outro:{v:{all:10},cond:{m:["burn"],rx:1,v:{all:20}},noSelf:1}},
+  ],
+  // 피해 비중(%) — 조화 파동 모드 기준(Prydwen 측정 파티: 린네·모니에)
   profile:{basic:8.3,lib:67.6,echo:2.6,other:21.4},
   // S0 기본 DPS
   dps:146568,

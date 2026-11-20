@@ -34,8 +34,8 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
     const w=(S.w||[]);const n=d.w.filter(x=>w.includes(x)).length;if(n)return n/Math.max(1,w.length);}
   if((d.m||[]).some(x=>(S.m||[]).includes(x))&&!(d.w&&CharDB.profile(id)))return 1;
   return 0;}
-// mOv: 모드 공명자의 메커니즘을 한 모드로 좁혀 판정할 때 (views.teamWarnings)
-function charMeets(k,id,mOv){const d=COND[k],c=charMap[id];if(!d||!c)return false;if(d.dealer&&c.role==="support")return false;const S=synOf(id),M=mOv||S.m||[];
+// 공명 모드 공명자는 지금 모드(CharDB.withModes — 파티 계산이 고른 모드)의 메커니즘으로 판정한다
+function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;if(d.dealer&&c.role==="support")return false;const S=synOf(id),M=S.m||[];
   return (d.ids||[]).includes(id)||(d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>M.includes(x));}
 function teamMeets(k,t){const d=COND[k];const n=t.slots.filter(id=>id&&charMeets(k,id)).length;return n>=((d&&d.min)||1)}
 // 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
@@ -66,7 +66,7 @@ let db=null, docRef=null, storeMode="local";
 let selected=null;         // tap-to-place selection
 let portraits={};          // charId -> file name in portraits/
 // 게임 이미지(img/, 배포 때 encore.moe에서 받음)가 있으면 그것을, 없으면 portraits/ 이미지를 쓴다.
-let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set()};
+let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set(),mode:new Set()};
 const hasPic=id=>gameImg.char.has(id)||!!portraits[id];
 // --pic은 외부 CSS에서 사용되므로 상대 URL을 넣으면 CSS 파일 위치 기준으로 해석된다. 페이지 기준 절대 URL로 고정한다.
 const assetUrl=path=>new URL(path,document.baseURI).href;
@@ -197,7 +197,7 @@ async function loadPortraits(){
 }
 async function loadGameImages(){
   try{const r=await fetch("img/index.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();
-    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number)),set:new Set((j.set||[]).map(Number))};
+    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number)),set:new Set((j.set||[]).map(Number)),mode:new Set(j.mode||[])};
     rerenderPlan();renderRoster();renderInvest();renderRecords();if(profId&&$("#prof").open)renderProfile();
   }catch(e){}
 }

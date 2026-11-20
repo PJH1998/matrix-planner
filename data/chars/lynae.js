@@ -3,8 +3,15 @@ MP.addChar({
   id:"lynae", name:"린네", el:"spectro", rar:5, role:"sub",
   release:60, eid:1509,  // 출시 순서 · encore.moe 번호(이미지)
 
-  // 반주·메커니즘
-  syn:{o:"다음 캐릭터 전체 피해 +15%, 공명 해방 피해 +25% (14초)",ob:["all","lib"],w:["basic"],m:["tuneW","tuneD"]},
+  // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
+  // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명
+  // 반주 효과는 두 모드가 같다. 거는 조화도 이탈만 다르다
+  modes:[
+    {id:"tuneW",name:"공명 모드 · 조화 파동",icon:"SP_RoleLabelI1",
+      syn:{o:"다음 캐릭터 전체 피해 +15%, 공명 해방 피해 +25% (14초)",ob:["all","lib"],w:["basic"],m:["tuneW"]}},
+    {id:"tuneD",name:"공명 모드 · 조화 밀집",icon:"SP_RoleLabelH2",
+      syn:{o:"다음 캐릭터 전체 피해 +15%, 공명 해방 피해 +25% (14초)",ob:["all","lib"],w:["basic"],m:["tuneD"]}},
+  ],
   // 반주 버프 수치(%)
   outro:{v:{all:15,lib:25}},
   // 피해 비중(%)

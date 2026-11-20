@@ -21,17 +21,18 @@ MP.TEAM_PRESETS=[
  ["changli","brant","lupa"]       // 거의 고정 조합
 ];
 MP.MIN_POINTS=1000;
-/* 추천 조합 표시: 2~3명 모두 같은 파티에 있으면 조합 이름을 보여주고 강도에 조합 보너스를 더한다 */
+/* 추천 조합 표시: 2~3명 모두 같은 파티에 있으면 조합 이름을 보여주고 강도에 조합 보너스를 더한다
+   modes: {공명자 id: 모드 id} — 공명 모드 공명자가 그 모드일 때만 조합으로 본다 */
 MP.COMBOS=[
- {ids:["qingxiao","denia","mornye"],name:"조화 밀집"},
- {ids:["hsin","suoming"],name:"합일"},
+ {ids:["qingxiao","denia","mornye"],name:"조화 밀집",modes:{denia:"tuneD"}},
+ {ids:["hsin","suoming"],name:"합일",modes:{hsin:"unison"}},
  {ids:["augusta","iuno"],name:"아우구스타 정석"},
  {ids:["lucy","rebecca"],name:"해킹"},
  {ids:["cartethyia","ciaccona","rover_a"],name:"풍식"},
  {ids:["zani","phoebe"],name:"광학"},
- {ids:["hiyuki","lucilla"],name:"서리"},
+ {ids:["hiyuki","lucilla"],name:"서리",modes:{lucilla:"frost"}},
  {ids:["xuanling","chisa"],name:"암흑"},
- {ids:["aemeath","mornye"],name:"조화 파동"},
+ {ids:["aemeath","mornye"],name:"조화 파동",modes:{aemeath:"tuneW"}},
  {ids:["jinhsi","zhezhi","shorekeeper"],name:"금희 정석"},
  {ids:["carlotta","zhezhi"],name:"카를로타 정석"},
  {ids:["xiangliyao","yinlin"],name:"전도 정석"},

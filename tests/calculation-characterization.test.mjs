@@ -32,9 +32,10 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const teams = app.state().teams.slice(0, 4);
   const expected = [
     ["camellya", 27.944933011231065, 36.97499186422595],
-    ["qingxiao", 66.23832843723189, 82.79791054653985],
+    // 1.4: 공명 모드 공명자는 파티마다 한 모드로 계산한다(데니아 조화 밀집, 여우의 별자리 전자 — 이상 효과 서킷)
+    ["qingxiao", 64.6519560068525, 80.81494500856563],
     ["jingran", 63.59063742236907, 70.46568607792942],
-    ["hsin", 70.21280676197273, 108.82985048105773],
+    ["hsin", 59.05310498992667, 91.53231273438635],
   ];
 
   teams.forEach((team, index) => {
@@ -45,8 +46,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.758920774392114);
-  closeTo(simulation.total, 42014.43905177187);
+  closeTo(simulation.progress, 6.447587019659116);
+  closeTo(simulation.total, 39135.14665456242);
   assert.equal(simulation.bad, 0);
 });
 
@@ -97,8 +98,8 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
 
   assert.equal(teams.length, 18);
   assert.deepEqual(teams.map(team => `${team.slots.join("/")}:${team.buff}`), [
-    "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:negative",
-    "aemeath/lynae/mornye:negative", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
+    "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:tune",
+    "aemeath/lynae/mornye:tune", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
     "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "lucy/rebecca/verina:tune",
     "jinhsi/zhezhi/shorekeeper:general", "zani/phoebe/baizhi:negative", "camellya/sanhua/baizhi:general",
