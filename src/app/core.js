@@ -92,6 +92,8 @@ const calculationContext={state:()=>state,chars:()=>chars,charMap:()=>charMap,cy
 const weaponCalculator=new window.MP.WeaponCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,
   weapons:window.WEAPONS,weaponTypes:window.WEAPON_TYPES,weaponStats:window.WEAPON_STATS,weaponSheetFx:window.WEAPON_SHEET_FX});
 const echoCalculator=new window.MP.EchoCalculator({state:calculationContext.state,charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator});
+// 에코 점수(100점 만점)와 등급: 부옵이 이 공명자에게 얼마나 쓸모 있는지
+const echoScorer=new window.MP.EchoScoreCalculator({charMap:calculationContext.charMap,charDb:CharDB,echoDb:EchoDB,echoes:echoCalculator,weapons:weaponCalculator});
 const characterCalculator=new window.MP.CharacterCalculator({state:calculationContext.state,chars:calculationContext.chars,charMap:calculationContext.charMap,
   cycle:calculationContext.cycle,charDb:CharDB,echoDb:EchoDB,weapons:weaponCalculator,echoes:echoCalculator});
 

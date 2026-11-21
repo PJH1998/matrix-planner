@@ -160,6 +160,9 @@
     subTiers:key=>(MP.ECHO_SUB_TIERS||{})[key]||null,
     subKeys:()=>Object.keys(MP.ECHO_SUB||{}),
     subOdds:key=>(MP.ECHO_SUB_ODDS||{})[key]||null,       // 수치 단계별 가중치 (공식 확률 공시, subTiers와 같은 순서)
+    subMax:key=>{const t=(MP.ECHO_SUB_TIERS||{})[key];return t?t[t.length-1]:null}, // 부옵 최대 수치(마지막 단계)
+    grades:()=>MP.ECHO_GRADES||[],                         // 에코 점수 등급 [{id, name, desc, min}] 높은 등급부터
+    grade:score=>(MP.ECHO_GRADES||[]).find(g=>score>=g.min)||null,
     names:()=>MP.ECHO_NAMES||[],
     /* 공명자 연결 — 공명자 데이터는 CharDB를 거친다 */
     charSets:id=>MP.CharDB.sets(id),                       // [[세트, 개수, …], …] 위에 있을수록 정배
