@@ -338,7 +338,7 @@ function echoCmpHTML(id){const C=echoCmp;if(!C||C.id!==id)return "";const c=char
   const notes=[];
   if(erBreak&&v!=="warn")notes.push(`새 에코로 바꾸면 공명 효율이 최소치 ${B.erMin}%보다 낮아져 사이클이 밀릴 수 있어요.`);
   if(v==="warn")notes.push(`공명 효율이 최소치보다 낮아지면 사이클이 밀릴 수 있어요. 다른 칸으로 공명 효율을 채울 수 있다면 바꿔도 좋아요.`);
-  if(A.es&&B.es&&A.es.grade.id!==B.es.grade.id)notes.push(`바꾸면 에코 등급이 ${A.es.grade.name}에서 ${B.es.grade.name}${josaRo(B.es.grade.name)} ${eb>ea?"올라요":"내려가요"}.`);
+  if(A.es&&B.es&&A.es.grade.label!==B.es.grade.label)notes.push(`바꾸면 에코 등급이 ${A.es.grade.label}에서 ${B.es.grade.label}${josaRo(B.es.grade.label)} ${eb>ea?"올라요":"내려가요"}.`);
   if(B.cost>12)notes.push(`바꾸면 코스트가 ${B.cost}/12가 돼요.`);
   if(cur&&+cur.cost!==+C.echo.cost)notes.push(`코스트가 달라요 (${cur.cost}코 → ${C.echo.cost}코).`);
   const good=v==="better"||v==="even"&&d>0;
@@ -446,7 +446,7 @@ function pfScoresHTML(id){const c=charMap[id];const es=echoScorer.score(id);
   const etip=`부옵이 이 공명자에게 얼마나 쓸모 있는지 500점 만점으로 매긴 점수입니다(에코 1개 100점). ${c.role==="support"?"지원 기준 스탯·공명 효율":"크리티컬은 목표치까지, 공명 효율은 최소치까지, 크리티컬 피해·주력 스탯·주력 피해 보너스"}를 셉니다. 주옵은 넣지 않습니다.`;
   return `<div class="pf-scores">
     <div class="pf-sc" title="${tip}"><span class="l">${scoreName(id)}</span><b id="pfScore">${charScore(id).toFixed(1)}</b><small id="pfScoreTag" class="pf-stag">${scoreTag(id)}</small></div>
-    <div class="pf-sc es${es?" eg-"+es.grade.id:""}" title="${esc(etip)}"><span class="l">에코 점수</span>${es?`<b>${Math.round(es.total)}</b><em>/500</em><span class="eg">${esc(es.grade.name)}</span><small class="egd">${esc(es.grade.desc)}${es.count<5?` · 에코 ${es.count}/5`:""}</small>`:`<b class="none">—</b><small class="egd">에코를 넣으면 점수와 등급이 나와요</small>`}</div>
+    <div class="pf-sc es${es?" eg-"+es.grade.id:""}" title="${esc(etip)}"><span class="l">에코 점수</span>${es?`<b>${Math.round(es.total)}</b><em>/500</em><span class="eg">${esc(es.grade.label)}</span><small class="egd">${esc(es.grade.desc)}${es.count<5?` · 에코 ${es.count}/5`:""}</small>`:`<b class="none">—</b><small class="egd">에코를 넣으면 점수와 등급이 나와요</small>`}</div>
   </div>`}
 function setGrowth(id,patch){appMediator.characters.patchGrowth(id,patch);persist();renderProfile();renderRoster();rerenderPlan();}
 function renderProfile(){

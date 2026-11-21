@@ -15,6 +15,23 @@ test("등급은 높은 순서 6개, 점수 경계에서 바뀐다", () => {
   assert.deepEqual(grades.map(g => g.name), ["어자", "명식", "해일", "노도", "거랑", "경파"]);
   for (let i = 1; i < grades.length; i++) assert.ok(grades[i - 1].min > grades[i].min);
   assert.equal(grades.at(-1).min, 0);
+  // 어자 450, 간격 75점으로 같다
+  assert.equal(grades[0].min, 450);
+  for (let i = 1; i < grades.length - 1; i++) assert.equal(grades[i - 1].min - grades[i].min, 75);
+});
+
+test("어자를 뺀 등급은 구간을 셋으로 나눠 III · II · I", () => {
+  const app = loadCurrentApp();
+  const g = v => app.echoGradeOf(v);
+  assert.equal(g(500).label, "어자");
+  assert.equal(g(450).label, "어자");
+  assert.equal(g(449).label, "명식 I");
+  assert.equal(g(425).label, "명식 I");
+  assert.equal(g(424).label, "명식 II");
+  assert.equal(g(375).label, "명식 III");
+  assert.equal(g(300).label, "해일 III");
+  assert.equal(g(149).label, "경파 I");
+  assert.equal(g(0).label, "경파 III");
 });
 
 test("에코가 없으면 점수 없음, 쓸모없는 부옵만 있으면 0점·경파", () => {

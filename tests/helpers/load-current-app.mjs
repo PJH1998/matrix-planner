@@ -78,6 +78,7 @@ export function loadCurrentApp() {
       erOk:id=>echoCalculator.erOk(id),
       echoScore:id=>clone(echoScorer.score(id)),
       echoGrades:()=>clone(EchoDB.grades()),
+      echoGradeOf:v=>clone(EchoDB.grade(v)),
       echoBuild:(id,list)=>clone(echoBuild(id,list==null?undefined:clone(list))),
       sheetStats:id=>clone(sheetStats(id)),
       echoFactor:id=>clone(echoFactor(id)),
