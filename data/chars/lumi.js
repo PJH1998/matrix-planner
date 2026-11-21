@@ -1,7 +1,7 @@
 /* 루미 — 전도 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"lumi", name:"루미", el:"electro", rar:4, role:"sub",
-  release:30, eid:1504,  // 출시 순서 · encore.moe 번호(이미지)
+  release:30, eid:1504, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 공명 스킬 피해 +38% (10초)",ob:["skill"],w:[],m:[]},

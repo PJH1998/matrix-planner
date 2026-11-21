@@ -1,7 +1,7 @@
 /* 히유키 — 응결 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"hiyuki", name:"히유키", el:"glacio", rar:5, role:"dps",
-  release:66, eid:1108,  // 출시 순서 · encore.moe 번호(이미지)
+  release:66, eid:1108, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"근처 아군이 서리 효과 대상에게 주는 응결 피해 +20% (20초)",ob:["el"],p:1,w:["lib"],m:["frost"]},

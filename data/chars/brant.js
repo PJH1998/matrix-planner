@@ -1,7 +1,7 @@
 /* 브렌트 — 용융 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"brant", name:"브렌트", el:"fusion", rar:5, role:"sub",
-  release:35, eid:1206,  // 출시 순서 · encore.moe 번호(이미지)
+  release:35, eid:1206, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 용융 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic"],m:[]},

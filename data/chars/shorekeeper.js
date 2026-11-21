@@ -1,7 +1,7 @@
 /* 파수인 — 회절 · 5★ · 서포터 */
 MP.addChar({
   id:"shorekeeper", name:"파수인", el:"spectro", rar:5, role:"support",
-  release:28, eid:1505,  // 출시 순서 · encore.moe 번호(이미지)
+  release:28, eid:1505, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"파티 전체 피해 +15%, 피격 회피 보조 (30초)",ob:["all"],p:1,w:[],m:[]},

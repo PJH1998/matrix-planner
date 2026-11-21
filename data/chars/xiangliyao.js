@@ -1,7 +1,7 @@
 /* 상리요 — 전도 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"xiangliyao", name:"상리요", el:"electro", rar:5, role:"dps",
-  release:27, eid:1305,  // 출시 순서 · encore.moe 번호(이미지)
+  release:27, eid:1305, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 일반 공격 명중 시 협동 공격 (8초)",ob:[],w:["lib"],m:["coord"]},

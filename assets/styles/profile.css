@@ -241,3 +241,32 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
   .ecmp{order:-1;flex:none}
 }
 @media (max-width:420px){.ecmp{padding:12px}.ecmp-cards{gap:6px}.ecmp-c{padding:7px}.ecmp-c .ec-sub{font-size:12.5px;gap:4px;padding:3px 4px}.ecmp-c .ec-main span{font-size:12.5px}}
+
+/* 점수 영역: 공명력(협주력) · 에코 점수와 등급 (프로필 창은 라이트 모드에서도 어두운 색) */
+.pf-scores{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:8px;margin:4px 0 2px}
+.pf-sc{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding:8px 12px 9px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);min-width:0;--eg:#e6c36a}
+.pf-sc .l{flex-basis:100%;font-size:12.5px;color:#9aa6b1;letter-spacing:.02em}
+.pf-sc b{font-family:var(--f-num);font-size:30px;line-height:1.05;font-weight:600;color:#e6c36a}
+.pf-sc b.none{color:#6d7883}
+.pf-sc em{font-style:normal;font-family:var(--f-num);font-size:14px;color:#8d98a3;margin-left:-4px}
+.pf-sc .pf-stag{align-self:center;border-color:rgba(255,255,255,.2);color:#b6bfc8}
+.pf-sc .eg{align-self:center;font-size:17px;font-weight:700;color:var(--eg);padding:1px 10px;border-radius:7px;background:color-mix(in srgb,var(--eg) 16%,transparent);border:1px solid color-mix(in srgb,var(--eg) 55%,transparent)}
+.pf-sc .egd{flex-basis:100%;font-size:12px;color:#9aa6b1;word-break:keep-all}
+.pf-sc.es b{color:var(--eg)}
+.pf-sc.es{border-color:color-mix(in srgb,var(--eg) 35%,rgba(255,255,255,.1));background:linear-gradient(120deg,color-mix(in srgb,var(--eg) 10%,transparent),rgba(255,255,255,.02))}
+/* 등급 색 = 등급 아이콘 색 (경파 회색 → 거랑 초록 → 노도 파랑 → 해일 보라 → 명식 빨강 → 어자 금색). 어두운 배경에서 읽히도록 조금 밝게 */
+.eg-eoja{--eg:#ecc463}.eg-myeongsik{--eg:#e8707e}.eg-haeil{--eg:#a07ce6}.eg-nodo{--eg:#5ea4ea}.eg-georang{--eg:#74cf86}.eg-gyeongpa{--eg:#b7bfc9}
+/* 에코 점수 칸: 왼쪽 등급 아이콘, 오른쪽 점수·등급 */
+.pf-sc.es{flex-wrap:nowrap;align-items:center;gap:10px;overflow:hidden}
+.pf-sc.es .esb{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0;flex:1}.pf-sc .esn{white-space:nowrap}.pf-sc .esn em{margin-left:2px}
+.pf-sc .egi{flex:none;width:66px;height:66px;margin:-8px -2px -8px -6px;object-fit:contain;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--eg) 45%,transparent))}
+.pf-sc.es b{text-shadow:0 0 14px color-mix(in srgb,var(--eg) 40%,transparent)}
+.pf-sc.es::after{content:"";position:absolute;inset:auto 0 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--eg),transparent);opacity:.55;pointer-events:none}
+/* 비교 창 등급 */
+.egc{display:inline-flex;align-items:center;gap:3px;color:var(--eg);font-weight:700;white-space:nowrap}
+.egc img{width:20px;height:20px;object-fit:contain}
+.ecmp-t tr.eg-row td{font-size:12.5px}
+@media (max-width:520px){.pf-scores{grid-template-columns:1fr 1fr}.pf-sc{padding:7px 9px}.pf-sc b{font-size:24px}.pf-sc .eg{font-size:14px;padding:0 7px}.pf-sc .egi{width:48px;height:48px;margin:-4px -4px -4px -5px}.pf-sc.es{gap:6px}}
+/* 에코 카드 한 장의 점수 */
+.ec-pts{display:flex;align-items:baseline;gap:4px;padding:2px 7px 0;font-size:12.5px;color:#9aa6b1}
+.ec-pts span{flex:1}.ec-pts b{font-family:var(--f-num);font-size:16px;font-weight:600;color:#f3e3b5}.ec-pts small{font-size:11.5px;color:#7f8b97}

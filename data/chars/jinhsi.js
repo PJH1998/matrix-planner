@@ -1,7 +1,7 @@
 /* 금희 — 회절 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"jinhsi", name:"금희", el:"spectro", rar:5, role:"dps",
-  release:24, eid:1304,  // 출시 순서 · encore.moe 번호(이미지)
+  release:24, eid:1304, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"봄의 빛 공생 강화 (20초)",ob:[],w:["skill"],m:["coord"]},

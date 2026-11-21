@@ -1,7 +1,7 @@
 /* 앙코 — 용융 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"encore", name:"앙코", el:"fusion", rar:5, role:"dps",
-  release:8, eid:1203,  // 출시 순서 · encore.moe 번호(이미지)
+  release:8, eid:1203, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"대지의 불길 지속 피해 (버프 없음)",ob:[],w:["basic"],m:[]},

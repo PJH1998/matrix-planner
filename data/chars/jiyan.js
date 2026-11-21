@@ -1,7 +1,7 @@
 /* 기염 — 기류 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"jiyan", name:"기염", el:"aero", rar:5, role:"dps",
-  release:11, eid:1404,  // 출시 순서 · encore.moe 번호(이미지)
+  release:11, eid:1404, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 강공격 명중 시 협동 공격 (8초)",ob:[],w:["heavy"],m:["coord"]},

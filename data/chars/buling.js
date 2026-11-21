@@ -1,7 +1,7 @@
 /* 복링 — 전도 · 4★ · 서포터 */
 MP.addChar({
   id:"buling", name:"복링", el:"electro", rar:4, role:"support",
-  release:58, eid:1307,  // 출시 순서 · encore.moe 번호(이미지)
+  release:58, eid:1307, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:["flare"]},

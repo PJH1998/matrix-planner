@@ -1,7 +1,7 @@
 /* 카카루 — 전도 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"calcharo", name:"카카루", el:"electro", rar:5, role:"dps",
-  release:18, eid:1301,  // 출시 순서 · encore.moe 번호(이미지)
+  release:18, eid:1301, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"사냥 그림자 전도 피해 (버프 없음)",ob:[],w:["lib"],m:[]},

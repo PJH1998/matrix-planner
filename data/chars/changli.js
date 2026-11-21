@@ -1,7 +1,7 @@
 /* 장리 — 용융 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"changli", name:"장리", el:"fusion", rar:5, role:"dps",
-  release:25, eid:1205,  // 출시 순서 · encore.moe 번호(이미지)
+  release:25, eid:1205, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 용융 피해 +20%, 공명 해방 피해 +25% (10초)",ob:["el","lib"],w:["skill","lib"],m:[]},

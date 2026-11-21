@@ -1,7 +1,7 @@
 /* 카르티시아 — 기류 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"cartethyia", name:"카르티시아", el:"aero", rar:5, role:"dps",
-  release:39, eid:1409,  // 출시 순서 · encore.moe 번호(이미지)
+  release:39, eid:1409, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"이상 효과 대상에게 주는 기류 피해 +17.5% (20초)",ob:["el"],p:1,w:["basic"],m:["erosion","anom"]},

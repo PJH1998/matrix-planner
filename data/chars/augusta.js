@@ -1,7 +1,7 @@
 /* 아우구스타 — 전도 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"augusta", name:"아우구스타", el:"electro", rar:5, role:"dps",
-  release:48, eid:1306,  // 출시 순서 · encore.moe 번호(이미지)
+  release:48, eid:1306, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   shieldUp:0.6, // 실드 유지율(예측치, 0~1)

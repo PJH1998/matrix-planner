@@ -1,7 +1,7 @@
 /* 루크 · 헤르센 — 회절 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"luuk", name:"루크 · 헤르센", el:"spectro", rar:5, role:"dps",
-  release:63, eid:1510,  // 출시 순서 · encore.moe 번호(이미지)
+  release:63, eid:1510, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"회절 피해 (버프 없음)",ob:[],w:["basic"],m:["tuneD"]},

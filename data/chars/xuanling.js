@@ -1,7 +1,7 @@
 /* 양양·현령 — 인멸 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"xuanling", name:"양양·현령", el:"havoc", rar:5, role:"dps",
-  release:70, eid:1610,  // 출시 순서 · encore.moe 번호(이미지)
+  release:70, eid:1610, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"암흑 효과 부여 시 파티 인멸 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["bane"]},

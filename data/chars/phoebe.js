@@ -1,7 +1,7 @@
 /* 페비 — 회절 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"phoebe", name:"페비", el:"spectro", rar:5, role:"sub",
-  release:34, eid:1506,  // 출시 순서 · encore.moe 번호(이미지)
+  release:34, eid:1506, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"고해 상태: 회절 저항 -10%, 광학 효과 피해 +100% (30초)",ob:[],p:1,w:["heavy"],m:["frazzle"]},

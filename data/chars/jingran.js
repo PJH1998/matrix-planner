@@ -1,7 +1,7 @@
 /* 경연 — 용융 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"jingran", name:"경연", el:"fusion", rar:5, role:"dps",
-  release:74, eid:1212,  // 출시 순서 · encore.moe 번호(이미지)
+  release:74, eid:1212, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   shieldUp:0.6, // 실드 유지율(예측치, 0~1)

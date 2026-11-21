@@ -1,7 +1,7 @@
 /* 청초 — 기류 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"qingxiao", name:"청초", el:"aero", rar:5, role:"dps",
-  release:73, eid:1413,  // 출시 순서 · encore.moe 번호(이미지)
+  release:73, eid:1413, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"기류 피해 (버프 없음)",ob:[],w:["basic","heavy"],m:["tuneD"]},

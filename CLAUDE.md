@@ -41,7 +41,7 @@ src/store/                      LocalStorageRepository → state-schema(정규�
 src/mediators/                  Character / Echo / Team / Boss Mediator, 이를 묶는 AppMediator
 src/services/                   계산 로직 — WeaponCalculator, EchoCalculator, CharacterCalculator,
                                 TeamCalculator(파티 강도·보스 진행), RecommendationService(자동 추천),
-                                SpecUpManager(에코 스펙업, 1.4)
+                                SpecUpManager(에코 스펙업, 1.4), EchoScoreCalculator(에코 점수·등급, 1.5)
 src/components/                 Icon, FavoriteButton, CharacterCard (HTML 문자열 생성)
 data/                           cycle, conds, weapons, echoes, teams, chars/_list.js(→ chars/<id>.js)
 core/chardb.js, bossdb.js, echodb.js   데이터 중개자 (CharDB · BossDB · EchoDB)
@@ -95,6 +95,7 @@ node --test tests/*.test.mjs
 | 1.2 | 2026-11-16 | 파티 자동 추천·체험 세팅, 서포터 조건부 효과, 드래그·우클릭 편성 | [docs/versions/v1.2.md](docs/versions/v1.2.md) |
 | 1.3 | 2026-11-17~19 | 에코 세팅(OCR)·세트 효과, 비전투 최종 스탯, 공명력·협주력 개편, 효과 범위 규칙 | [docs/versions/v1.3.md](docs/versions/v1.3.md) |
 | 1.4 | 2026-11-20~21 | 공명 모드 분리·에코 스펙업 효율, 1.4.1 에코 비교 창 | [docs/versions/v1.4.md](docs/versions/v1.4.md) |
+| 1.5 | 2026-11-22 | 에코 점수·6등급(지역별 등급 아이콘), 공명자 지역, 프로필 카드 점수 표시 | [docs/versions/v1.5.md](docs/versions/v1.5.md) |
 
 강도 계산 개편 설계(1.3.3): [docs/strength-v2.md](docs/strength-v2.md)
 
@@ -102,8 +103,10 @@ node --test tests/*.test.mjs
 
 - ~~1.4 — 공명 모드 분리 · 에코 스펙업 효율~~ **완료 (2026-11-20)**
 1. **보스 정보 페이지** — 이번 주기 보스 배너 + 패턴 토글(매트릭스 미믹 제외), 패턴별 유튜브 링크(시작 시간) 또는 스크린샷. `data/bosses/` + BossDB 구조로.
-2. **에코 점수 단계별 프로필 카드 테두리** (1.4에서 넘어옴) — 에코 점수 환산 + 명조 지역 컨셉 단계: 금주 → 검은 해안 → 리나시타 → 일곱 언덕 → 호나미 → 라하이로이 → 로야 빙원 → 라하이로이 지하 → 몽주 → 신연방. 단계 기준은 미정, 카드 배경 이미지는 사용자가 직접 구한다.
-3. 나중에: 픽업 추천(보유 캐릭터와 대조해 다음 픽업을 뽑을지), 간단한 업적.
+2. **에코 등급별 프로필 카드 테두리** (1.4에서 넘어옴, 2026-11-22 기획 변경) — 단계 = 에코 점수 6등급(경파 → 거랑 → 노도 → 해일 → 명식 → 어자, `MP.ECHO_GRADES`). 카드 배경 이미지는 사용자가 직접 구한다.
+   - 등급 아이콘은 지역별 4종(`icons/grade/<등급>/<1~4>.webp`, 번호 = `MP.REGIONS` 순서), 어자는 공통 1개(`eoja.webp`). 공명자 지역(`region`)은 출시 버전으로 정한다: 1.x 금주 · 2.x 리나시타 · 3.0~3.4 라하이로이 · 3.5~3.8 몽주. 새 공명자 파일에도 `region`을 넣는다.
+3. 보관(쓸 곳 미정): **명조 지역 컨셉 10단계** — 금주 → 검은 해안 → 리나시타 → 일곱 언덕 → 호나미 → 라하이로이 → 로야 빙원 → 라하이로이 지하 → 몽주 → 신연방. 원래 프로필 카드 테두리 단계안이었으나 2026-11-22에 에코 6등급으로 바뀜. 다른 기능에 쓸 수 있어 남겨 둔다.
+4. 나중에: 픽업 추천(보유 캐릭터와 대조해 다음 픽업을 뽑을지), 간단한 업적.
 
 ### 열린 문제
 

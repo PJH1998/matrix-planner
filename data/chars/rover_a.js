@@ -1,7 +1,7 @@
 /* 방랑자(기류) — 기류 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"rover_a", name:"방랑자(기류)", el:"aero", rar:5, role:"sub",
-  release:4, eid:1406,  // 출시 순서 · encore.moe 번호(이미지)
+  release:4, eid:1406, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"파티 전체 침식의 경계: 풍식 효과 최대 스택 +3 (30초)",ob:[],p:1,w:[],m:["erosion","anom"]},

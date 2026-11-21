@@ -1,7 +1,7 @@
 /* 에이메스 — 용융 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"aemeath", name:"에이메스", el:"fusion", rar:5, role:"dps",
-  release:62, eid:1210,  // 출시 순서 · encore.moe 번호(이미지)
+  release:62, eid:1210, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
   // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명

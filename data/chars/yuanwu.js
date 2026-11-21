@@ -1,7 +1,7 @@
 /* 연무 — 전도 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"yuanwu", name:"연무", el:"electro", rar:4, role:"sub",
-  release:15, eid:1303,  // 출시 순서 · encore.moe 번호(이미지)
+  release:15, eid:1303, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"공진 수치 피해 (버프 없음)",ob:[],w:[],m:[]},

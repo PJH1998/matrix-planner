@@ -1,7 +1,7 @@
 /* 방랑자(인멸) — 인멸 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"rover_h", name:"방랑자(인멸)", el:"havoc", rar:5, role:"dps",
-  release:4, eid:1604,  // 출시 순서 · encore.moe 번호(이미지)
+  release:4, eid:1604, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"인멸 필드 지속 피해 (버프 없음)",ob:[],w:["basic","lib"],m:[]},

@@ -1,7 +1,7 @@
 /* 방랑자(전도) — 전도 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"rover_e", name:"방랑자(전도)", el:"electro", rar:5, role:"sub",
-  release:4, eid:1309,  // 출시 순서 · encore.moe 번호(이미지)
+  release:4, eid:1309, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터가 이상 효과 부여 시 전체 피해 +25% (14초)",ob:["all"],w:[],m:["flare","anom"]},

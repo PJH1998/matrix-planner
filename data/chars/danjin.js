@@ -1,7 +1,7 @@
 /* 단근 — 인멸 · 4★ · 메인 딜러 */
 MP.addChar({
   id:"danjin", name:"단근", el:"havoc", rar:4, role:"dps",
-  release:10, eid:1602,  // 출시 순서 · encore.moe 번호(이미지)
+  release:10, eid:1602, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 인멸 피해 +23% (14초)",ob:["el"],w:["heavy"],m:[]},

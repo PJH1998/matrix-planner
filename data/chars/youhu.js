@@ -1,7 +1,7 @@
 /* 유호 — 응결 · 4★ · 서포터 */
 MP.addChar({
   id:"youhu", name:"유호", el:"glacio", rar:4, role:"support",
-  release:28.5, eid:1106,  // 출시 순서 · encore.moe 번호(이미지)
+  release:28.5, eid:1106, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 협동 공격 피해 +100% (28초)",ob:["coord"],w:[],m:["coord"]},

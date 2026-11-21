@@ -30,7 +30,7 @@ export function loadCurrentApp() {
   context.globalThis = context;
 
   run(context, "core/hub.js");
-  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/services/SpecUpManager.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
+  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/services/SpecUpManager.js", "src/services/EchoScoreCalculator.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
   // 특성 테스트는 주기가 바뀌어도 값이 그대로여야 하므로 보관한 3.7 주기로 고정한다 (data/cycle.js는 문법 확인용으로만 먼저 읽는다)
@@ -76,6 +76,9 @@ export function loadCurrentApp() {
       specUpOdds:key=>clone(specUp.tierOdds(key)),
       specUpRoll:(seed,n)=>{const r=specUp.rng(seed);return Array.from({length:n},()=>specUp.rollSubs(r))},
       erOk:id=>echoCalculator.erOk(id),
+      echoScore:id=>clone(echoScorer.score(id)),
+      echoGrades:()=>clone(EchoDB.grades()),
+      echoGradeOf:v=>clone(EchoDB.grade(v)),
       echoBuild:(id,list)=>clone(echoBuild(id,list==null?undefined:clone(list))),
       sheetStats:id=>clone(sheetStats(id)),
       echoFactor:id=>clone(echoFactor(id)),
