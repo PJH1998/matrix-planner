@@ -7,7 +7,8 @@
      공명 모드: 파티에 모드 공명자가 있으면 모드 조합(최대 2×2×2)을 모두 계산해 가장 좋은 조합을 쓴다(bestModes).
      기준 = 파워 서킷까지 반영한 강도 × 이번 주기 보스 효과 배율 평균. 메커니즘·조합 시너지 보너스는 빼고 비교한다
      (모니에처럼 메커니즘이 여럿인 파티원과 "다른" 메커니즘을 맞추면 보너스가 늘어 실제 버프를 잃는 모드가 뽑히는 것을 막는다).
-     같으면 시너지 보너스, 그다음 게임 기본 모드 순. 결과의 modes에 고른 모드를 남긴다. */
+     같으면 시너지 보너스, 그다음 게임 기본 모드 순. 결과의 modes에 고른 모드를 남긴다.
+     에코를 넣은 모드가 있는 공명자는 그 모드들 중에서만 고른다(modeCandidates). */
   class TeamCalculator{
     constructor({state,charMap,cycle,charDb,bossDb,echoDb,characters,echoes,condWeight,selectedBuff,damageLabels,mechanicLabels,elementLabels,anomalies}){
       this.state=state;this.charMap=charMap;this.cycle=cycle;this.db=charDb;this.bossDb=bossDb;this.echoDb=echoDb;this.characters=characters;this.echoes=echoes;
@@ -53,7 +54,11 @@
       links=links.filter(link=>link.k!=="outro"||this.synOf(link.from).p||best[link.from]===link);links.forEach(link=>{if(link.j===link.i+1)adj[link.j]=true;else adj.wrap=true});
       return {links,adj,combos:this.db.combos().filter(combo=>combo.ids.every(id=>ids.includes(id))&&Object.entries(combo.modes||{}).every(([id,mode])=>this.db.modeId(id)===mode))}}
     /* 공명 모드 */
-    bestModes(team){const ids=team.slots.filter(id=>id&&this.db.hasModes(id));if(!ids.length)return {};const combos=this.db.modeCombos(ids);if(combos.length<2)return combos[0]||{};
+    // 비교할 모드: 에코(또는 직접 입력한 스탯)를 넣은 모드가 하나라도 있으면 그 모드들만.
+    // 빈 모드는 체험 세팅 스탯으로 계산돼, 실제 에코를 넣은 모드보다 강하게 나와 뽑히는 것을 막는다. 하나도 없거나 체험 세팅이면 모든 모드
+    modeCandidates(id){const all=this.db.modes(id).map(m=>m.i),set=all.filter(i=>this.db.withModes({[id]:i},()=>!this.echoes.usesTrialStats(id)));return set.length?set:all}
+    bestModes(team){const ids=team.slots.filter(id=>id&&this.db.hasModes(id));if(!ids.length)return {};const allow={};ids.forEach(id=>{allow[id]=this.modeCandidates(id)});
+      const combos=this.db.modeCombos(ids).filter(map=>ids.every(id=>allow[id].includes(map[id])));if(combos.length<2)return combos[0]||{};
       let best=combos[0],bestValue=null;combos.forEach(map=>{const value=this.db.withModes(map,()=>this.modeValue(team));
         if(!bestValue||value[0]>bestValue[0]*(1+1e-9)||(Math.abs(value[0]-bestValue[0])<=bestValue[0]*1e-9&&value[1]>bestValue[1]*(1+1e-9))){bestValue=value;best=map}});return best}
     // [시너지 보너스를 뺀 값, 넣은 값]
