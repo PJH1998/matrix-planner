@@ -234,19 +234,14 @@ function echoHTML(id){
     <label class="esel"><img src="${setIconUrl(S.a)}" alt="" onerror="this.style.visibility='hidden'"><select data-eseta aria-label="첫 번째 세트">${opt(S.a)}</select><em>×${S.mode==="5"?5:S.mode==="32"?3:1}</em></label>
     ${S.mode!=="5"?`<label class="esel"><img src="${setIconUrl(S.b)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetb aria-label="두 번째 세트">${opt(S.b)}</select><em>×2</em></label>`:""}
     ${S.mode==="122"?`<label class="esel"><img src="${setIconUrl(S.c)}" alt="" onerror="this.style.visibility='hidden'"><select data-esetc aria-label="세 번째 세트">${opt(S.c)}</select><em>×2</em></label>`:""}
-    <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><button type="button" class="btn ghost eopen" id="pfEOpen">이미지 불러오기</button><span class="estat-msg" id="pfEOcr"></span></div>`;
-  const card=(e,i)=>{const m=echoMsg[id+":"+i];const msg=m?`<div class="ec-msg${/실패/.test(m)?" err":""}">${esc(m)}</div>`:"";const sel=echoSel===i?" sel":"";
+    <span class="ecostc${cost>12?" bad":""}">코스트 ${cost}/12</span><button type="button" class="btn ghost eopen" id="pfEOpen">이미지 불러오기</button><span class="estat-msg" id="pfEOcr">${esc(echoMsg[id+":cmp"]||"")}</span></div>`;
+  const card=(e,i)=>{const m=echoMsg[id+":"+i];const msg=m?`<div class="ec-msg${/실패/.test(m)?" err":""}">${esc(m)}</div>`:"";const sel=echoSel===i||echoCmp&&echoCmp.id===id&&echoCmp.slot===i?" sel":""; // 비교 창이 보고 있는 칸도 표시
     if(!e)return `<div class="ecard empty${sel}" data-eslot="${i}"><div class="ec-plus">+</div><div>입력할 칸 선택</div><small>선택 후 Ctrl+V · 끌어다 놓기</small><button type="button" class="ec-b" data-enew="${i}">직접 입력</button>${msg}</div>`;
-    const ed=echoEdit===i;const F=EchoDB.FIXED[e.cost];
+    const ed=echoEdit===i;
     const head=`<div class="ec-h"><select class="ec-cost" data-ecost="${i}" aria-label="코스트">${[4,3,1].map(x=>`<option value="${x}"${x===+e.cost?" selected":""}>${x}코</option>`).join("")}</select><span class="ec-sp"></span>
       <button type="button" class="ec-b" data-ecap="${i}" title="캡처로 다시 읽기">캡처</button><button type="button" class="ec-b" data-eedit="${i}">${ed?"완료":"수정"}</button><button type="button" class="ec-b" data-edel="${i}" title="지우기" aria-label="에코 ${i+1} 지우기">✕</button></div>`;
     if(ed)return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoEditHTML(e,i)}${msg}</div>`;
-    const subs=[0,1,2,3,4].map(j=>{const x=(e.subs||[])[j];if(!x)return `<div class="ec-sub none"><i class="sti"></i><span>—</span></div>`;
-      return `<div class="ec-sub t${EchoDB.tier(x.k,x.v)}${subUseful(id,x.k)?" good":" off"}">${statIcon(x.k)}<span>${esc(echoLab(x.k))}</span><b>${fmtV(x.k,x.v)}</b></div>`}).join("");
-    return `<div class="ecard${sel}" data-eslot="${i}">${head}
-      <div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
-      ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
-      <div class="ec-subs">${subs}</div>${(state.growth[id]||{}).trial?"":`<div class="su-badge wait" data-subadge="${i}"><span>스펙업 계산 중…</span></div>`}${msg}</div>`};
+    return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoBodyHTML(id,e)}${(state.growth[id]||{}).trial?"":`<div class="su-badge wait" data-subadge="${i}"><span>스펙업 계산 중…</span></div>`}${msg}</div>`};
   const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음 · 아래 배지 = 같은 코스트·주옵으로 새로 깎았을 때 더 좋을 확률과 에코 1개당 기대 상승</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 지원 기준은 비전투 최종 스탯으로 확인하며, 공명 효율에 연동된 파티 버프와 에코 세트 효과는 파티 계산에 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
@@ -284,10 +279,75 @@ function saveEchoes(id,arr){appMediator.echoes.setEchoes(id,arr);
 function saveEchoSet(id,patch){appMediator.echoes.patchSet(id,echoSetOf(id),patch);persist();requestAnimationFrame(()=>{renderProfile();renderRoster();rerenderPlan()})}
 function newEcho(id,i){const cost=SLOT_COST[i]||1;const M=(EchoDB.mainStats(cost)||{}).main||{};const k=cost===4?"cr":cost===3?"el":"atk%";
   return {cost,main:Object.assign({k,v:M[k]},k==="el"?{elem:(charMap[id]||{}).el}:{}),subs:[]}}
+// 에코 카드 본문(주옵·고정 스탯·부옵 5줄). 에코 칸과 비교 창이 같이 쓴다
+function echoBodyHTML(id,e){const F=EchoDB.FIXED[e.cost];
+  const subs=[0,1,2,3,4].map(j=>{const x=(e.subs||[])[j];if(!x)return `<div class="ec-sub none"><i class="sti"></i><span>—</span></div>`;
+    return `<div class="ec-sub t${EchoDB.tier(x.k,x.v)}${subUseful(id,x.k)?" good":" off"}">${statIcon(x.k)}<span>${esc(echoLab(x.k))}</span><b>${fmtV(x.k,x.v)}</b></div>`}).join("");
+  return `<div class="ec-main">${statIcon(e.main.k,e.main.elem)}<span>${esc(echoLab(e.main.k,e.main.elem))}</span><b>${fmtV(e.main.k,e.main.v)}</b></div>
+    ${F?`<div class="ec-fix"><span>${F[0]==="hp"?"HP":"공격력"}</span><span>${F[1].toLocaleString()}</span></div>`:""}
+    <div class="ec-subs">${subs}</div>`}
+// 한 장만 붙여넣었는데 고른 칸도 빈 칸도 없으면, 읽은 뒤 어느 칸과 비교할지 정한다(ocrEcho에 칸 번호 null)
 function echoQueue(id,files){const E=echoSlots(id);const free=[];if(echoSel!=null&&files.length===1)free.push(echoSel);
   E.forEach((e,i)=>{if(!e&&!free.includes(i))free.push(i)});
+  if(!free.length&&files.length===1)return ocrEcho(id,files[0],null);
   files.slice(0,free.length).forEach((f,k)=>ocrEcho(id,f,free[k]));
-  if(files.length>free.length){const m=$("#pfEOcr");if(m)m.textContent=free.length?`빈 칸이 ${free.length}개라 ${files.length-free.length}장은 넣지 못했어요.`:"빈 칸이 없어요. 바꿀 카드를 눌러 고른 뒤 다시 붙여넣으세요."}}
+  if(files.length>free.length){const m=$("#pfEOcr");if(m)m.textContent=free.length?`빈 칸이 ${free.length}개라 ${files.length-free.length}장은 넣지 못했어요.`:"빈 칸이 없어요. 한 장씩 붙여넣으면 지금 에코와 비교해 드려요."}}
+
+/* ---------- 에코 비교 창 ----------
+   이미 에코가 있는 칸에 새 캡처를 넣으면 바로 바꾸지 않고, 프로필 옆 창에 지금 에코와 새 에코를 나란히 보여 준다.
+   개인 점수(공명력·협주력)와 주요 스탯을 바꾸기 전·후로 계산해 어느 쪽이 좋은지 표시하고, 교체할지 묻는다.
+   공명 효율 최소치를 채우던 세팅이 새 에코로 깨지면 점수가 올라도 "더 좋다"고 하지 않는다(스펙업 효율과 같은 기준). */
+let echoCmp=null; // {id, mode, slot, echo}
+// 계산 중에만 i번 칸에 에코를 끼워 본다 (저장 데이터는 바로 되돌린다). 칸이 모두 비어 echoes 목록이 없어도 된다
+function withEchoAt(id,i,echo,fn){const slot=echoCalculator.slot(id),had=Array.isArray(slot.echoes),list=had?slot.echoes:(slot.echoes=[]),len=list.length,old=list[i];
+  list[i]=echo;try{return fn()}finally{if(i<len)list[i]=old;else list.length=len;if(!had)delete slot.echoes}}
+const sameEcho=(a,b)=>!!a&&!!b&&+a.cost===+b.cost&&JSON.stringify([a.main.k,+a.main.v,a.main.elem||null,(a.subs||[]).map(x=>[x.k,+x.v])])===JSON.stringify([b.main.k,+b.main.v,b.main.elem||null,(b.subs||[]).map(x=>[x.k,+x.v])]);
+// 비교할 칸 고르기: 같은 코스트·같은 주옵 칸 → 같은 코스트 칸 → 그 코스트 자리. 후보가 여럿이면 바꿨을 때 점수가 가장 오르는 칸
+function cmpSlotFor(id,echo){const E=echoSlots(id);const idx=[0,1,2,3,4];
+  const same=idx.filter(i=>E[i]&&+E[i].cost===+echo.cost&&E[i].main.k===echo.main.k&&(E[i].main.elem||null)===(echo.main.elem||null));
+  const cands=same.length?same:idx.filter(i=>E[i]&&+E[i].cost===+echo.cost);
+  if(!cands.length){const k=SLOT_COST.indexOf(+echo.cost);return k<0?0:k}
+  if(cands.length===1)return cands[0];
+  return cands.map(i=>({i,s:withEchoAt(id,i,echo,()=>charScore(id))})).sort((a,b)=>b.s-a.s)[0].i}
+function openEchoCmp(id,slot,echo){echoCmp={id,mode:CharDB.hasModes(id)?CharDB.viewMode(id):null,slot,echo};echoSel=null;if(profId===id)renderProfile()}
+// 지금 세팅의 개인 점수·주요 스탯 (fn 안에서 에코를 바꿔 끼운 상태로 부르면 그 세팅 기준)
+function cmpSnap(id){const X=sheetStats(id),c=charMap[id];const er=echoCalculator.erMin(id);
+  return {score:charScore(id),X,erMin:er.min,erOk:X.er+.05>=er.min,sp:c.role==="support"?echoCalculator.supportProgress(id):null,
+    cost:echoSlots(id).reduce((a,e)=>a+(e?+e.cost:0),0)}}
+function echoCmpHTML(id){const C=echoCmp;if(!C||C.id!==id)return "";const c=charMap[id];const E=echoSlots(id);const cur=E[C.slot];
+  const g=state.growth[id]||{};const A=cmpSnap(id),B=withEchoAt(id,C.slot,C.echo,()=>cmpSnap(id));
+  const d=A.score>0?(B.score/A.score-1)*100:0,sn=scoreName(id);
+  const erBreak=A.erOk&&!B.erOk;
+  // 판정: better(새 에코) / worse(지금 에코) / even(거의 같음) / warn(점수는 오르지만 공명 효율 최소치가 깨짐) / trial(점수 비교 불가)
+  const v=g.trial?"trial":Math.abs(d)<.05?"even":d>0?(erBreak?"warn":"better"):"worse";
+  const VT={better:`새 에코가 더 좋아요`,worse:`지금 에코가 더 좋아요`,even:`두 에코가 거의 같아요`,warn:`점수는 오르지만 공명 효율이 모자라져요`,trial:`체험 세팅이라 점수는 비교하지 않아요`};
+  const VS={better:`${sn} ${A.score.toFixed(1)} → ${B.score.toFixed(1)} (+${d.toFixed(1)}%)`,worse:`새 에코로 바꾸면 ${sn} ${A.score.toFixed(1)} → ${B.score.toFixed(1)} (${d.toFixed(1)}%)`,
+    even:`${sn} 차이 ${d>=0?"+":""}${d.toFixed(2)}%`,warn:`${sn} +${d.toFixed(1)}% · 공명 효율 ${A.X.er.toFixed(1)}% → ${B.X.er.toFixed(1)}% (최소 ${B.erMin}%)`,trial:`체험 세팅을 끄면 에코 기준 ${sn}으로 비교할 수 있어요. 아래 스탯 변화는 참고하세요.`};
+  const sc=scaleOf(id),SL={hp:"HP",atk:"공격력",def:"방어력",er:"공명 효율",cr:"크리티컬",cd:"크리티컬 피해"};
+  const keys=A.sp?Object.keys(A.sp.targets):[sc,"cr","cd","el","er"];
+  const row=(label,a,b,pct)=>{const dd=b-a,z=Math.abs(dd)<(pct?.05:.5);const f=x=>pct?x.toFixed(1)+"%":Math.round(x).toLocaleString();
+    return `<tr><th>${label}</th><td>${f(a)}</td><td>${f(b)}</td><td class="${z?"":dd>0?"up":"down"}">${z?"—":(dd>0?"+":"−")+(pct?Math.abs(dd).toFixed(1)+"%":Math.round(Math.abs(dd)).toLocaleString())}</td></tr>`};
+  const stRows=keys.map(k=>row(k==="el"?`${EL[c.el]} 피해`:SL[k]||k,A.X[k]||0,B.X[k]||0,["er","cr","cd","el"].includes(k))).join("");
+  const scRow=g.trial?"":`<tr class="sc"><th>${sn}</th><td>${A.score.toFixed(1)}</td><td>${B.score.toFixed(1)}</td><td class="${Math.abs(d)<.05?"":d>0?"up":"down"}">${Math.abs(d)<.05?"—":(d>0?"+":"−")+Math.abs(d).toFixed(1)+"%"}</td></tr>`;
+  const spRow=A.sp?`<tr><th>지원 기준</th><td>${A.sp.met}/${A.sp.total}</td><td>${B.sp.met}/${B.sp.total}</td><td class="${B.sp.met>A.sp.met?"up":B.sp.met<A.sp.met?"down":""}">${B.sp.met===A.sp.met?"—":(B.sp.met>A.sp.met?"+":"−")+Math.abs(B.sp.met-A.sp.met)}</td></tr>`:"";
+  const notes=[];
+  if(erBreak&&v!=="warn")notes.push(`새 에코로 바꾸면 공명 효율이 최소치 ${B.erMin}%보다 낮아져 사이클이 밀릴 수 있어요.`);
+  if(v==="warn")notes.push(`공명 효율이 최소치보다 낮아지면 사이클이 밀릴 수 있어요. 다른 칸으로 공명 효율을 채울 수 있다면 바꿔도 좋아요.`);
+  if(B.cost>12)notes.push(`바꾸면 코스트가 ${B.cost}/12가 돼요.`);
+  if(cur&&+cur.cost!==+C.echo.cost)notes.push(`코스트가 달라요 (${cur.cost}코 → ${C.echo.cost}코).`);
+  const good=v==="better"||v==="even"&&d>0;
+  const slotBtns=[0,1,2,3,4].map(i=>`<button type="button" data-ecmpslot="${i}" aria-pressed="${i===C.slot}" title="${E[i]?`${E[i].cost}코 ${esc(echoLab(E[i].main.k,E[i].main.elem))}`:"빈 칸"}">${i+1}<small>${E[i]?E[i].cost+"코":"빈 칸"}</small></button>`).join("");
+  const box=(t,e,cls)=>`<div class="ecmp-c${cls}"><div class="ecmp-ct">${t}${e?`<span>${e.cost}코</span>`:""}</div>${e?echoBodyHTML(id,e):`<div class="ecmp-empty">빈 칸</div>`}</div>`;
+  return `<aside class="ecmp" aria-label="에코 비교">
+    <div class="ecmp-h"><b>에코 비교</b><span>${esc(c.name)}${C.mode!=null?` · ${esc((CharDB.modes(id)[C.mode]||{}).short||"")}`:""}</span><button type="button" class="x" data-ecmp="no" aria-label="비교 닫기">✕</button></div>
+    <div class="ecmp-slots"><span>비교할 칸</span><div class="seg2" role="group" aria-label="비교할 칸">${slotBtns}</div></div>
+    <div class="ecmp-v ${v}"><b>${VT[v]}</b><span>${esc(VS[v])}</span></div>
+    <div class="ecmp-cards">${box(`지금 에코 · ${C.slot+1}번 칸`,cur,v==="worse"?" win":"")}${box("새 에코",C.echo,good||v==="warn"?" win new":" new")}</div>
+    <table class="ecmp-t"><thead><tr><th></th><th>지금</th><th>바꾸면</th><th>변화</th></tr></thead><tbody>${scRow}${spRow}${stRows}</tbody></table>
+    ${notes.map(n=>`<p class="ecmp-n">${esc(n)}</p>`).join("")}
+    <div class="ecmp-q"><p>${C.slot+1}번 칸 에코를 새 에코로 바꿀까요?</p>
+      <div class="ecmp-btns"><button type="button" class="btn${good?"":" ghost"}" data-ecmp="yes">교체</button><button type="button" class="btn${good?" ghost":""}" data-ecmp="no">그대로 두기</button></div></div>
+  </aside>`}
 /* 에코 캡처 인식: 줄마다 배경 밝기가 달라(강조 줄) 한 가지 흑백 기준으로는 글자가 깨질 때가 있다.
    기준을 바꿔 가며 몇 번 읽고, 부옵 5줄이 숫자 수정 없이 읽히면 바로 멈춘다. 가장 잘 읽힌 결과를 쓴다. */
 const ECHO_PASSES=[[130,0],[150,2],[115,0],[150,0]];
@@ -298,11 +358,16 @@ async function readEcho(blob){const w=await echoWorker();const got=[];
   for(const [th,sc] of ECHO_PASSES){const cv=await prepImage(blob,th,sc||0);const {data}=await w.recognize(cv);const e=EchoDB.parse(data.text);
     if(e&&e.main)got.push(e);if(got.length===1&&e&&e.subs.length>=5&&!e.subFix)break} // 첫 번째에 깨끗이 읽히면 바로 끝
   return EchoDB.merge(got)}
-async function ocrEcho(id,blob,i){const key=id+":"+i;echoMsg[key]="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";if(profId===id)renderProfile();
+// i: 넣을 칸. null이면 읽은 뒤 비교할 칸을 고른다. 그 칸에 이미 에코가 있으면 바로 바꾸지 않고 비교 창을 연다
+async function ocrEcho(id,blob,i){const key=id+":"+(i==null?"cmp":i);echoMsg[key]="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";if(profId===id)renderProfile();
   const job=_eq.then(()=>readEcho(blob));_eq=job.catch(()=>{});
   try{const e=await job;if(!e||!e.main)throw new Error("에코 옵션을 찾지 못했습니다. 주옵부터 부옵까지 보이게 캡처해 주세요.");
-    const arr=echoSlots(id);arr[i]={cost:e.cost,main:e.main,subs:e.subs};
-    delete echoMsg[key];echoSel=null;saveEchoes(id,arr);
+    const ne={cost:e.cost,main:e.main,subs:e.subs};delete echoMsg[key];
+    if(i==null)i=cmpSlotFor(id,ne);
+    const arr=echoSlots(id);
+    if(sameEcho(arr[i],ne)){echoMsg[id+":cmp"]=`${i+1}번 칸에 넣어 둔 에코와 같아서 그대로 뒀어요.`;echoSel=null;if(profId===id)renderProfile();return}
+    if(arr[i]&&arr[i].main)return openEchoCmp(id,i,ne);
+    arr[i]=ne;echoSel=null;saveEchoes(id,arr);
   }catch(err){echoMsg[key]="인식 실패: "+err.message;if(profId===id)renderProfile()}}
 function statsHTML(id){
   const c=charMap[id];const st=appMediator.echoes.stats(id)||{};const b=st.b||{};
@@ -364,7 +429,7 @@ window.mpDebug={specUp:(id,o)=>id?specUp.forChar(id):specUp.table(o||{}),teamCal
 
 /* ---------- profile dialog ---------- */
 let profId=null;
-function openProfile(id){if(profId!==id){pfTabSel=null;echoSel=null;echoEdit=null}profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
+function openProfile(id){if(profId!==id){pfTabSel=null;echoSel=null;echoEdit=null;echoCmp=null}profId=id;renderProfile();const d=$("#prof");if(!d.open)d.showModal();}
 // 공명 모드 전환: 모드마다 에코 세팅·스탯 직접 입력을 따로 저장한다. 화면의 점수·에코는 고른 모드 기준(CharDB.setView)
 function profModeBar(id){if(!CharDB.hasModes(id))return "";const cur=CharDB.viewMode(id),ms=CharDB.modes(id);
   return `<div class="pf-mode"><span class="pf-mode-l">공명 모드</span><div class="seg2 mseg" role="group" aria-label="공명 모드">${ms.map(m=>`<button type="button" data-pmode="${m.i}" aria-pressed="${m.i===cur}" title="${esc(m.name)}${m.i===0?" (게임 기본 모드)":""}">${modeIcon(m)}${esc(m.short)}</button>`).join("")}</div>
@@ -401,7 +466,8 @@ function renderProfile(){
     </div>
    </div>
    <div class="pf-s${g.trial?" pf-dim":""}">${profModeBar(id)}${statsHTML(id)}<input type="file" accept="image/*" id="pfEFile" multiple hidden></div>
-   </form>`;
+   </form>${echoCmpHTML(id)}`;
+  $("#prof").classList.toggle("has-cmp",!!echoCmp&&echoCmp.id===id);
   queueSpecBadges(id);
 }
 /* ---------- render: cycle/data ---------- */

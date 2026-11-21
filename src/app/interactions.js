@@ -200,13 +200,18 @@ let rlp=null,rlpFired=false;
 $("#rgrid").addEventListener("touchstart",e=>{const tk=e.target.closest(".rcard");if(!tk)return;rlpFired=false;rlp=setTimeout(()=>{rlpFired=true;toggleOwned(tk.dataset.id)},550)},{passive:true});
 ["touchend","touchmove","touchcancel"].forEach(ev=>$("#rgrid").addEventListener(ev,e=>{clearTimeout(rlp);if(ev==="touchend"&&rlpFired){e.preventDefault();rlpFired=false}}));
 $("#prof").addEventListener("click",e=>{
-  const d=$("#prof");if(e.target===d){d.close();return}
+  const d=$("#prof");if(e.target===d){const r=d.getBoundingClientRect();if(d.classList.contains("has-cmp")&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)return;d.close();return} // 비교 창이 열려 있으면 두 창 사이 틈은 바깥으로 치지 않는다
+  // 에코 비교 창: 교체 / 그대로 두기 / 비교할 칸 바꾸기
+  const cq=e.target.closest("[data-ecmp]");if(cq){const C=echoCmp;echoCmp=null;if(!C||C.id!==profId)return renderProfile();
+    if(cq.dataset.ecmp==="yes"){const a=echoSlots(profId);a[C.slot]=C.echo;echoMsg[profId+":cmp"]=`${C.slot+1}번 칸 에코를 바꿨어요.`;delete echoMsg[profId+":"+C.slot];if(echoEdit===C.slot)echoEdit=null;return saveEchoes(profId,a)}
+    echoMsg[profId+":cmp"]="지금 에코를 그대로 뒀어요.";return renderProfile()}
+  const cs=e.target.closest("[data-ecmpslot]");if(cs&&echoCmp){echoCmp.slot=+cs.dataset.ecmpslot;return renderProfile()}
   if(e.target.id==="pfPick"){$("#pfFile").click();return}
   if(e.target.id==="pfEOpen"){$("#pfEFile").click();return}
   if(e.target.id==="pfStClear"){appMediator.echoes.clearStats(profId);return setGrowth(profId,{})}
   const pt=e.target.closest("[data-ptab]");if(pt){pfTabSel=pt.dataset.ptab;return renderProfile()}
-  const pm=e.target.closest("[data-pmode]");if(pm){CharDB.setView(profId,+pm.dataset.pmode);pfTabSel=null;echoSel=null;echoEdit=null;renderProfile();renderRoster();return}
-  if(e.target.id==="pfEClear"){Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
+  const pm=e.target.closest("[data-pmode]");if(pm){CharDB.setView(profId,+pm.dataset.pmode);pfTabSel=null;echoSel=null;echoEdit=null;echoCmp=null;renderProfile();renderRoster();return}
+  if(e.target.id==="pfEClear"){echoCmp=null;Object.keys(echoMsg).forEach(k=>{if(k.startsWith(profId+":"))delete echoMsg[k]});echoEdit=null;echoSel=null;return saveEchoes(profId,[null,null,null,null,null])}
   const ee=e.target.closest("[data-eedit]");if(ee){const i=+ee.dataset.eedit;echoEdit=echoEdit===i?null:i;return renderProfile()}
   const ed=e.target.closest("[data-edel]");if(ed){const i=+ed.dataset.edel;const a=echoSlots(profId);a[i]=null;delete echoMsg[profId+":"+i];if(echoEdit===i)echoEdit=null;return saveEchoes(profId,a)}
   const nw=e.target.closest("[data-enew]");if(nw){const i=+nw.dataset.enew;const a=echoSlots(profId);a[i]=newEcho(profId,i);echoEdit=i;return saveEchoes(profId,a)}
@@ -220,6 +225,8 @@ $("#prof").addEventListener("click",e=>{
   const w=e.target.closest("#pfW button");if(w){const W=WMAP[+w.dataset.w];const g=state.growth[profId]||{};
     return setGrowth(profId,{wid:W.id,wr:W.q,ref:g.wid===W.id?g.ref:(W.q<5?5:1)})}
 });
+$("#prof").addEventListener("close",()=>{echoCmp=null;$("#prof").classList.remove("has-cmp")});
+$("#prof").addEventListener("cancel",e=>{if(echoCmp){e.preventDefault();echoCmp=null;renderProfile()}}); // Esc: 비교 창부터 닫는다
 $("#prof").addEventListener("input",e=>{
   if(e.target.id==="pfLv"){$("#pfLvN").value=e.target.value;}
   if(e.target.id==="pfLvN"&&e.target.value===""){return}
