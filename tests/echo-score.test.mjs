@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { loadCurrentApp } from "./helpers/load-current-app.mjs";
 
-// 에코 점수: 부옵 한 줄 = 수치 ÷ 최대 수치, × 공명자별 가중치 × 4 (× 보정), 에코 5개 100점 만점 · 6등급
+// 에코 점수: 부옵 한 줄 = 수치 ÷ 최대 수치, × 공명자별 가중치 × 20 (× 보정), 에코 1개 100점 · 5개 500점 만점 · 6등급
 const E = (cost, k, v, subs, elem) => ({ cost, lv: 25, main: Object.assign({ k, v }, elem ? { elem } : {}), subs: subs.map(([key, value]) => ({ k: key, v: value })) });
 const JUNK = [["hp", 580], ["def", 70], ["def%", 14.7], ["hp%", 11.6]];
 const setOf = (el, subs) => [E(4, "cd", 44, subs[0]), E(3, "el", 30, subs[1], el), E(3, "el", 30, subs[2], el), E(1, "atk%", 18, subs[3]), E(1, "atk%", 18, subs[4])];
@@ -27,16 +27,16 @@ test("에코가 없으면 점수 없음, 쓸모없는 부옵만 있으면 0점·
   assert.equal(s.count, 5);
 });
 
-test("에코 한 개는 20점, 총점은 칸 점수의 합이고 100점을 넘지 않는다", () => {
+test("에코 한 개는 100점, 총점은 칸 점수의 합이고 500점을 넘지 않는다", () => {
   const app = loadCurrentApp();
   const best = [["cd", 21], ["atk%", 11.6], ["lib", 11.6], ["cr", 10.5], ["er", 12.4]];
   const s = score(app, "hiyuki", setOf("glacio", Array(5).fill(best)));
-  s.slots.forEach(x => assert.ok(x.score <= 20 + 1e-9, `${x.score}`));
-  assert.ok(Math.abs(s.total - s.slots.reduce((a, x) => a + x.score, 0)) < 1e-9 || s.total === 100);
-  assert.ok(s.total <= 100);
-  // 크리티컬 피해 최대치 한 줄 = 4점 (가중치 1, 보정 1 이상)
+  s.slots.forEach(x => assert.ok(x.score <= 100 + 1e-9, `${x.score}`));
+  assert.ok(Math.abs(s.total - s.slots.reduce((a, x) => a + x.score, 0)) < 1e-9 || s.total === 500);
+  assert.ok(s.total <= 500);
+  // 크리티컬 피해 최대치 한 줄 = 20점 (가중치 1, 보정 1 이상)
   const one = score(app, "hiyuki", setOf("glacio", [[["cd", 21], ...JUNK], JUNK, JUNK, JUNK, JUNK]));
-  assert.ok(one.slots[0].score >= 4 - 1e-9 && one.slots[0].score <= 5, `${one.slots[0].score}`);
+  assert.ok(one.slots[0].score >= 20 - 1e-9 && one.slots[0].score <= 25, `${one.slots[0].score}`);
 });
 
 test("크리티컬은 목표치까지만 1, 넘는 부분은 0.25 · 크리티컬 피해는 항상 1", () => {
@@ -83,5 +83,5 @@ test("서포터는 지원 기준 스탯·공명 효율을 세고, 유효 부옵 
   assert.equal(s.weights.cd || 0, 0);               // 크리티컬 피해 추천이 없는 서포터
   assert.equal(s.weights["atk%"] || 0, 0);
   assert.ok(s.norm > 1, `${s.norm}`);
-  s.slots.forEach(x => assert.ok(x.score <= 20 + 1e-9));
+  s.slots.forEach(x => assert.ok(x.score <= 100 + 1e-9));
 });

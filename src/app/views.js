@@ -242,7 +242,7 @@ function echoHTML(id){
       <button type="button" class="ec-b" data-ecap="${i}" title="캡처로 다시 읽기">캡처</button><button type="button" class="ec-b" data-eedit="${i}">${ed?"완료":"수정"}</button><button type="button" class="ec-b" data-edel="${i}" title="지우기" aria-label="에코 ${i+1} 지우기">✕</button></div>`;
     if(ed)return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoEditHTML(e,i)}${msg}</div>`;
     const sp=ES&&ES.slots[i];
-    return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoBodyHTML(id,e)}${sp?`<div class="ec-pts" title="이 에코의 점수 (20점 만점)"><span>에코 점수</span><b>${sp.score.toFixed(1)}</b><small>/20</small></div>`:""}${(state.growth[id]||{}).trial?"":`<div class="su-badge wait" data-subadge="${i}"><span>스펙업 계산 중…</span></div>`}${msg}</div>`};
+    return `<div class="ecard${sel}" data-eslot="${i}">${head}${echoBodyHTML(id,e)}${sp?`<div class="ec-pts" title="이 에코의 점수 (100점 만점)"><span>에코 점수</span><b>${Math.round(sp.score)}</b><small>/100</small></div>`:""}${(state.growth[id]||{}).trial?"":`<div class="su-badge wait" data-subadge="${i}"><span>스펙업 계산 중…</span></div>`}${msg}</div>`};
   const tiers=`<div class="etier"><span>부옵 수치 단계</span><span><i style="background:#7d8791"></i>1~2</span><span><i style="background:#ffffff"></i>3~4</span><span><i style="background:#6fe08a"></i>5~6</span><span><i style="background:#ffd23f"></i>7</span><span><i style="background:#ff5c5c"></i>8 (최대)</span><span>· 금색 테두리 = 이 공명자의 유효 부옵, 흐린 줄 = 효과 없음 · 아래 배지 = 같은 코스트·주옵으로 새로 깎았을 때 더 좋을 확률과 에코 1개당 기대 상승</span></div>`;
   return `${setbar}<div class="ecards">${E.map(card).join("")}</div>${tiers}${n?echoSumHTML(id):`<p class="sbnote" style="text-align:left;margin-top:10px">에코 화면 캡처를 칸마다 붙여넣으면 주옵·부옵을 읽어 최종 스탯을 계산합니다. 세트는 위에서 ${modes.includes("122")?"5세트 / 3+2세트 / 1+2+2세트":"5세트 / 3+2세트"}로 고르세요.${c.role==="support"?" 지원 기준은 비전투 최종 스탯으로 확인하며, 공명 효율에 연동된 파티 버프와 에코 세트 효과는 파티 계산에 반영합니다.":""}</p>`}
    ${n?`<button type="button" class="btn ghost sclear" id="pfEClear">에코 모두 지우기</button>`:""}`}
@@ -333,7 +333,7 @@ function echoCmpHTML(id){const C=echoCmp;if(!C||C.id!==id)return "";const c=char
   const stRows=keys.map(k=>row(k==="el"?`${EL[c.el]} 피해`:SL[k]||k,A.X[k]||0,B.X[k]||0,["er","cr","cd","el"].includes(k))).join("");
   const scRow=g.trial?"":`<tr class="sc"><th>${sn}</th><td>${A.score.toFixed(1)}</td><td>${B.score.toFixed(1)}</td><td class="${Math.abs(d)<.05?"":d>0?"up":"down"}">${Math.abs(d)<.05?"—":(d>0?"+":"−")+Math.abs(d).toFixed(1)+"%"}</td></tr>`;
   const ea=A.es?A.es.total:0,eb=B.es?B.es.total:0,de=eb-ea;
-  const esRow=`<tr class="sc"><th>에코 점수</th><td>${ea.toFixed(1)}</td><td>${eb.toFixed(1)}</td><td class="${Math.abs(de)<.05?"":de>0?"up":"down"}">${Math.abs(de)<.05?"—":(de>0?"+":"−")+Math.abs(de).toFixed(1)}</td></tr>`;
+  const esRow=`<tr class="sc"><th>에코 점수</th><td>${Math.round(ea)}</td><td>${Math.round(eb)}</td><td class="${Math.abs(de)<.5?"":de>0?"up":"down"}">${Math.abs(de)<.5?"—":(de>0?"+":"−")+Math.round(Math.abs(de))}</td></tr>`;
   const spRow=A.sp?`<tr><th>지원 기준</th><td>${A.sp.met}/${A.sp.total}</td><td>${B.sp.met}/${B.sp.total}</td><td class="${B.sp.met>A.sp.met?"up":B.sp.met<A.sp.met?"down":""}">${B.sp.met===A.sp.met?"—":(B.sp.met>A.sp.met?"+":"−")+Math.abs(B.sp.met-A.sp.met)}</td></tr>`:"";
   const notes=[];
   if(erBreak&&v!=="warn")notes.push(`새 에코로 바꾸면 공명 효율이 최소치 ${B.erMin}%보다 낮아져 사이클이 밀릴 수 있어요.`);
@@ -443,10 +443,10 @@ function profModeBar(id){if(!CharDB.hasModes(id))return "";const cur=CharDB.view
 /* 프로필 점수 영역: 공명력(협주력)과 에코 점수·등급을 크게 보여 준다 */
 function pfScoresHTML(id){const c=charMap[id];const es=echoScorer.score(id);
   const tip=c.role==="support"?"기준 세팅(지원 기준 충족 · 0체인 · 추천 무기)으로 주는 버프 = 100":"이잘키 기준 스탯의 피해 기대값 = 100";
-  const etip=`부옵이 이 공명자에게 얼마나 쓸모 있는지 100점 만점으로 매긴 점수입니다(에코 1개 20점). ${c.role==="support"?"지원 기준 스탯·공명 효율":"크리티컬은 목표치까지, 공명 효율은 최소치까지, 크리티컬 피해·주력 스탯·주력 피해 보너스"}를 셉니다. 주옵은 넣지 않습니다.`;
+  const etip=`부옵이 이 공명자에게 얼마나 쓸모 있는지 500점 만점으로 매긴 점수입니다(에코 1개 100점). ${c.role==="support"?"지원 기준 스탯·공명 효율":"크리티컬은 목표치까지, 공명 효율은 최소치까지, 크리티컬 피해·주력 스탯·주력 피해 보너스"}를 셉니다. 주옵은 넣지 않습니다.`;
   return `<div class="pf-scores">
     <div class="pf-sc" title="${tip}"><span class="l">${scoreName(id)}</span><b id="pfScore">${charScore(id).toFixed(1)}</b><small id="pfScoreTag" class="pf-stag">${scoreTag(id)}</small></div>
-    <div class="pf-sc es${es?" eg-"+es.grade.id:""}" title="${esc(etip)}"><span class="l">에코 점수</span>${es?`<b>${es.total.toFixed(1)}</b><em>/100</em><span class="eg">${esc(es.grade.name)}</span><small class="egd">${esc(es.grade.desc)}${es.count<5?` · 에코 ${es.count}/5`:""}</small>`:`<b class="none">—</b><small class="egd">에코를 넣으면 점수와 등급이 나와요</small>`}</div>
+    <div class="pf-sc es${es?" eg-"+es.grade.id:""}" title="${esc(etip)}"><span class="l">에코 점수</span>${es?`<b>${Math.round(es.total)}</b><em>/500</em><span class="eg">${esc(es.grade.name)}</span><small class="egd">${esc(es.grade.desc)}${es.count<5?` · 에코 ${es.count}/5`:""}</small>`:`<b class="none">—</b><small class="egd">에코를 넣으면 점수와 등급이 나와요</small>`}</div>
   </div>`}
 function setGrowth(id,patch){appMediator.characters.patchGrowth(id,patch);persist();renderProfile();renderRoster();rerenderPlan();}
 function renderProfile(){

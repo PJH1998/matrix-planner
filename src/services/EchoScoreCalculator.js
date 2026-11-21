@@ -1,6 +1,6 @@
 (function(g){
-  /* 에코 점수 — 에코 5개의 부옵이 이 공명자에게 얼마나 쓸모 있는지 100점 만점으로 매긴다 (에코 1개 = 20점 만점).
-     부옵 한 줄 = 수치 ÷ 그 부옵의 최대 수치(유효 줄). 점수 = Σ 유효 줄 × 가중치 × 4 × 보정. 주옵은 코스트마다 고르는 값이라 넣지 않는다.
+  /* 에코 점수 — 에코 5개의 부옵이 이 공명자에게 얼마나 쓸모 있는지 500점 만점으로 매긴다 (에코 1개 = 100점 만점).
+     부옵 한 줄 = 수치 ÷ 그 부옵의 최대 수치(유효 줄). 점수 = Σ 유효 줄 × 가중치 × 20 × 보정 (최대 수치 한 줄 = 20점). 주옵은 코스트마다 고르는 값이라 넣지 않는다.
      딜러 가중치
        크리티컬      목표치(공식 가이드 → 이잘키)를 채울 때까지 1, 넘는 부분은 0.25
        크리티컬 피해  1 (높을수록 좋음)
@@ -10,13 +10,13 @@
      서포터 가중치: 지원 기준 스탯(HP·공격력·방어력)·주력 스탯 1, 공명 효율은 기준치(버프 상한이 더 높으면 상한)까지 1,
        공식 가이드에 크리티컬·크리티컬 피해 추천이 있으면 딜러처럼, 가이드가 「높을수록 좋음」(gt)으로 둔 스탯은 넘는 부분도 1.
      「채울 때까지」는 비전투 최종 스탯으로 본다(무기·주옵이 이미 채운 몫은 빼고). 넘는 부분은 그 부옵을 가진 에코들에 고르게 나눈다.
-     보정: 쓸모 있는 부옵 종류는 공명자마다 다르다(서포터는 2~3종). 에코마다 가장 좋은 부옵 5종이 최대 수치로 붙은 세팅 = 100점이 되도록
+     보정: 쓸모 있는 부옵 종류는 공명자마다 다르다(서포터는 2~3종). 에코마다 가장 좋은 부옵 5종이 최대 수치로 붙은 세팅 = 500점이 되도록
        5 ÷ (가중치 상위 5개 합)을 곱한다. 이미 채운 크리티컬·공명 효율은 넘는 부분 가중치로 센다.
      등급 구간은 data/echoes.js의 MP.ECHO_GRADES. */
   class EchoScoreCalculator{
     constructor({charMap,charDb,echoDb,echoes,weapons}){
       this.charMap=charMap;this.db=charDb;this.echoDb=echoDb;this.echoes=echoes;this.weapons=weapons;
-      this.critOver=.25;this.mainOver=.25;this.typeFull=.6;this.perLine=4;
+      this.critOver=.25;this.mainOver=.25;this.typeFull=.6;this.perLine=20;this.maxTotal=500;
       this.types=["basic","heavy","skill","lib"];
     }
     isSupport(id){const c=this.charMap()[id];return !!c&&c.role==="support"}
@@ -44,14 +44,14 @@
       cap("er",this.echoes.erMin(id).min,0);return {w,best}}
     // 보정 배율: 가중치 상위 5개의 합이 5가 되도록
     norm(best){const top=Object.values(best).sort((a,b)=>b-a).slice(0,5).reduce((a,b)=>a+b,0);return top>0?5/top:0}
-    // 에코 한 개 점수 (20점 만점)와 부옵별 점수. f = 보정 배율
+    // 에코 한 개 점수 (100점 만점)와 부옵별 점수. f = 보정 배율
     echoScore(echo,w,f){const subs=(echo&&echo.subs||[]).map(s=>{const max=this.echoDb.subMax(s.k),pts=max?Math.min(1,(+s.v||0)/max)*(w[s.k]||0)*this.perLine*f:0;return {k:s.k,v:s.v,pts}});
       return {score:subs.reduce((a,s)=>a+s.pts,0),subs}}
     /* 지금 모드의 에코 점수 {total, grade, slots:[칸별 {score, subs} | null], parts:{키: 점수}, count, weights, norm}. 에코가 없으면 null */
     score(id){if(!this.charMap()[id])return null;const raw=(this.echoes.slot(id).echoes||[]).slice(0,5);if(!raw.some(e=>e&&e.main))return null;
       const {w,best}=this.weights(id),f=this.norm(best),slots=[0,1,2,3,4].map(i=>raw[i]&&raw[i].main?this.echoScore(raw[i],w,f):null),parts={};
       slots.forEach(s=>s&&s.subs.forEach(x=>{if(x.pts>0)parts[x.k]=(parts[x.k]||0)+x.pts}));
-      const total=Math.min(100,slots.reduce((a,s)=>a+(s?s.score:0),0));
+      const total=Math.min(this.maxTotal,slots.reduce((a,s)=>a+(s?s.score:0),0));
       return {total,grade:this.echoDb.grade(total),slots,parts,count:slots.filter(Boolean).length,weights:w,norm:f}}
   }
   g.MP.EchoScoreCalculator=EchoScoreCalculator;

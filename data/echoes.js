@@ -83,13 +83,13 @@ MP.ECHO_SUB_ODDS=(()=>{const crit=[70,70,70,24,24,24,9,9],normal=[7,8,21,25,18,1
 /* 세트 아이콘: 세트 이름 → [encore.moe 세트 번호, 아이콘 파일명(IconElementAttri)]. 배포 때 img/set/{번호}.webp로 받는다 */
 MP.ECHO_SET_ICON={"끊임없는 잔향":[9,"T_IconElementAttriAttack"],"스쳐가는 바람":[4,"T_IconElementAttriWind"],"찬란한 광휘":[7,"T_IconElementAttriCure"],"떠오르는 구름":[8,"T_IconElementAttriCloud"],"울려퍼지는 뇌음":[3,"T_IconElementAttriThunder"],"빛을 삼키는 해":[6,"T_IconElementAttriDark"],"야밤의 서리":[1,"T_IconElementAttriIce"],"빛나는 별":[5,"T_IconElementAttriLight"],"솟구치는 용암":[2,"T_IconElementAttriFire"],"냉철한 결단":[10,"T_IconElementAttriIceUltimateSkill"],"하늘의 합주곡":[13,"T_IconElementAttriCooperate"],"어둠의 장막":[12,"T_IconElementAttriDarkAssist"],"영원의 광채":[11,"T_IconElementAttriLightError"],"파도에 맞선 용기":[14,"T_IconElementAttriEnergy"],"뒤틀린 피안의 꿈":[19,"T_IconElementAttriDarkVision"],"불타는 깃털을 펼친 사냥꾼의 그림자":[22,"T_IconElementAttriFireA"],"운명을 붕괴시키는 현":[23,"T_IconElementAttriQianXiao"],"만물의 숨결에 비롯된 울림":[21,"T_IconElementAttriSupport"],"영광의 칼날로 만들어진 왕관":[20,"T_IconElementAttriShield"],"끝없는 하늘":[16,"T_IconElementAttriWindError"],"울부짖는 늑대의 불꽃":[18,"T_IconElementAttriFireUltimateSkill"],"영광이 깃든 바람":[17,"T_IconElementAttriWindErrorA"],"빛을 쫓는 별의 고리":[25,"T_IconElementAttriCureWeakness"],"흐르는 금빛 속 진리의 답":[26,"T_IconElementAttriAttackWeakness"],"함의의 소리를 따라":[29,"T_IconElementAttriWindVision"],"마음을 엮은 꿈의 그림자":[31,"T_IconElementAttriSupport1"],"역광 속 눈부신 서약":[24,"T_IconElementAttriLightWeakness"],"오색찬란한 거품":[28,"T_IconElementAttriFireA2"],"소리 없이 내려앉은 기도의 눈":[30,"T_IconElementAttriIceA1"],"긴 여정을 떠나는 별":[27,"T_IconElementAttriFireA1"],"내려앉은 깃털의 노래":[33,"T_IconElementAttriYangyang"],"꿈으로 세상을 비추는 마음":[36,"T_IconElementAttriXin"],"꿈을 깨뜨리는 망령의 악몽":[32,"T_IconElementAttriAdam"],"황천길을 밝히는 등불":[35,"T_IconElementAttriJingran"],"거울 그림자에 번개가 스치는 찰나":[37,"T_IconElementAttriThunderError"],"악을 씻어내는 마음":[34,"T_IconElementAttriQingxiao"],"추억에 붉게 물든 꽃":[38,"T_IconElementAttriCureA"]};
 
-/* 에코 점수 등급 (에코 5개 총점, 100점 만점). 위에서부터 min 이상이면 그 등급. 점수 공식은 src/services/EchoScoreCalculator.js
-   구간 기준(딜러, 칸마다 새 에코 N개 중 가장 좋은 것을 낀 세팅의 중앙값): 1개 ≈34 · 3개 ≈43 · 10개 ≈50 · 30개 ≈56 · 100개 ≈60 · 100개 상위 10% ≈65 */
+/* 에코 점수 등급 (에코 5개 총점, 500점 만점 · 에코 1개 100점). 위에서부터 min 이상이면 그 등급. 점수 공식은 src/services/EchoScoreCalculator.js
+   구간 기준(딜러, 칸마다 새 에코 N개 중 가장 좋은 것을 낀 세팅의 중앙값): 1개 ≈170 · 3개 ≈215 · 10개 ≈250 · 30개 ≈280 · 100개 ≈300 · 100개 상위 10% ≈325 */
 MP.ECHO_GRADES=[
- {id:"eoja",name:"어자",desc:"최상위 · 완벽에 가까운 세팅",min:65},
- {id:"myeongsik",name:"명식",desc:"최상급 · 종결 세팅",min:58},
- {id:"haeil",name:"해일",desc:"상급 · 높은 완성도",min:52},
- {id:"nodo",name:"노도",desc:"중상급 · 우수한 세팅",min:45},
- {id:"georang",name:"거랑",desc:"중급 · 준수한 세팅",min:38},
+ {id:"eoja",name:"어자",desc:"최상위 · 완벽에 가까운 세팅",min:325},
+ {id:"myeongsik",name:"명식",desc:"최상급 · 종결 세팅",min:290},
+ {id:"haeil",name:"해일",desc:"상급 · 높은 완성도",min:260},
+ {id:"nodo",name:"노도",desc:"중상급 · 우수한 세팅",min:225},
+ {id:"georang",name:"거랑",desc:"중급 · 준수한 세팅",min:190},
  {id:"gyeongpa",name:"경파",desc:"입문 · 성장 단계",min:0}
 ];
