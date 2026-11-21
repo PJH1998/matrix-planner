@@ -1,7 +1,7 @@
 /* 치사 — 인멸 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"chisa", name:"치사", el:"havoc", rar:5, role:"sub",
-  release:57, eid:1508,  // 출시 순서 · encore.moe 번호(이미지)
+  release:57, eid:1508, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   shieldUp:0.9, // 실드 유지율(예측치, 0~1)

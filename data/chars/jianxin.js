@@ -1,7 +1,7 @@
 /* 감심 — 기류 · 5★ · 서포터 */
 MP.addChar({
   id:"jianxin", name:"감심", el:"aero", rar:5, role:"support",
-  release:23, eid:1405,  // 출시 순서 · encore.moe 번호(이미지)
+  release:23, eid:1405, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 공명 해방 피해 +38% (14초)",ob:["lib"],w:[],m:[]},

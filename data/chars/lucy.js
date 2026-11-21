@@ -1,7 +1,7 @@
 /* 루시 — 회절 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"lucy", name:"루시", el:"spectro", rar:5, role:"dps",
-  release:68, eid:1511,  // 출시 순서 · encore.moe 번호(이미지)
+  release:68, eid:1511, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 일반 공격 피해 +25%, 해킹 이탈 부여 시 전체 피해 +20%",ob:["basic","all"],w:["heavy"],m:["hack"]},

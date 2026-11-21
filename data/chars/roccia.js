@@ -1,7 +1,7 @@
 /* 로코코 — 인멸 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"roccia", name:"로코코", el:"havoc", rar:5, role:"sub",
-  release:33, eid:1606,  // 출시 순서 · encore.moe 번호(이미지)
+  release:33, eid:1606, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 인멸 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["heavy"],m:[]},

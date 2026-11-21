@@ -1,7 +1,7 @@
 /* 카멜리아 — 인멸 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"camellya", name:"카멜리아", el:"havoc", rar:5, role:"dps",
-  release:29, eid:1603,  // 출시 순서 · encore.moe 번호(이미지)
+  release:29, eid:1603, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"인멸 피해 (버프 없음)",ob:[],w:["basic"],m:[]},

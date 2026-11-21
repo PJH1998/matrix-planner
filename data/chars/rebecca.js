@@ -1,7 +1,7 @@
 /* 레베카 — 전도 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"rebecca", name:"레베카", el:"electro", rar:5, role:"sub",
-  release:68.5, eid:1308,  // 출시 순서 · encore.moe 번호(이미지)
+  release:68.5, eid:1308, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 전체 피해 +15%, 강공격 피해 최대 +35% (14초)",ob:["all","heavy"],w:["basic"],m:["hack"]},

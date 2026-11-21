@@ -5,6 +5,7 @@
    필드 (없는 값은 생략 — 역할·등급별 기본값을 쓴다)
      id, name, el, rar, role    기본 정보. role: dps 메인 딜러 / sub 서브 딜러 / support 서포터
      release                    출시 순서(클수록 최근)        eid   encore.moe 공명자 번호(이미지 받기용)
+     region                     지역 id(아래 MP.REGIONS). 출시 버전으로 정한다 — 에코 등급 아이콘을 그 지역 것으로 보여 준다
      syn   {o, ob, p, w, m}     반주·메커니즘 (출처: encore.moe 반주·고유 스킬 설명)
              o  반주 요약 / ob 반주 버프 대상(basic·heavy·skill·lib·echo·coord·el·all)
              p  1이면 파티 전체 버프 / w 주력 피해 유형 / m 메커니즘(frost·burn·erosion·flare·frazzle·bane·anom·tuneD·tuneW·hack·unison·shield·echo·coord)
@@ -56,6 +57,13 @@ const LIST=[
  "chisa","xuanling","phrolova","cantarella","camellya","roccia","rover_h","danjin","taoqi"
 ];
 g.MP.CHAR_LIST=LIST;
+/* 지역 — 공명자가 출시된 버전으로 나눈다(사용자 기준). 순서 = 에코 등급 아이콘 번호(icons/grade/<등급>/<n>.webp) */
+g.MP.REGIONS=[
+ {id:"jinzhou",name:"금주",ver:"1.x"},
+ {id:"rinascita",name:"리나시타",ver:"2.x"},
+ {id:"lahairoi",name:"라하이로이",ver:"3.0~3.4"},
+ {id:"mengzhou",name:"몽주",ver:"3.5~3.8"}
+];
 // 브라우저: 목록 순서대로 공명자 파일을 이어서 읽는다(파싱 중 동기 로드 → 본문 스크립트보다 먼저 등록됨)
 if(typeof document!=="undefined"&&document.readyState==="loading"){
   const base=(document.currentScript&&document.currentScript.src||"").replace(/[^/]*$/,"");

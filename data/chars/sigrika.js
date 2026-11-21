@@ -1,7 +1,7 @@
 /* 시그리카 — 기류 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"sigrika", name:"시그리카", el:"aero", rar:5, role:"dps",
-  release:65, eid:1412,  // 출시 순서 · encore.moe 번호(이미지)
+  release:65, eid:1412, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"기류 피해, 에코 어빌리티 사용 시 목표 정체",ob:[],w:["echo"],m:["echo"]},

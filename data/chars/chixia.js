@@ -1,7 +1,7 @@
 /* 치샤 — 용융 · 4★ · 메인 딜러 */
 MP.addChar({
   id:"chixia", name:"치샤", el:"fusion", rar:4, role:"dps",
-  release:2, eid:1202,  // 출시 순서 · encore.moe 번호(이미지)
+  release:2, eid:1202, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"용융 피해 (버프 없음)",ob:[],w:["skill"],m:[]},

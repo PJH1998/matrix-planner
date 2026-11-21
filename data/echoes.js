@@ -87,11 +87,13 @@ MP.ECHO_SET_ICON={"끊임없는 잔향":[9,"T_IconElementAttriAttack"],"스쳐�
    등급 간격은 75점으로 같고, 어자를 뺀 등급은 그 구간을 셋으로 나눠 III → II → I (I이 가장 높음).
    500점 = 지금 주옵·세트·무기에서 부옵 25줄이 모두 가장 좋은 종류·최대 수치인 세팅.
    참고(딜러, 칸마다 새 에코 N개 중 가장 좋은 것을 낀 세팅): 1개 ≈175 · 3개 ≈240 · 10개 ≈280 · 30개 ≈300 · 100개 ≈340 · 1000개 ≈375 · 부옵 전부 7단계 ≈455 */
+/* icons: 등급 아이콘 개수. 1개면 icons/grade/<id>.webp, 여러 개면 지역별 icons/grade/<id>/<1~n>.webp
+   (등급마다 지역 대표 에코를 새긴 아이콘. 번호 = 공명자 지역 순서 MP.REGIONS: 1 금주 · 2 리나시타 · 3 라하이로이 · 4 몽주) */
 MP.ECHO_GRADES=[
- {id:"eoja",name:"어자",desc:"최상위 · 완벽에 가까운 세팅",min:450},
- {id:"myeongsik",name:"명식",desc:"최상급 · 종결 세팅",min:375},
- {id:"haeil",name:"해일",desc:"상급 · 높은 완성도",min:300},
- {id:"nodo",name:"노도",desc:"중상급 · 우수한 세팅",min:225},
- {id:"georang",name:"거랑",desc:"중급 · 준수한 세팅",min:150},
- {id:"gyeongpa",name:"경파",desc:"입문 · 성장 단계",min:0}
+ {id:"eoja",name:"어자",desc:"최상위 · 완벽에 가까운 세팅",min:450,icons:1},
+ {id:"myeongsik",name:"명식",desc:"최상급 · 종결 세팅",min:375,icons:4},
+ {id:"haeil",name:"해일",desc:"상급 · 높은 완성도",min:300,icons:4},
+ {id:"nodo",name:"노도",desc:"중상급 · 우수한 세팅",min:225,icons:4},
+ {id:"georang",name:"거랑",desc:"중급 · 준수한 세팅",min:150,icons:4},
+ {id:"gyeongpa",name:"경파",desc:"입문 · 성장 단계",min:0,icons:4}
 ];

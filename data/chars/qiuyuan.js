@@ -1,7 +1,7 @@
 /* 구원 — 기류 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"qiuyuan", name:"구원", el:"aero", rar:5, role:"sub",
-  release:56, eid:1411,  // 출시 순서 · encore.moe 번호(이미지)
+  release:56, eid:1411, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 에코 어빌리티 피해 +50% (14초)",ob:["echo"],w:["heavy","echo"],m:["echo"]},

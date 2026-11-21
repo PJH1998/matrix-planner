@@ -1,7 +1,7 @@
 /* 알토 — 기류 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"aalto", name:"알토", el:"aero", rar:4, role:"sub",
-  release:12, eid:1403,  // 출시 순서 · encore.moe 번호(이미지)
+  release:12, eid:1403, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 기류 피해 +23% (14초)",ob:["el"],w:[],m:[]},

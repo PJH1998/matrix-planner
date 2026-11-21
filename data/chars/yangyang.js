@@ -1,7 +1,7 @@
 /* 양양 — 기류 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"yangyang", name:"양양", el:"aero", rar:4, role:"sub",
-  release:1, eid:1402,  // 출시 순서 · encore.moe 번호(이미지)
+  release:1, eid:1402, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 공명 에너지 회복 (5초)",ob:[],w:[],m:[]},

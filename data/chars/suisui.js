@@ -1,7 +1,7 @@
 /* 수수 — 응결 · 5★ · 서포터 */
 MP.addChar({
   id:"suisui", name:"수수", el:"glacio", rar:5, role:"support",
-  release:71, eid:1110,  // 출시 순서 · encore.moe 번호(이미지)
+  release:71, eid:1110, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"파티 전체 피해 +25% (30초), 꽃향기의 편지 소모량에 따라 추가 효과",ob:["all"],p:1,w:[],m:["frost","anom"]},

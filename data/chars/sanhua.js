@@ -1,7 +1,7 @@
 /* 산화 — 응결 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"sanhua", name:"산화", el:"glacio", rar:4, role:"sub",
-  release:7, eid:1102,  // 출시 순서 · encore.moe 번호(이미지)
+  release:7, eid:1102, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 일반 공격 피해 +38% (14초)",ob:["basic"],w:[],m:[]},

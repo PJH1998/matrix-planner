@@ -1,7 +1,7 @@
 /* 음림 — 전도 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"yinlin", name:"음림", el:"electro", rar:5, role:"sub",
-  release:17, eid:1302,  // 출시 순서 · encore.moe 번호(이미지)
+  release:17, eid:1302, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 전도 피해 +20%, 공명 해방 피해 +25% (14초)",ob:["el","lib"],w:["skill"],m:[]},

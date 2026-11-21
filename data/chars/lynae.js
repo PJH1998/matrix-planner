@@ -1,7 +1,7 @@
 /* 린네 — 회절 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"lynae", name:"린네", el:"spectro", rar:5, role:"sub",
-  release:60, eid:1509,  // 출시 순서 · encore.moe 번호(이미지)
+  release:60, eid:1509, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 공명 모드 — 모드마다 다른 값(syn·outro·sets 등)은 여기 적는다. 없는 필드는 아래 공통 값을 쓴다. 0번 = 게임 기본 모드
   // name: 게임 공식 명칭 · icon: 게임 아이콘(encore.moe RoleLabel) · 출처: encore.moe 고유 스킬·반주 스킬 설명

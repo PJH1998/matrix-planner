@@ -1,7 +1,7 @@
 /* 모니에 — 용융 · 5★ · 서포터 */
 MP.addChar({
   id:"mornye", name:"모니에", el:"fusion", rar:5, role:"support",
-  release:61, eid:1209,  // 출시 순서 · encore.moe 번호(이미지)
+  release:61, eid:1209, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"파티 전체 피해 +25% (30초)",ob:["all"],p:1,w:[],m:["tuneW","tuneD"]},

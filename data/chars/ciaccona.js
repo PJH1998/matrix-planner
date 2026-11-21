@@ -1,7 +1,7 @@
 /* 샤콘 — 기류 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"ciaccona", name:"샤콘", el:"aero", rar:5, role:"sub",
-  release:38, eid:1407,  // 출시 순서 · encore.moe 번호(이미지)
+  release:38, eid:1407, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"주변 적이 받는 풍식 효과 피해 +100% (30초)",ob:[],p:1,w:["lib"],m:["erosion"]},

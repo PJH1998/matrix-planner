@@ -1,7 +1,7 @@
 /* 모르테피 — 용융 · 4★ · 서브 딜러 */
 MP.addChar({
   id:"mortefi", name:"모르테피", el:"fusion", rar:4, role:"sub",
-  release:13, eid:1204,  // 출시 순서 · encore.moe 번호(이미지)
+  release:13, eid:1204, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 강공격 피해 +38% (14초)",ob:["heavy"],w:[],m:[]},

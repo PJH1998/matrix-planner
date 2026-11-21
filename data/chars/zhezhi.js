@@ -1,7 +1,7 @@
 /* 절지 — 응결 · 5★ · 서브 딜러 */
 MP.addChar({
   id:"zhezhi", name:"절지", el:"glacio", rar:5, role:"sub",
-  release:26, eid:1105,  // 출시 순서 · encore.moe 번호(이미지)
+  release:26, eid:1105, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 응결 피해 +20%, 공명 스킬 피해 +25% (14초)",ob:["el","skill"],w:["basic","skill"],m:["coord"]},

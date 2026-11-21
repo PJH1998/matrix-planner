@@ -1,7 +1,7 @@
 /* 젠니 — 회절 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"zani", name:"젠니", el:"spectro", rar:5, role:"dps",
-  release:37, eid:1507,  // 출시 순서 · encore.moe 번호(이미지)
+  release:37, eid:1507, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"강렬한 불기운 대상에게 주는 회절 피해 +20% (20초)",ob:["el"],p:1,w:["heavy"],m:["frazzle"]},

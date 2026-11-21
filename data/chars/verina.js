@@ -1,7 +1,7 @@
 /* 벨리나 — 회절 · 5★ · 서포터 */
 MP.addChar({
   id:"verina", name:"벨리나", el:"spectro", rar:5, role:"support",
-  release:3, eid:1503,  // 출시 순서 · encore.moe 번호(이미지)
+  release:3, eid:1503, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 지속 회복, 파티 전체 피해 +15% (30초)",ob:["all"],p:1,w:[],m:["coord"]},

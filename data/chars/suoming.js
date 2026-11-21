@@ -1,7 +1,7 @@
 /* 쇄명 — 전도 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"suoming", name:"쇄명", el:"electro", rar:5, role:"dps",
-  release:76, eid:1312,  // 출시 순서 · encore.moe 번호(이미지)
+  release:76, eid:1312, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 전도 피해 +20%, 합일 버프 보유 시 공명 스킬 피해 +25% (8초)",ob:["el","skill"],w:["basic"],m:["unison"]},

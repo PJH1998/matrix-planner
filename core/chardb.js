@@ -103,6 +103,9 @@
     teamWeaponBuff:(id,wid)=>(raw(id).teamWeaponBuff||{})[wid]||null,
     /* 기타 */
     release:id=>raw(id).release,
+    regions:()=>MP.REGIONS||[],
+    region:id=>(MP.REGIONS||[]).find(r=>r.id===raw(id).region)||null,          // 공명자 지역 {id, name, ver}
+    regionNo:id=>{const i=(MP.REGIONS||[]).findIndex(r=>r.id===raw(id).region);return i<0?1:i+1}, // 지역 번호(1부터, 없으면 1) = 등급 아이콘 번호
     eid:id=>raw(id).eid,
     pairs:id=>raw(id).pairs||{},
     pairW:(a,b)=>(raw(a).pairs||{})[b]||0,

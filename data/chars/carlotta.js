@@ -1,7 +1,7 @@
 /* 카를로타 — 응결 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"carlotta", name:"카를로타", el:"glacio", rar:5, role:"dps",
-  release:32, eid:1107,  // 출시 순서 · encore.moe 번호(이미지)
+  release:32, eid:1107, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"응결 피해 (버프 없음)",ob:[],w:["skill"],m:[]},

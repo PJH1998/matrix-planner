@@ -1,7 +1,7 @@
 /* 능양 — 응결 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"lingyang", name:"능양", el:"glacio", rar:5, role:"dps",
-  release:14, eid:1104,  // 출시 순서 · encore.moe 번호(이미지)
+  release:14, eid:1104, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"응결 피해 (버프 없음)",ob:[],w:["basic"],m:[]},

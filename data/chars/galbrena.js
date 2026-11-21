@@ -1,7 +1,7 @@
 /* 갈브레나 — 용융 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"galbrena", name:"갈브레나", el:"fusion", rar:5, role:"dps",
-  release:55, eid:1208,  // 출시 순서 · encore.moe 번호(이미지)
+  release:55, eid:1208, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"용융 피해 (버프 없음)",ob:[],w:["heavy","echo"],m:["echo"]},

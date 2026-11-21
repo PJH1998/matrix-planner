@@ -161,7 +161,9 @@
     subKeys:()=>Object.keys(MP.ECHO_SUB||{}),
     subOdds:key=>(MP.ECHO_SUB_ODDS||{})[key]||null,       // 수치 단계별 가중치 (공식 확률 공시, subTiers와 같은 순서)
     subMax:key=>{const t=(MP.ECHO_SUB_TIERS||{})[key];return t?t[t.length-1]:null}, // 부옵 최대 수치(마지막 단계)
-    grades:()=>MP.ECHO_GRADES||[],                         // 에코 점수 등급 [{id, name, desc, min}] 높은 등급부터
+    grades:()=>MP.ECHO_GRADES||[],                         // 에코 점수 등급 [{id, name, desc, min, icons}] 높은 등급부터
+    // 등급 아이콘 경로. v = 지역 아이콘 번호(1부터). 아이콘이 1개인 등급은 v를 보지 않는다
+    gradeIcon(id,v=1){const g=(MP.ECHO_GRADES||[]).find(x=>x.id===id);if(!g)return "";const n=g.icons||1;return n>1?`icons/grade/${id}/${Math.min(n,Math.max(1,v|0||1))}.webp`:`icons/grade/${id}.webp`},
     /* 점수의 등급 {id, name, desc, min, sub, label}. 맨 위 등급을 뺀 등급은 [min, 윗 등급 min) 구간을 셋으로 나눠 sub = III · II · I (I이 가장 높음) */
     grade(score){const G=MP.ECHO_GRADES||[],i=G.findIndex(g=>score>=g.min);if(i<0)return null;const g=G[i],up=G[i-1];let sub=null;
       if(up){const t=(score-g.min)/(up.min-g.min);sub=t>=2/3?"I":t>=1/3?"II":"III"}

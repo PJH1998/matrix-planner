@@ -1,7 +1,7 @@
 /* 도기 — 인멸 · 4★ · 서포터 */
 MP.addChar({
   id:"taoqi", name:"도기", el:"havoc", rar:4, role:"support",
-  release:9, eid:1601,  // 출시 순서 · encore.moe 번호(이미지)
+  release:9, eid:1601, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 공명 스킬 피해 +38% (14초)",ob:["skill"],w:[],m:[]},

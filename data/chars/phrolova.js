@@ -1,7 +1,7 @@
 /* 플로로 — 인멸 · 5★ · 메인 딜러 */
 MP.addChar({
   id:"phrolova", name:"플로로", el:"havoc", rar:5, role:"dps",
-  release:41, eid:1608,  // 출시 순서 · encore.moe 번호(이미지)
+  release:41, eid:1608, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 인멸 피해 +20%, 강공격 피해 +25% (14초)",ob:["el","heavy"],w:["echo","skill"],m:["echo"]},
