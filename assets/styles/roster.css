@@ -43,6 +43,14 @@
 .pcard .pwep img{width:100%;height:100%;display:block}
 .pcard .pwep b{position:absolute;right:-4px;bottom:-5px;font-family:var(--f-num);font-size:11px;background:#14181c;color:#e6c36a;border-radius:3px;padding:0 4px}
 .pcard.off{filter:grayscale(.85) brightness(.6)}
+/* 카드 아래 줄: 에코 등급 뱃지·점수(등급 색) · 공명력(금색). 색은 profile.css의 .eg-* */
+.pcard.has-stat .pinfo{bottom:46px}
+.pcard .pstat{position:absolute;left:8px;right:8px;bottom:7px;height:32px;display:flex;align-items:center;gap:8px;padding:0 10px 0 4px;border-radius:8px;background:rgba(8,11,15,.72);border:1px solid rgba(255,255,255,.1)}
+.pcard .pes{display:flex;align-items:center;gap:4px;color:var(--eg)}
+.pcard .pes img{width:34px;height:34px;margin:-4px -2px -4px 0;object-fit:contain;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--eg) 45%,transparent))}
+.pcard .pstat b{font-family:var(--f-num);font-size:17px;font-weight:600;line-height:1}
+.pcard .pps{margin-left:auto;color:#e6c36a}
+@media (max-width:560px){.pcard.has-stat .pinfo{bottom:40px}.pcard .pstat{height:28px;bottom:6px;left:6px;right:6px;padding:0 8px 0 3px}.pcard .pes img{width:28px;height:28px}.pcard .pstat b{font-size:15px}}
 .pcard .poff{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:14px;padding:3px 10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.3);border-radius:4px;color:#fff}
 @media (max-width:560px){.rgrid.pmode{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pcard{height:250px}.pcard .ptxt b{font-size:16px}.pcard .pwep{width:40px;height:40px}}
 .rlv.rtr{color:#8fd3ff;letter-spacing:.06em}

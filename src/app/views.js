@@ -196,7 +196,10 @@ function renderRoster(){
 const favBtn=(c,cls)=>FavoriteButton.render({character:c,className:cls,active:!!(state.fav||{})[c.id],escape:esc});
 // 프로필 모드 카드: 전신 그림 + 속성·성급·레벨·돌파·무기
 function profCardHTML(c){const g=state.growth[c.id]||{};const on=!!state.owned[c.id];const wp=weaponOf(c.id);const pic=cardUrl(c.id);
-  return CharacterCard.profile({character:c,growth:g,owned:on,weapon:wp,pictureUrl:pic,elementName:EL[c.el],favoriteHtml:favBtn(c,"pfav"),weaponIconUrl:wp.w?weaponIcon(wp.w):"",escape:esc})}
+  return CharacterCard.profile({character:c,growth:g,owned:on,weapon:wp,pictureUrl:pic,elementName:EL[c.el],favoriteHtml:favBtn(c,"pfav"),weaponIconUrl:wp.w?weaponIcon(wp.w):"",statsHtml:on?profStatsHTML(c.id):"",escape:esc})}
+// 프로필 카드 아래 줄: 에코 등급 뱃지 + 에코 점수(에코를 넣었을 때만, 체험 세팅 제외) · 공명력(협주력) 숫자
+function profStatsHTML(id){const g=state.growth[id]||{};const es=g.trial?null:echoScorer.score(id);const sn=scoreName(id),ps=charScore(id);
+  return `<div class="pstat">${es?`<span class="pes eg-${es.grade.id}" title="에코 점수 ${Math.round(es.total)}/500 · ${esc(es.grade.label)}"><img src="${gradeIcon(es.grade.id,id)}" alt="${esc(es.grade.name)} 등급"><b>${Math.round(es.total)}</b></span>`:""}<span class="pps" title="${esc(sn)}"><b>${ps.toFixed(1)}</b></span></div>`}
 function toggleOwned(id){const on=appMediator.characters.toggleOwned(id);
   if(!on)appMediator.teams.removeCharacter(id);
   persist();renderRoster();rerenderPlan();flash(`${charMap[id].name}: ${on?"보유":"미보유"}`);}
