@@ -574,7 +574,7 @@ function queueSpecBadges(id){if(!document.querySelector("[data-subadge]"))return
       const top=best&&best.index===s.index,low=s.eff<.05;el.className="su-badge"+(top?" top":low?" low":"");el.closest(".ecard")?.classList.toggle("su-first",top);
       el.title=`새로 깎으면 지금보다 좋아질 확률 ${suPct(s.p)} · 좋아지면 평균 +${s.gain.toFixed(1)}% · 에코 1개당 기대 +${s.eff.toFixed(2)}% · 평균 ${suTries(s.tries)}`+(s.erCut>.01?" · 공명 효율 최소치를 깨는 경우는 뺐습니다":"");
       const er=s.erCut>.01?`<i class="su-er">⚡</i>`:"";
-      el.innerHTML=low?`<span>${s.p<.005?"교체 불필요":"교체 효과 거의 없음"}${er}</span><span>확률 <b>${suPct(s.p)}</b></span>`
+      el.innerHTML=low?`<span>${s.p<.005?"다시 깎을 필요 없음":"이미 좋은 에코"}${er}</span><span>더 좋을 확률 <b>${suPct(s.p)}</b></span>`
         :`${top?`<em>먼저 깎기</em>`:""}<span>더 좋을 확률 <b>${suPct(s.p)}</b>${er}</span><span>1개당 <b>+${s.eff.toFixed(2)}%</b></span>`})},0)}
 
 /* ---------- 주기별 기록 ---------- */
