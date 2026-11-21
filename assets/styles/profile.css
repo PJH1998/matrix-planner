@@ -192,3 +192,52 @@ nav.tabs a.dot::after{content:"";position:absolute;right:4px;top:6px;width:7px;h
   .su-mode{font-size:0;gap:0;padding:1px}.su-mode .micon{width:15px;height:15px}
   .su-slot{white-space:normal;gap:3px}.su-set{width:16px;height:16px}
 }
+
+/* 에코 비교 창 (이미 에코가 있는 칸에 새 캡처를 넣었을 때). 프로필 창 오른쪽에 창 하나를 더 붙인다.
+   프로필 창은 라이트 모드에서도 어두운 색이라 이 창도 같은 색을 고정해서 쓴다 */
+.prof[open].has-cmp{width:min(1900px,98vw);display:flex;gap:12px;align-items:flex-start;background:transparent;border:0;box-shadow:none;overflow:visible}
+.prof.has-cmp>.pf{flex:1;min-width:0;max-height:94vh;overflow:auto;background:#10151a;border:1px solid rgba(255,255,255,.16);border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.ecmp{flex:0 0 400px;max-height:94vh;overflow:auto;background:#10151a;color:#eef2f5;border:1px solid rgba(230,195,106,.55);border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.6);
+  padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;font-family:"Noto Sans KR",var(--f-body);letter-spacing:-.01em;font-size:14px}
+.ecmp-h{display:flex;align-items:center;gap:8px}
+.ecmp-h b{font-size:18px;color:#f3e3b5}.ecmp-h span{color:#9aa6b1;font-size:13px}
+.ecmp-h .x{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.2);color:#d9dee3;border-radius:2px;width:30px;height:30px;cursor:pointer}
+.ecmp-h .x:hover{border-color:#e6c36a;color:#e6c36a}
+.ecmp-slots{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#9aa6b1}
+.ecmp-slots button{display:inline-flex;align-items:baseline;gap:3px;padding:4px 9px}
+.ecmp-slots button small{font-size:11px;opacity:.8}
+.ecmp-v{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.ecmp-v b{font-size:16px}.ecmp-v span{font-size:13px;color:#b6bfc8;font-family:var(--f-num),"Noto Sans KR",sans-serif}
+.ecmp-v.better{background:rgba(111,224,138,.08);border-color:rgba(111,224,138,.45)}.ecmp-v.better b{color:#8fe8a5}
+.ecmp-v.worse{background:rgba(242,169,130,.07);border-color:rgba(242,169,130,.4)}.ecmp-v.worse b{color:#f2b596}
+.ecmp-v.warn{background:rgba(255,210,63,.07);border-color:rgba(255,210,63,.45)}.ecmp-v.warn b{color:#ffd96a}
+.ecmp-v.even b,.ecmp-v.trial b{color:#e9edf1}
+.ecmp-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ecmp-c{background:#161d26;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:3px;border:1.5px solid transparent;min-width:0}
+.ecmp-c.win{border-color:#d9bf7a;box-shadow:0 0 10px rgba(230,195,106,.18)}
+.ecmp-ct{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12.5px;color:#cfd4d9}
+.ecmp-ct span{background:rgba(217,191,122,.15);color:#f3e3b5;border-radius:20px;padding:1px 8px;font-size:12px}
+.ecmp-c.new .ecmp-ct{color:#f3e3b5;font-weight:500}
+.ecmp-c .ec-main{margin-top:3px;padding:7px 8px}.ecmp-c .ec-sub{padding:3px 6px;font-size:13px}.ecmp-c .ec-subs{margin-bottom:0}
+.ecmp-empty{color:#7f8b97;text-align:center;padding:40px 0;border:1.5px dashed #34404c;border-radius:9px;margin-top:4px}
+.ecmp-t{width:100%;min-width:0;border-collapse:collapse;font-size:13.5px}
+.ecmp-t th,.ecmp-t td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06);color:#e9edf1;text-align:right;font-family:var(--f-num),"Noto Sans KR",sans-serif;white-space:nowrap}
+.ecmp-t th{background:none;position:static;letter-spacing:0;text-transform:none;font-size:13.5px;color:#cfd4d9}
+.ecmp-t th:first-child{text-align:left;font-weight:400;color:#cfd4d9;font-family:"Noto Sans KR",var(--f-body)}
+.ecmp-t thead th{color:#8d98a3;font-size:12px;font-weight:400}
+.ecmp-t tr.sc th,.ecmp-t tr.sc td{color:#f3e3b5;font-weight:600;font-size:14.5px}
+.ecmp-t tr td.up{color:#6fe08a}.ecmp-t tr td.down{color:#ff8a65}
+.ecmp-n{margin:0;font-size:12.5px;color:#f2c58a;line-height:1.45}
+.ecmp-q{margin-top:2px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:8px}
+.ecmp-q p{margin:0;font-size:14px;color:#e9edf1}
+.ecmp-btns{display:flex;gap:8px}
+.ecmp-btns .btn{flex:1;padding:8px 10px;font-size:14.5px;border-radius:8px;cursor:pointer;background:#e6c36a;color:#1c1606;border:1px solid #e6c36a;font-weight:600}
+.ecmp-btns .btn.ghost{background:transparent;color:#e9edf1;border-color:rgba(255,255,255,.25);font-weight:500}
+.ecmp-btns .btn:hover{filter:brightness(1.08)}.ecmp-btns .btn.ghost:hover{border-color:#e6c36a;color:#f3e3b5}
+/* 좁은 화면: 비교 창을 위에, 프로필을 아래에 쌓고 창 전체를 스크롤 */
+@media (max-width:1000px){
+  .prof[open].has-cmp{flex-direction:column;align-items:stretch;gap:10px;max-height:94vh;overflow:auto;width:97vw}
+  .prof.has-cmp>.pf,.ecmp{max-height:none;overflow:visible}
+  .ecmp{order:-1;flex:none}
+}
+@media (max-width:420px){.ecmp{padding:12px}.ecmp-cards{gap:6px}.ecmp-c{padding:7px}.ecmp-c .ec-sub{font-size:12.5px;gap:4px;padding:3px 4px}.ecmp-c .ec-main span{font-size:12.5px}}

@@ -94,7 +94,7 @@ node --test tests/*.test.mjs
 | 1.1 | 2026-11-16 | 명조 스타일 리뉴얼·보유 캐릭터·육성 투자 효율·주기별 기록, 반주 수치화 | [docs/versions/v1.1.md](docs/versions/v1.1.md) |
 | 1.2 | 2026-11-16 | 파티 자동 추천·체험 세팅, 서포터 조건부 효과, 드래그·우클릭 편성 | [docs/versions/v1.2.md](docs/versions/v1.2.md) |
 | 1.3 | 2026-11-17~19 | 에코 세팅(OCR)·세트 효과, 비전투 최종 스탯, 공명력·협주력 개편, 효과 범위 규칙 | [docs/versions/v1.3.md](docs/versions/v1.3.md) |
-| 1.4 | 2026-11-20 | 공명 모드 분리·에코 스펙업 효율 | [docs/versions/v1.4.md](docs/versions/v1.4.md) |
+| 1.4 | 2026-11-20~21 | 공명 모드 분리·에코 스펙업 효율, 1.4.1 에코 비교 창 | [docs/versions/v1.4.md](docs/versions/v1.4.md) |
 
 강도 계산 개편 설계(1.3.3): [docs/strength-v2.md](docs/strength-v2.md)
 
