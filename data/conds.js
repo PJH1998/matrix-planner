@@ -6,6 +6,7 @@
    ids: 이 공명자가 있으면 만족 (고유 패시브 조건)
    dealer: 서포터는 제외 (이상 효과 "피해" 증가는 이상 효과 딜러만 받는다.
            "이상 효과에 걸린 적이 받는 피해" 증가는 대상 디버프라 negative(파티 전원)를 쓴다)
+   by: 공명자 파일의 이 수치 필드(offTune · echoExtra)가 0보다 큰 공명자가 있으면 만족
    mReq: 이 메커니즘을 가진 공명자만 (예: 서리 효과 "피해"는 서리 효과를 거는 공명자의 이상 효과 피해(other)에만 붙는다)
    ===================================================================== */
 (function(g){
@@ -33,6 +34,9 @@ g.MP.CONDS={
   tuneWSelf:{label:"조화 파동 피해를 준 공명자",scope:"char",dealer:1,m:["tuneW"]},
   hack:{label:"해킹",scope:"char",m:["hack"]},
   unison:{label:"합일",scope:"char",m:["unison"],min:2}, // 합일 대응: 합일 공명자 본인만, 파티에 합일 공명자가 2명 이상일 때
-  shield:{label:"실드",scope:"team",m:["shield"]}
+  shield:{label:"실드",scope:"team",m:["shield"]},
+  // 공명자 파일의 수치 필드(by)가 0보다 큰 공명자가 있으면 만족 — 보스 효과의 유리 표시용
+  tuneBreak:{label:"부조화 수치 누적 효율 증가",scope:"team",by:"offTune"}, // 조화도 파괴를 더 자주 (모니에)
+  echoAlt:{label:"에코 어빌리티 추가 발동",scope:"team",by:"echoExtra"}    // 스킬이 에코 어빌리티 발동으로 간주 (프롤로바·칸타렐라·로코코 등)
 };
 })(typeof window!=="undefined"?window:globalThis);

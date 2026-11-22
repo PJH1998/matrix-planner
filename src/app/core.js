@@ -36,7 +36,7 @@ function condWeight(k,t,id){if(!k)return 1;const d=COND[k],c=charMap[id];if(!d||
   return 0;}
 // 공명 모드 공명자는 지금 모드(CharDB.withModes — 파티 계산이 고른 모드)의 메커니즘으로 판정한다
 function charMeets(k,id){const d=COND[k],c=charMap[id];if(!d||!c)return false;if(d.dealer&&c.role==="support")return false;const S=synOf(id),M=S.m||[];
-  return (d.ids||[]).includes(id)||(d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>M.includes(x));}
+  return (d.ids||[]).includes(id)||(d.by==="offTune"&&CharDB.offTune(id)>0)||(d.by==="echoExtra"&&CharDB.echoExtra(id)>0)||(d.w||[]).some(x=>(S.w||[]).includes(x))||(d.el||[]).includes(c.el)||(d.m||[]).some(x=>M.includes(x));}
 function teamMeets(k,t){const d=COND[k];const n=t.slots.filter(id=>id&&charMeets(k,id)).length;return n>=((d&&d.min)||1)}
 // 효과 하나가 파티 t의 공명자 id에게 적용되는지. 조건 없는 효과는 항상 적용, 모르는 조건 키는 적용하지 않는다.
 function condApplies(k,t,id){if(!k)return true;const d=COND[k];if(!d)return false;if(d.scope==="team")return teamMeets(k,t);
