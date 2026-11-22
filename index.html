@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="assets/styles/theme.css">
 <link rel="stylesheet" href="assets/styles/roster.css">
 <link rel="stylesheet" href="assets/styles/profile.css">
+<link rel="stylesheet" href="assets/styles/pickup.css">
 
 </head>
 <body>
@@ -24,6 +25,7 @@
     <a href="#roster" data-v="roster">보유 캐릭터</a>
     <a href="#cycle" data-v="cycle" id="cycleTab" hidden>주기 설정</a>
     <a href="#invest" data-v="invest">투자 효율</a>
+    <a href="#pickup" data-v="pickup">픽업 추천</a>
     <a href="#records" data-v="records">기록</a>
     <a href="#method" data-v="method">계산 기준</a>
     <a href="#updates" data-v="updates" id="updTab">업데이트</a>
@@ -132,6 +134,20 @@
   <p class="su-foot" id="suFoot"></p>
   </div>
   <div class="disc foot" role="note">⚠ 위 결과는 <b>추천일 뿐</b>입니다. 「뽑기 투자」의 예상 비용은 한정 캐릭터 1명 ≈ 95연차, 전용 무기 1개 ≈ 70연차로 잡은 평균값이며, 실제 뽑기·에코 결과는 운에 따라 크게 달라집니다. 이 사이트는 비영리 팬 도구이며 결과에 대해 책임지지 않습니다.</div>
+</section>
+
+<!-- PICKUP -->
+<section class="view" id="v-pickup">
+  <div class="roster-h"><h2>픽업 추천</h2></div>
+  <div class="disc" role="note"><b>참고용 추천입니다.</b> 이 화면의 수치는 이 사이트의 강도 계산으로 만든 <b>추정치</b>이며, 실제 게임 성능과 다를 수 있습니다. 뽑기는 반드시 본인 판단으로 결정하세요.</div>
+  <details class="pk-how" open><summary>읽는 법</summary><ul>
+    <li>지금 픽업 · 다음 픽업을 탭으로 고르고, 캐릭터 배너를 누르면 자세한 결과가 펼쳐집니다. 펼친 배너의 <b>전용 무기도 뽑기</b>를 켜면 전용 무기까지 뽑은 경우로 계산합니다. 끄면 상시 5성 무기(서포터는 4성 공명 효율 무기가 더 좋으면 그 무기)로 계산합니다.</li>
+    <li><b>새로 뽑기</b>: 그 공명자를 넣은 조합을 지금 편성에 넣으면 <b>예상 총점</b>이 얼마나 오르는지 보여 줍니다. 먼저 <b>정석 조합</b>(고정 조합 · 궁합 1 파트너), 다음 <b>서브 조합</b>(보유 공명자로 만드는 다른 조합)입니다.</li>
+    <li>필요한 공명자가 다른 파티에서 배치 횟수를 다 쓰고 있으면 <b>포기할 파티</b>를 알려 줍니다. 서브 딜러는 새 메인 딜러와 시너지가 더 클 때만 데려옵니다.</li>
+    <li><b>돌파</b>(이미 보유): 공명 체인 +1로 그 공명자 강도가 얼마나 오르는지만 보여 줍니다.</li>
+  </ul></details>
+  <div id="pkBanners"></div>
+  <p class="su-foot" id="pkFoot"></p>
 </section>
 
 <!-- RECORDS -->
@@ -260,6 +276,7 @@
 <script src="src/services/RecommendationService.js"></script>
 <script src="src/services/SpecUpManager.js"></script>
 <script src="src/services/EchoScoreCalculator.js"></script>
+<script src="src/services/PickupAdvisor.js"></script>
 <script src="src/components/Icon.js"></script>
 <script src="src/components/FavoriteButton.js"></script>
 <script src="src/components/CharacterCard.js"></script>
@@ -269,14 +286,17 @@
 <script src="data/echoes.js"></script>
 <script src="data/teams.js"></script>
 <script src="data/trial.js"></script>
+<script src="data/banners.js"></script>
 <script src="data/chars/_list.js"></script>
 <script src="core/chardb.js"></script>
 <script src="core/bossdb.js"></script>
 <script src="core/echodb.js"></script>
+<script src="core/bannerdb.js"></script>
 <script src="updates.js"></script>
 <script src="src/app/core.js"></script>
 <script src="src/app/views.js"></script>
 <script src="src/app/interactions.js"></script>
+<script src="src/app/pickup.js"></script>
 <script src="src/app.js"></script>
 
 </body>

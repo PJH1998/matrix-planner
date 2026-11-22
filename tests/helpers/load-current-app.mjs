@@ -30,12 +30,12 @@ export function loadCurrentApp() {
   context.globalThis = context;
 
   run(context, "core/hub.js");
-  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/services/SpecUpManager.js", "src/services/EchoScoreCalculator.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
+  for (const file of ["src/store/LocalStorageRepository.js", "src/store/state-schema.js", "src/store/AppStore.js", "src/mediators/CharacterMediator.js", "src/mediators/EchoMediator.js", "src/mediators/TeamMediator.js", "src/mediators/BossMediator.js", "src/mediators/AppMediator.js", "src/services/WeaponCalculator.js", "src/services/EchoCalculator.js", "src/services/DealerCalculator.js", "src/services/SupportCalculator.js", "src/services/CharacterCalculator.js", "src/services/TeamCalculator.js", "src/services/RecommendationService.js", "src/services/SpecUpManager.js", "src/services/EchoScoreCalculator.js", "src/services/PickupAdvisor.js", "src/components/Icon.js", "src/components/FavoriteButton.js", "src/components/CharacterCard.js"]) run(context, file);
   run(context, "data/chars/_list.js");
   for (const id of context.MP.CHAR_LIST) run(context, `data/chars/${id}.js`);
   // 특성 테스트는 주기가 바뀌어도 값이 그대로여야 하므로 보관한 3.7 주기로 고정한다 (data/cycle.js는 문법 확인용으로만 먼저 읽는다)
-  for (const file of ["data/cycle.js", "data/archive/cycle-3.7-s2p3.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js", "data/trial.js"]) run(context, file);
-  for (const file of ["core/chardb.js", "core/bossdb.js", "core/echodb.js"]) run(context, file);
+  for (const file of ["data/cycle.js", "data/archive/cycle-3.7-s2p3.js", "data/conds.js", "data/weapons.js", "data/echoes.js", "data/teams.js", "data/trial.js", "data/banners.js"]) run(context, file);
+  for (const file of ["core/chardb.js", "core/bossdb.js", "core/echodb.js", "core/bannerdb.js"]) run(context, file);
 
   const appSource = fs.readFileSync(path.join(ROOT, "src/app/core.js"), "utf8");
   const persistence = appSource.indexOf("/* ---------- persistence ---------- */");
@@ -48,6 +48,8 @@ export function loadCurrentApp() {
       charMap:calculationContext.charMap,cycle:calculationContext.cycle,charDb:CharDB,characters:characterCalculator,teams:teamCalculator,vigorOf,
       bestBuffs:t=>{if(!t.slots.some(Boolean))return new Set();const scores=(cycle.buffs||[]).map(b=>[b.id,teamScore({...t,buff:b.id})]);
         const max=Math.max(...scores.map(x=>x[1])),base=teamScore({...t,buff:null});return !(max>base+1e-9)?new Set():new Set(scores.filter(x=>x[1]>=max-1e-9).map(x=>x[0]))}});
+    const pickupTestAdvisor=new window.MP.PickupAdvisor({state:calculationContext.state,charMap:calculationContext.charMap,cycle:calculationContext.cycle,
+      teams:teamCalculator,characters:characterCalculator,weapons:weaponCalculator,charDb:CharDB,vigorOf,sameChar});
     // 스펙업 캐시 확인용: 실제로 다시 계산한 횟수를 센다
     {const compute=specUp.computeChar.bind(specUp);specUp.computes=0;specUp.computeChar=(...a)=>{specUp.computes++;return compute(...a)}}
     window.__calcTest={
@@ -89,7 +91,16 @@ export function loadCurrentApp() {
       pairs:id=>clone(CharDB.pairs(id)),
       guide:id=>clone(CharDB.guide(id)),
       presets:()=>clone(window.MP.TEAM_PRESETS||[]),
-      normalize:s=>clone(appStore.normalize(clone(s)))
+      normalize:s=>clone(appStore.normalize(clone(s))),
+      banners:t=>clone(window.MP.BannerDB.shown(t)),
+      bannerCurrent:t=>clone(window.MP.BannerDB.current(t)),
+      bannerNext:t=>clone(window.MP.BannerDB.next(t)),
+      pickup:(banners,weapons)=>{const r=pickupTestAdvisor.analyzeAll(clone(banners),clone(weapons||{}));return clone(r)},
+      pickupBase:id=>{pickupTestAdvisor.clear();return clone(pickupTestAdvisor.baseWeapon(id))},
+      pickupOptions:(id,entry,opt)=>clone(pickupTestAdvisor.options(id,entry||null,opt||{})),
+      pickupCombos:(id,patch)=>clone(pickupTestAdvisor.withPatch(id,clone(patch||{owned:true,fresh:true,growth:{chain:0}}),()=>pickupTestAdvisor.combos(id,pickupTestAdvisor.baseline()))),
+      pickupBlocked:id=>clone(pickupTestAdvisor.withPatch(id,{owned:true,fresh:true,growth:{chain:0}},()=>{const sh=pickupTestAdvisor.baseline();return pickupTestAdvisor.candidates(id).filter(c=>!c.missing.length).map(c=>({slots:c.slots,r:pickupTestAdvisor.place(c.slots,id,sh,c.main)})).filter(x=>x.r.blocked).map(x=>({slots:x.slots,blocked:x.r.blocked}))})),
+      pickupCandidates:id=>clone(pickupTestAdvisor.withPatch(id,{owned:true,fresh:true,growth:{chain:0}},()=>pickupTestAdvisor.candidates(id)))
     };
   })();`;
   vm.runInContext(strengthCode + expose, context, { filename: "index-calculation-harness.js" });

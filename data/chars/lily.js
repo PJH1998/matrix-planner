@@ -1,7 +1,7 @@
 /* 릴리 — 회절 · 5★ · 서포터 */
 MP.addChar({
   id:"lily", name:"릴리", el:"spectro", rar:5, role:"support",
-  release:77, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  release:77, eid:1512, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
 
   // 반주·메커니즘
   shieldUp:0.3, // 실드 유지율(예측치, 0~1)
