@@ -12,6 +12,8 @@
      effects[]       kind: "benefit"(유리) | "threat"(주의), round: "2R+" 등(선택),
                      tags: 상성 판정용 조건 키(선택, 아래 cond와 같은 키), text: 설명
                      dmg, cond, up: (선택) 보스 진행 계산용. up = 유지율(0~1, 시간제한 효과가 켜져 있는 비율, 없으면 1). 받는 피해 %(감소는 음수, 중첩 효과는 최대 중첩 기준)와 적용 조건 키(없으면 모든 파티)
+                     upBy:"offTune"  up × (1 + 파티 부조화 수치 누적 효율 증가 합 / 100), 최대 1 (공명자 파일 offTune)
+                     stack:{per,max,full}  dmg 대신 — 이름이 다른 에코 어빌리티 수만큼 중첩(공명자 1명당 1 + echoExtra), 중첩당 per%, max중첩이면 full% 추가
    buffs[]           파워 서킷(강화 효과)
      id              아무 문자열 (examples와 사용자 편성이 이 값으로 선택)
      name, type      표시 이름, 분류
@@ -33,8 +35,9 @@ window.MATRIX_CYCLE={
  period:"2026-11-19 ~ 2026-12-22",
  endsAt:"2026-12-22T04:00:00+08:00",
  bosses:[
-  {name:"폭주의 고릴라",res:"aero",note:"기류 메인 딜러는 피하는 편이 좋습니다. 조화도 파괴 파티가 유리합니다.",effects:[
-    {kind:"benefit",tags:["tunability"],dmg:50,cond:"tunability",text:"조화도 파괴를 당하면 받는 피해 12.5% 증가 (전투 끝까지, 최대 4중첩)"},
+  {name:"폭주의 고릴라",res:"aero",note:"기류 메인 딜러는 피하는 편이 좋습니다. 조화도 파괴를 자주 하는 파티(모니에 등)가 유리합니다.",effects:[
+    // 조화도 파괴는 모든 공명자가 한다(부조화 수치가 가득 차면). 평균 중첩 = 기본 50%(예측치) × (1 + 파티 부조화 수치 누적 효율 증가)
+    {kind:"benefit",tags:["tuneBreak"],dmg:50,up:0.5,upBy:"offTune",text:"조화도 파괴를 당하면 받는 피해 12.5% 증가 (전투 끝까지, 최대 4중첩)"},
     {kind:"threat",dmg:-20,text:"받는 피해 20% 감소"}]},
   {name:"데니아",res:"fusion",note:"용융 메인 딜러는 피하는 편이 좋습니다. 이상 효과 파티가 유리합니다.",effects:[
     {kind:"benefit",tags:["anomDmg"],dmg:25,cond:"anomDmg",text:"받는 모든 이상 효과 피해 최종 25% 증가"},
@@ -42,7 +45,8 @@ window.MATRIX_CYCLE={
   {name:"크라운리스",res:"havoc",note:"인멸 메인 딜러는 피하는 편이 좋습니다.",effects:[
     {kind:"benefit",tags:["unison"],dmg:40,cond:"unison",up:0.8,text:"합일 대응을 발동한 공명자가 주는 피해 최종 40% 증가 (30초)"}]},
   {name:"시길룸",res:"spectro",note:"회절 메인 딜러는 피하는 편이 좋습니다. 에코 어빌리티를 자주 맞히는 파티가 유리합니다.",effects:[
-    {kind:"benefit",tags:["echo"],dmg:80,text:"에코 어빌리티 명중 시 「항로 이탈」 1중첩: 받는 최종 피해 10%씩 증가, 5중첩이면 추가 30% (같은 이름의 에코는 1회만)"},
+    // 중첩 수 = 이름이 다른 에코 어빌리티 수: 공명자 1명당 1(자기 에코) + echoExtra(스킬이 에코 어빌리티로 간주)
+    {kind:"benefit",tags:["echoAlt"],stack:{per:10,max:5,full:30},text:"에코 어빌리티 명중 시 「항로 이탈」 1중첩: 받는 최종 피해 10%씩 증가, 5중첩이면 추가 30% (같은 이름의 에코는 1회만)"},
     {kind:"threat",dmg:-25,text:"받는 피해 최종 25% 감소"}]},
   {name:"매트릭스 미믹",res:null,hpMul:1.1,scoreMul:1.1,killBonus:1000,note:"특이점 확장 전용. 모든 속성 저항이 같습니다.",effects:[
     {kind:"benefit",tags:["any"],text:"준 피해가 1.1배 점수로 계산, 처치 시 1,000점 (S2 한정)"},

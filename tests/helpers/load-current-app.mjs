@@ -53,6 +53,7 @@ export function loadCurrentApp() {
     // 스펙업 캐시 확인용: 실제로 다시 계산한 횟수를 센다
     {const compute=specUp.computeChar.bind(specUp);specUp.computes=0;specUp.computeChar=(...a)=>{specUp.computes++;return compute(...a)}}
     window.__calcTest={
+      bossMul:(t,boss)=>teamCalculator.inModes(clone(t),()=>teamCalculator.bossMul(clone(t),clone(boss))),
       reset(patch){state=appMediator.replace(Object.assign(appStore.fresh(),clone(patch||{})));derive();_tc.clear();return clone(state)},
       state:()=>clone(state),
       defaults:()=>clone(DEFAULT_CHARS),
