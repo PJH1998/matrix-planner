@@ -28,7 +28,7 @@ g.MP.CONDS={
   anomDmg:{label:"이상 효과 피해",scope:"char",dealer:1,mReq:ANOM.concat("anom"),m:ANOM.concat("anom"),w:["other"]}, burn:{label:"불꽃 효과",scope:"team",m:["burn"]},
   erosion:{label:"풍식 효과",scope:"team",m:["erosion"]}, flare:{label:"전자 효과",scope:"team",m:["flare"]},
   frazzle:{label:"광학 효과",scope:"team",m:["frazzle"]}, bane:{label:"암흑 효과",scope:"team",m:["bane"]},
-  tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW"]},
+  tunability:{label:"조화도 이탈",scope:"team",m:["tuneD","tuneW","hack"]}, // 조화 밀집 · 이탈, 조화 파동 · 이탈, 해킹 · 이탈(루시·레베카)
   tuneD:{label:"조화 밀집",scope:"team",m:["tuneD"]}, tuneW:{label:"조화 파동",scope:"team",m:["tuneW"]},
   tuneWSelf:{label:"조화 파동 피해를 준 공명자",scope:"char",dealer:1,m:["tuneW"]},
   hack:{label:"해킹",scope:"char",m:["hack"]},

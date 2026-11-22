@@ -26,13 +26,17 @@
     elRefOf(id){const ijk=this.ijkOf(id);return ijk.el*30+10+(ijk.node?12:0)}
     expDmg(main,cr,cd,bonus){return main*(1+Math.min(Math.max(cr,0),100)/100*(cd/100-1))*(1+bonus/100)}
     refDmg(id){const ijk=this.ijkOf(id);return this.expDmg(ijk.main[1],ijk.cr,ijk.cd,this.elRefOf(id)+this.typeRef)}
-    statsWithWeapon(cid,wid){const ijk=this.ijkOf(cid),scale=ijk.main[0],base=this.db.base(cid)||[11000,400,1150];
-      const result={main:ijk.main[1],cr:ijk.cr,cd:ijk.cd},best=this.weapons.bestWeaponId(cid),w0=this.weapons.stat(best),w1=this.weapons.stat(wid);if(!w0||!w1||best===wid)return result;
-      const sub=(w,k)=>w[1]===k?w[2]:0;
-      if(scale==="atk"){const b=base[1],p0=Math.max(0,(ijk.main[1]-this.flatAtk)/(b+w0[0])-1),p1=p0-sub(w0,"atk%")/100+sub(w1,"atk%")/100;result.main=(b+w1[0])*(1+p1)+this.flatAtk}
-      else if(scale==="hp"){const b=base[0],p0=Math.max(0,(ijk.main[1]-this.flatHp)/b-1);result.main=b*(1+p0-sub(w0,"hp%")/100+sub(w1,"hp%")/100)+this.flatHp}
-      result.cr+=sub(w1,"cr")-sub(w0,"cr");result.cd+=sub(w1,"cd")-sub(w0,"cd");return result}
-    weaponStatRatio(cid,wid){const r=this.statsWithWeapon(cid,wid);return this.expDmg(r.main,r.cr,r.cd,this.elRefOf(cid)+this.typeRef)/this.refDmg(cid)}
+    /* 이잘키 기준 스탯(최고 무기·그 무기의 기준 재련)에서 무기만 wid(재련 ref)로 바꿨을 때의 스탯.
+       무기 기본 공격력·부옵과 비전투 상시 패시브(WEAPON_SHEET_FX)의 차이를 반영한다. bonus = 피해 보너스 차이(%) */
+    statsWithWeapon(cid,wid,ref){const ijk=this.ijkOf(cid),scale=ijk.main[0],base=this.db.base(cid)||[11000,400,1150];
+      const best=this.weapons.bestWeaponId(cid),bestRef=((this.weapons.perfList(cid).find(x=>x.id===best)||{}).r)||1,r1=ref||bestRef;
+      const result={main:ijk.main[1],cr:ijk.cr,cd:ijk.cd,bonus:0},w0=this.weapons.stat(best),w1=this.weapons.stat(wid);if(!w0||!w1||(best===wid&&r1===bestRef))return result;
+      const f0=this.weapons.sheetFx(best,bestRef),f1=this.weapons.sheetFx(wid,r1),sub=(w,f,k)=>(w[1]===k?w[2]:0)+(f[k]||0),diff=k=>sub(w1,f1,k)-sub(w0,f0,k);
+      if(scale==="atk"){const b=base[1],p0=Math.max(0,(ijk.main[1]-this.flatAtk)/(b+w0[0])-1),p1=p0+diff("atk%")/100;result.main=(b+w1[0])*(1+p1)+this.flatAtk}
+      else if(scale==="hp"){const b=base[0],p0=Math.max(0,(ijk.main[1]-this.flatHp)/b-1);result.main=b*(1+p0+diff("hp%")/100)+this.flatHp}
+      result.cr+=diff("cr");result.cd+=diff("cd");
+      result.bonus=diff("el")+["basic","heavy","skill","lib","echo"].reduce((a,k)=>a+diff(k)*this.db.share(cid,k),0);return result}
+    weaponStatRatio(cid,wid,ref){const r=this.statsWithWeapon(cid,wid,ref);return this.expDmg(r.main,r.cr,r.cd,this.elRefOf(cid)+this.typeRef+r.bonus)/this.refDmg(cid)}
     // 5세트는 전부 a, 3+2는 앞 3개가 a, 1+2+2는 첫 칸부터 a·b·b·c·c 순서로 배정한다.
     echoesOf(id){const echoes=(this.slot(id).echoes||[]).filter(e=>e&&e.main);if(!echoes.length)return echoes;const set=this.setOf(id);
       return echoes.map((e,i)=>Object.assign({},e,{set:set.mode==="122"?(i===0?set.a:(i<3?set.b:set.c)):(set.mode==="5"||i<3?set.a:(set.b||set.a))}))}
@@ -51,11 +55,13 @@
       rows.forEach(row=>Object.entries(row).forEach(([k,v])=>{if(k==="chain")return;
         if(k==="atk%")out.atk+=baseAtk*v/100;else if(k==="hp%")out.hp+=base[0]*v/100;else if(k==="def%")out.def+=base[2]*v/100;
         else if(["atk","hp","def","cr","cd","er","el","all","heal"].includes(k))out[k]=(out[k]||0)+v;else out.types[k]=(out.types[k]||0)+v}));return out}
-    /* 체험 세팅 스탯: 기본+무기+노드 위에 data/trial.js 기준(공식 가이드 추천 스탯 등)을 덮어쓴다.
+    /* 체험 세팅 스탯: 기본+무기+노드 위에 data/trial.js 기준(공식 가이드 추천 스탯 등)을 덮어쓰고, 장착 무기와 최고 무기의 스탯 차이를 더한다.
        기준에 없는 항목(가이드에 공격력이 없는 공명자 등)은 이잘키 기준 스탯으로 채운다. 피해 유형 보너스는 이잘키 기준값 */
     trialStats(id){const spec=this.db.trialSpec(id),out=Object.assign({},this.sheetBuild(id,[]).screen),ijk=this.ijkOf(id);out.types=Object.assign({},out.types);
       const ref={cr:ijk.cr,cd:ijk.cd,el:this.elRefOf(id)};ref[ijk.main[0]]=ijk.main[1];
       Object.entries(Object.assign(ref,spec.stats||{})).forEach(([k,v])=>out[k]=+v);this.bonusKeysOf(id).filter(k=>k!=="el").forEach(k=>out.types[k]=(out.types[k]||0)+this.typeRef);
+      // 기준 스탯은 최고 무기 기준이다. 다른 무기·재련이면 무기 스탯(기본 공격력·부옵·상시 패시브) 차이만큼 더한다 (무기 패시브 계수가 이 몫을 뺀다)
+      const weapon=this.weapons.weaponOf(id);if(weapon.w){const r=this.statsWithWeapon(id,weapon.w.id,weapon.ref),k=ijk.main[0];out[k]+=r.main-ijk.main[1];out.cr+=r.cr-ijk.cr;out.cd+=r.cd-ijk.cd;out.el+=r.bonus}
       return this.addChainStats(id,out,this.chainOf(id))}
     /* 에코도 스탯 직접 입력도 없으면 체험 세팅 기준 스탯으로 계산한다(무기·체인은 사용자 설정) */
     usesTrialStats(id){const growth=this.state().growth[id]||{};return !!growth.trial||(!this.echoesOf(id).length&&!this.slot(id).stats)}

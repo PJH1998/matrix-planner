@@ -107,7 +107,7 @@ const isTrial=id=>!!(state.growth[id]||{}).trial,weaponOf=id=>weaponCalculator.w
 const TYPE_REF=echoCalculator.typeRef,FLAT_ATK=echoCalculator.flatAtk,FLAT_HP=echoCalculator.flatHp,BONUS_KEYS=echoCalculator.bonusKeys;
 const echoSetOf=id=>echoCalculator.setOf(id),echoSetModes=id=>echoCalculator.modesOf(id),bonusKeysOf=id=>echoCalculator.bonusKeysOf(id),scaleOf=id=>echoCalculator.scaleOf(id),ijkOf=id=>echoCalculator.ijkOf(id);
 const elRefOf=id=>echoCalculator.elRefOf(id),statsWithWeapon=(id,wid)=>echoCalculator.statsWithWeapon(id,wid);
-const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=id=>echoCalculator.refDmg(id),weaponStatRatio=(id,wid)=>echoCalculator.weaponStatRatio(id,wid);
+const expDmg=(main,cr,cd,bonus)=>echoCalculator.expDmg(main,cr,cd,bonus),refDmg=id=>echoCalculator.refDmg(id),weaponStatRatio=(id,wid,ref)=>echoCalculator.weaponStatRatio(id,wid,ref);
 const echoesOf=id=>echoCalculator.echoesOf(id),dmgWeights=id=>echoCalculator.dmgWeights(id),echoCtx=id=>echoCalculator.context(id);
 const echoBuild=(id,list)=>echoCalculator.build(id,list),sheetStats=id=>echoCalculator.sheetStats(id),echoRef=id=>echoCalculator.reference(id),echoFactor=id=>echoCalculator.factor(id),statFactor=id=>echoCalculator.statFactor(id);
 

@@ -95,7 +95,7 @@ node --test tests/*.test.mjs
 | 1.2 | 2026-11-16 | 파티 자동 추천·체험 세팅, 서포터 조건부 효과, 드래그·우클릭 편성 | [docs/versions/v1.2.md](docs/versions/v1.2.md) |
 | 1.3 | 2026-11-17~19 | 에코 세팅(OCR)·세트 효과, 비전투 최종 스탯, 공명력·협주력 개편, 효과 범위 규칙 | [docs/versions/v1.3.md](docs/versions/v1.3.md) |
 | 1.4 | 2026-11-20~21 | 공명 모드 분리·에코 스펙업 효율, 1.4.1 에코 비교 창 | [docs/versions/v1.4.md](docs/versions/v1.4.md) |
-| 1.5 | 2026-11-22 | 에코 점수·6등급(지역별 등급 아이콘), 공명자 지역, 프로필 카드 점수 표시 | [docs/versions/v1.5.md](docs/versions/v1.5.md) |
+| 1.5 | 2026-11-22 | 에코 점수·6등급(지역별 등급 아이콘), 공명자 지역, 프로필 카드 점수 표시, 1.5.1 무기 상시 효과·해킹 조화도 이탈·모드 직접 선택 | [docs/versions/v1.5.md](docs/versions/v1.5.md) |
 
 강도 계산 개편 설계(1.3.3): [docs/strength-v2.md](docs/strength-v2.md)
 

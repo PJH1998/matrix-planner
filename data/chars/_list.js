@@ -16,7 +16,7 @@
      modes [{id, name, icon, …}] 공명 모드(루실라·에이메스·데니아·여우의 별자리·린네). 0번 = 게임 기본 모드
                                 name: 게임 공식 명칭("공명 모드 · 서리") · icon: encore.moe RoleLabel 아이콘 파일 이름
                                 모드마다 다른 필드(syn·outro·sets·profile·dps·amp·supCond 등)를 여기 적으면 그 모드일 때 공통 값 대신 쓴다
-                                파티 계산은 모드 조합을 모두 계산해 가장 좋은 조합을 고르고, 에코 세팅도 모드별로 따로 저장한다
+                                파티 칸에서 사용자가 고른 모드를 쓰고, 「자동」이면 모드 조합을 모두 계산해 가장 좋은 조합을 고른다. 에코 세팅은 모드별로 따로 저장한다
      shieldUp                   (선택) 실드 유지율 0~1 — 실드 조건 효과(파워 서킷 등)의 유지율로 쓴다. 파티 중 가장 높은 값
      profile                    피해 비중(%) — Prydwen Calculations Damage Profile. other = 이상 효과·조화도 파괴 등
      dps, chain                 S0 기본 DPS, 0~6체인 DPS 배율 (Prydwen Calculations, 2026-11)

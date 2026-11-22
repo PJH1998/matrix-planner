@@ -4,7 +4,8 @@
      딜러는 1:1로 더한다(서브 딜러도 자기 로테이션을 다 한다고 본다). 메인 = 개인 피해가 가장 큰 딜러(버프 대상·표시용).
      반주는 두 교대 방향 중 실제 이득이 큰 쪽을 선택한다. strengthScale은 예전 강도 눈금(보스 회귀식)에 맞춘 상수다(공식 가이드 스탯 기준 중앙값을 맞춤, scripts/compare-strength.mjs).
      보스 피해는 상위권 실측 회귀식 (강도 / 37.8)^1.07을 사용하며 숙련도와 속성 저항을 별도로 반영한다.
-     공명 모드: 파티에 모드 공명자가 있으면 모드 조합(최대 2×2×2)을 모두 계산해 가장 좋은 조합을 쓴다(bestModes).
+     공명 모드: 파티 칸의 모드 배지에서 사용자가 고른 모드(team.modes)는 그대로 쓴다. 고르지 않은(자동) 공명자만
+     모드 조합(최대 2×2×2)을 모두 계산해 가장 좋은 조합을 쓴다(bestModes).
      기준 = 파워 서킷까지 반영한 강도 × 이번 주기 보스 효과 배율 평균. 메커니즘·조합 시너지 보너스는 빼고 비교한다
      (모니에처럼 메커니즘이 여럿인 파티원과 "다른" 메커니즘을 맞추면 보너스가 늘어 실제 버프를 잃는 모드가 뽑히는 것을 막는다).
      같으면 시너지 보너스, 그다음 게임 기본 모드 순. 결과의 modes에 고른 모드를 남긴다.
@@ -57,7 +58,9 @@
     // 비교할 모드: 에코(또는 직접 입력한 스탯)를 넣은 모드가 하나라도 있으면 그 모드들만.
     // 빈 모드는 체험 세팅 스탯으로 계산돼, 실제 에코를 넣은 모드보다 강하게 나와 뽑히는 것을 막는다. 하나도 없거나 체험 세팅이면 모든 모드
     modeCandidates(id){const all=this.db.modes(id).map(m=>m.i),set=all.filter(i=>this.db.withModes({[id]:i},()=>!this.echoes.usesTrialStats(id)));return set.length?set:all}
-    bestModes(team){const ids=team.slots.filter(id=>id&&this.db.hasModes(id));if(!ids.length)return {};const allow={};ids.forEach(id=>{allow[id]=this.modeCandidates(id)});
+    // 사용자가 이 파티에 고른 모드(team.modes). 모드 공명자이고 번호가 맞을 때만
+    fixedModes(team){const out={},picked=team.modes||{};team.slots.forEach(id=>{if(!id||!this.db.hasModes(id))return;const i=picked[id];if(Number.isInteger(i)&&i>=0&&i<this.db.modes(id).length)out[id]=i});return out}
+    bestModes(team){const ids=team.slots.filter(id=>id&&this.db.hasModes(id));if(!ids.length)return {};const fixed=this.fixedModes(team),allow={};ids.forEach(id=>{allow[id]=fixed[id]!=null?[fixed[id]]:this.modeCandidates(id)});
       const combos=this.db.modeCombos(ids).filter(map=>ids.every(id=>allow[id].includes(map[id])));if(combos.length<2)return combos[0]||{};
       let best=combos[0],bestValue=null;combos.forEach(map=>{const value=this.db.withModes(map,()=>this.modeValue(team));
         if(!bestValue||value[0]>bestValue[0]*(1+1e-9)||(Math.abs(value[0]-bestValue[0])<=bestValue[0]*1e-9&&value[1]>bestValue[1]*(1+1e-9))){bestValue=value;best=map}});return best}
