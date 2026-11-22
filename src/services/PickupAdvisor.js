@@ -96,7 +96,9 @@
         let why=null;if(this.role(x)!=="support"&&x!==main){const m0=this.teams.mainDps(teams[i]);
           // 그 파티의 메인 딜러가 새 조합의 메인 딜러와 같으면 같은 파티를 다시 짜는 것이라 괜찮다
           if(!(m0&&main&&this.same(m0,main))){const sNew=this.synergy(main,x),sOld=m0===x?-Infinity:this.synergy(m0,x);
-            if(!(sNew>sOld+1e-9)&&!force){blocked={id:x,from:m0,index:i};return}why={from:m0,sNew,sOld}}}
+            if(!(sNew>sOld+1e-9)&&!force){blocked={id:x,from:m0,index:i};return}
+            // x가 그 파티의 메인 딜러 자신이면 비교한 상대가 없다 → 이유를 남기지 않는다
+            if(m0!==x)why={from:m0,sNew,sOld}}}
         if(!give.has(i))give.set(i,[]);give.get(i).push({id:x,why})});
       if(blocked)return {blocked};
       const list=shared.list.slice(),gave=[...give.keys()].sort((a,b)=>a-b);gave.forEach(i=>{list[i]={slots:[null,null,null],buff:null}});
