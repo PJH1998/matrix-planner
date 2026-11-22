@@ -1,13 +1,14 @@
 "use strict";
 /* ---------- routing ---------- */
-const VIEWS=["plan","roster","invest","records","method","updates","cycle","data"];
+const VIEWS=["plan","roster","invest","pickup","records","method","updates","cycle","data"];
 document.getElementById("cycleTab").hidden=!IS_ADMIN;
 // 로고 옆 버전: updates.js의 가장 최근 항목
 {const el=document.getElementById("appVer"),u=(window.UPDATES||[])[0];if(el&&u)el.textContent="v"+u.ver}
 function route(){const h=(location.hash||"").slice(1);let v=VIEWS.includes(h)?h:"plan";if(v==="cycle"&&!IS_ADMIN)v="plan";
   VIEWS.forEach(x=>document.getElementById("v-"+x).classList.toggle("on",x===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
-  if(v==="plan")setPlanTop();}
+  if(v==="plan")setPlanTop();
+  if(v==="pickup"&&typeof renderPickup==="function")renderPickup();}
 // 배치 화면 세 칸의 높이를 '머리글 아래 남은 화면'에 맞춘다 → 칸이 화면 밖으로 잘리지 않음
 function setPlanTop(){const el=document.querySelector("#v-plan .plan");if(!el||!el.offsetParent)return;
   const t=Math.round(el.getBoundingClientRect().top+window.scrollY);document.documentElement.style.setProperty("--plan-top",t+"px")}

@@ -66,11 +66,16 @@ let db=null, docRef=null, storeMode="local";
 let selected=null;         // tap-to-place selection
 let portraits={};          // charId -> file name in portraits/
 // 게임 이미지(img/, 배포 때 encore.moe에서 받음)가 있으면 그것을, 없으면 portraits/ 이미지를 쓴다.
-let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set(),mode:new Set()};
+let gameImg={char:new Set(),card:new Set(),weapon:new Set(),set:new Set(),mode:new Set(),gacha:new Set(),stand:new Set(),skin:new Set()};
 const hasPic=id=>gameImg.char.has(id)||!!portraits[id];
 // --pic은 외부 CSS에서 사용되므로 상대 URL을 넣으면 CSS 파일 위치 기준으로 해석된다. 페이지 기준 절대 URL로 고정한다.
 const assetUrl=path=>new URL(path,document.baseURI).href;
 const picUrl=id=>assetUrl(gameImg.char.has(id)?`img/char/${id}.webp`:"portraits/"+encodeURIComponent(portraits[id]));
+// 픽업 배너 그림(가챠 배경 · 전신 그림). 배너 공명자만 있고, 없으면 null
+const gachaUrl=id=>gameImg.gacha.has(id)?assetUrl(`img/gacha/${id}.webp`):null;
+// 전신 그림이 없으면 스킨 미리보기(머리~허벅지만 있어 화면에서 크기를 따로 맞춘다)
+const standUrl=id=>gameImg.stand.has(id)?assetUrl(`img/stand/${id}.webp`):gameImg.skin.has(id)?assetUrl(`img/skin/${id}.webp`):null;
+const standIsSkin=id=>!gameImg.stand.has(id)&&gameImg.skin.has(id);
 const cardUrl=id=>gameImg.card.has(id)?assetUrl(`img/card/${id}.webp`):(portraits[id]?assetUrl("portraits/"+encodeURIComponent(portraits[id])):null);
 let currentUser=null, fb=null;
 const ui={el:null,q:"",rq:"",rel:null};
@@ -197,13 +202,13 @@ async function loadPortraits(){
     const r=await fetch("portraits/index.json",{cache:"no-cache"});if(!r.ok)return;
     const files=await r.json();if(!Array.isArray(files))return;
     const m={};files.forEach(f=>{if(typeof f!=="string")return;const c=matchChar(f);if(c)m[c.id]=f});
-    portraits=m;rerenderPlan();renderRoster();renderInvest();renderRecords();
+    portraits=m;rerenderPlan();renderRoster();renderInvest();renderRecords();if(location.hash==="#pickup"&&typeof renderPickup==="function")renderPickup();
   }catch(e){}
 }
 async function loadGameImages(){
   try{const r=await fetch("img/index.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();
-    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number)),set:new Set((j.set||[]).map(Number)),mode:new Set(j.mode||[])};
-    rerenderPlan();renderRoster();renderInvest();renderRecords();if(profId&&$("#prof").open)renderProfile();
+    gameImg={char:new Set(j.char||[]),card:new Set(j.card||[]),weapon:new Set((j.weapon||[]).map(Number)),set:new Set((j.set||[]).map(Number)),mode:new Set(j.mode||[]),gacha:new Set(j.gacha||[]),stand:new Set(j.stand||[]),skin:new Set(j.skin||[])};
+    rerenderPlan();renderRoster();renderInvest();renderRecords();if(location.hash==="#pickup"&&typeof renderPickup==="function")renderPickup();if(profId&&$("#prof").open)renderProfile();
   }catch(e){}
 }
 

@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: _site/img
-          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
+          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py', 'scripts/process-banner-images.py') }}
       - name: Restore game image cache
         if: steps.processed-images.outputs.cache-hit != 'true'
         uses: actions/cache@v4
@@ -60,11 +60,12 @@ jobs:
           else
             echo 'complete=true' >> "$GITHUB_OUTPUT"
           fi
-      - name: Smooth profile card images
+      - name: Smooth profile card images · shrink banner images
         if: steps.processed-images.outputs.cache-hit != 'true'
         run: |
           python -m pip install Pillow==11.3.0
           python scripts/process-card-images.py _site/img/card
+          python scripts/process-banner-images.py _site/img
       - name: Publish images to img-cache branch
         if: steps.processed-images.outputs.cache-hit != 'true' && steps.fetch-images.outputs.complete == 'true'
         run: |
@@ -81,7 +82,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: _site/img
-          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py') }}
+          key: processed-images-${{ hashFiles('.image-manifest.json', 'img-manual/**/*.webp', 'scripts/fetch-assets.mjs', 'scripts/process-card-images.py', 'scripts/process-banner-images.py') }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
