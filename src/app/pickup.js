@@ -37,13 +37,13 @@ function pkComboHTML(c,id){const miss=new Set(c.missing||[]),me=charMap[id];
   const mem=c.slots.map(x=>pkMember(x,sameChar(x,id)?"me":miss.has(x)?"miss":"")).join("");
   if(miss.size)return `<div class="pk-combo miss"><div class="pk-cm">${mem}</div>
     <div class="pk-cv"><span class="pk-cs">강도 <b>${c.strength.toFixed(1)}</b></span></div>
-    <p class="pk-cn">${pkNames([...miss])} 미보유 — 함께 있어야 만들 수 있는 조합</p></div>`;
-  const facts=[];
+    <p class="pk-cn">${c.optimal?`<b class="pk-ctag">최적 조합</b> `:""}${pkNames([...miss])} 미보유 — 함께 있어야 만들 수 있는 조합</p></div>`;
+  const facts=[];if(c.optimal)facts.push(`<b class="pk-ctag">최적 조합</b>`);if(c.kind==="sub"&&c.linked===false)facts.push("궁합 표에 없는 조합");
   facts.push(c.giveUp.length?`파티 ${pkNo(c.index)} 자리에 넣음`:`빈 파티 ${pkNo(c.index)}에 넣음`);
   if(c.buff)facts.push(`서킷 ${pkBuff(c.buff)}`);
   if(c.instead)facts.push(`총점은 ${esc(me.name)} 대신 ${esc(pkJosa((charMap[c.instead.id]||{}).name||"","을","를"))} 넣은 파티(강도 ${c.instead.strength.toFixed(1)})와 비교`);
   // 서브 딜러를 데려오는 이유: 새 메인 딜러와 시너지가 그 파티 메인 딜러보다 크다
-  const give=c.giveUp.map(g=>{const take=(g.take||[]).filter(t=>t.why&&t.why.from&&charMap[c.main]).map(t=>`${pkJosa(pkName(t.id),"은","는")} ${pkName(t.why.from)}보다 ${pkJosa(pkName(c.main),"과","와")} 시너지가 더 커요.`);
+  const give=c.giveUp.map(g=>{const take=(g.take||[]).filter(t=>t.why&&t.why.from&&t.why.sNew>t.why.sOld&&charMap[c.main]).map(t=>`${pkJosa(pkName(t.id),"은","는")} ${pkName(t.why.from)}보다 ${pkJosa(pkName(c.main),"과","와")} 시너지가 더 커요.`);
     return `<div class="pk-give"><div class="pk-gt"><b>포기할 파티 ${pkNo(g.index)}</b><span>예상 ${Math.round(g.pts).toLocaleString()}점</span></div>
       <div class="pk-gm">${g.slots.filter(Boolean).map(x=>pkMember(x,c.slots.some(y=>sameChar(x,y))?"take":"")).join("")}</div>
       <small>${pkNames(c.slots.filter(x=>x!==id&&g.slots.some(y=>sameChar(x,y))))} — 배치 횟수를 이 파티에서 다 쓰고 있어요.${take.length?" "+take.join(" · "):""}</small></div>`}).join("");
@@ -66,7 +66,7 @@ function pkResultHTML(r){
     :`<div class="pk-big"><span>뽑아도 예상 총점이</span><b class="flat">오르지 않아요</b></div>
       <div class="pk-sub"><span>지금 보유한 공명자로 같은 자리를 채우는 쪽이 더 높습니다</span><span>≈ ${m.cost}연차</span></div>`;
   return `<div class="pk-res">${big}</div>
-    ${sec("정석 조합","고정 조합 · 궁합 1 파트너",std,"보유 공명자로 만들 수 있는 정석 조합이 없습니다.")}
+    ${sec("정석 조합","최적 조합 · 궁합 1 파트너",std,"보유 공명자로 만들 수 있는 정석 조합이 없습니다.")}
     ${sec("서브 조합","보유 공명자로 만드는 다른 조합",sub,"보유 공명자로 만들 수 있는 다른 조합이 없습니다.")}`}
 
 /* 펼친 배너: 전용 무기 선택 · 결과 · 조합 · 계산 기준 */

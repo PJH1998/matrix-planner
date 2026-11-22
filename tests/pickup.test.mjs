@@ -102,6 +102,34 @@ test("정석·서브 조합은 배치 횟수를 다 쓴 공명자의 파티를 �
   assert.ok(std.giveUp.some((g) => teams[g.index].slots.includes("hsin")));
 });
 
+test("정석은 최적 조합(고정 조합 · 기준 파티)을 보유·총점과 상관없이 맨 앞에, 서브는 궁합 있는 조합을 먼저 보여 준다", () => {
+  const app = loadCurrentApp();
+  withoutBanner(app);
+  const names = (c) => c.slots.slice().sort().join("/");
+  const preset = ["hiyuki", "lucilla", "suisui"].sort().join("/");
+  // 히유키도 픽업이라 미보유 → 고정 조합(히유키·루실라·수수)은 「있어야 만들 수 있는 조합」으로 맨 앞
+  let combos = app.pickupCombos("suisui");
+  assert.equal(names(combos[0]), preset);
+  assert.equal(combos[0].optimal, true);
+  assert.deepEqual(combos[0].missing, ["hiyuki"]);
+  // 양양·현령의 기준 파티(양양·현령·치사·수수)도 최적 조합 — 수수가 없어도 맨 앞
+  const xl = app.pickupCombos("xuanling");
+  assert.equal(names(xl[0]), ["xuanling", "chisa", "suisui"].sort().join("/"));
+  assert.equal(xl[0].optimal, true);
+  assert.deepEqual(xl[0].missing, ["suisui"]);
+  // 수수 쪽에도 두 번째 최적 조합으로 나온다
+  assert.ok(combos.slice(0, 2).some((c) => names(c) === ["xuanling", "chisa", "suisui"].sort().join("/") && c.optimal));
+  // 히유키를 보유하면 고정 조합을 넣어 보고 맨 앞에 둔다(총점이 더 오르는 정석이 있어도)
+  app.reset({ owned: { ...app.state().owned, hiyuki: true } });
+  combos = app.pickupCombos("suisui");
+  assert.equal(names(combos[0]), preset);
+  assert.equal(combos[0].missing.length, 0);
+  assert.ok(Number.isFinite(combos[0].dTotal));
+  // 서브: 카르티시아처럼 궁합 표에 수수가 없는 메인 딜러 조합보다 궁합 있는 조합이 먼저
+  const sub = combos.find((c) => c.kind === "sub");
+  if (sub) assert.equal(sub.linked, true, sub.slots.join("/"));
+});
+
 test("서브 딜러는 새 메인 딜러와 시너지가 더 클 때만 다른 파티에서 데려온다", () => {
   const app = loadCurrentApp();
   withoutBanner(app);
