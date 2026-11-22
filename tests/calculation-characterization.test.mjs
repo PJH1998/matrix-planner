@@ -31,7 +31,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const app = loadCurrentApp();
   const teams = app.state().teams.slice(0, 4);
   const expected = [
-    ["camellya", 27.944933011231065, 36.97499186422595],
+    // 1.5.1: 체험 세팅 스탯에 장착 무기와 최고 무기의 스탯 차이를 더한다(산화 4성 무기)
+    ["camellya", 27.4563960912223, 36.38874756021543],
     // 1.4: 공명 모드 공명자는 파티마다 한 모드로 계산한다(데니아 조화 밀집, 여우의 별자리 전자 — 이상 효과 서킷)
     ["qingxiao", 64.6519560068525, 80.81494500856563],
     ["jingran", 63.59063742236907, 70.46568607792942],
@@ -46,8 +47,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.447587019659116);
-  closeTo(simulation.total, 39135.14665456242);
+  closeTo(simulation.progress, 6.4419734970833895);
+  closeTo(simulation.total, 39083.23139440145);
   assert.equal(simulation.bad, 0);
 });
 
@@ -67,14 +68,15 @@ test("에코 5세트의 스탯과 강도 환산 결과를 고정한다", () => {
   const build = app.echoBuild("hiyuki");
   const factor = app.echoFactor("hiyuki");
 
-  closeTo(build.atk, 2144.66);
+  // 1.5.1: 무기 상시 패시브(서린 불꽃 공격력 12%)를 비전투 최종 스탯에 넣는다
+  closeTo(build.atk, 2270.78);
   closeTo(build.cr, 105.5);
   closeTo(build.cd, 243);
   closeTo(build.er, 120);
   closeTo(build.el, 79);
   assert.deepEqual(build.sets, [{ name: set, c: 5, on: [2, 5] }]);
-  closeTo(factor.f, 1.0618522907147732);
-  closeTo(app.charScore("hiyuki"), 106.18522907147731);
+  closeTo(factor.f, 1.1242961330510628);
+  closeTo(app.charScore("hiyuki"), 112.42961330510627);
 });
 
 test("기존 저장 데이터의 정규화 규칙을 고정한다", () => {
@@ -138,8 +140,9 @@ test("루시와 레베카의 1+2+2 에코 세트를 순서대로 배정한다", 
     [expected.a, 1, "basic", 31.5],
     [expected.a, 1, "heavy", 31.5],
   ]);
-  closeTo(app.echoFactor("lucy").f, 0.5174585734842625);
-  closeTo(app.charScore("lucy"), 51.74585734842624);
+  // 1.5.1: 스펙트럴 트리거 상시 패시브(공격력 12%) 포함
+  closeTo(app.echoFactor("lucy").f, 0.5481150887060864);
+  closeTo(app.charScore("lucy"), 54.811508870608634);
 });
 
 test("비전투 최종 스탯에 장착 무기 부옵을 포함하고 조건부 세트 효과는 배율에서 제외한다", () => {
@@ -167,7 +170,7 @@ test("비전투 최종 스탯에 장착 무기 부옵을 포함하고 조건부 
     { cost: 1, main: { k: "atk%", v: 18 }, subs: [] },
   ] } } });
   assert.ok(lucy.echoBuild("lucy").fx.some(effect => effect.eff > 0));
-  closeTo(lucy.echoFactor("lucy").f, 0.5174585734842625);
+  closeTo(lucy.echoFactor("lucy").f, 0.5481150887060864);
 });
 
 test("서포터 유효 옵션과 릴리 공효 190~260 구간을 실제 최종 공효로 판정한다", () => {
@@ -319,15 +322,17 @@ test("에코 미입력과 체험 세팅은 공식 가이드 스탯을 쓴다", (
   // 에코도 스탯 직접 입력도 없으면 체험 세팅 기준 스탯(무기·체인은 사용자 설정)
   closeTo(app.finalStats("jiyan").atk, 2200);
   closeTo(app.finalStats("jiyan").cr, 70);
+  // 체험 세팅 무기(상시 5성 R1 · 푸른물결의 빛)는 최고 무기(청룡의 천장)와 스탯 차이만큼 더한다 (1.5.1)
+  // 공격력 부옵 36.45% → 공격력 +374, 크리티컬 피해 −48.6, 상시 패시브 속성 피해 −12
   app.reset({ growth: { jiyan: { trial: true } } });
   const sheet = app.finalStats("jiyan");
-  closeTo(sheet.atk, 2200);
+  closeTo(sheet.atk, 2573.977, 1e-6);
   closeTo(sheet.cr, 70);
-  closeTo(sheet.cd, 260);
-  assert.ok(app.charScore("jiyan") > 80);
-  // 가이드에 공격력이 없는 공명자는 이잘키 기준 공격력으로 채운다
+  closeTo(sheet.cd, 211.4, 1e-9);
+  assert.ok(app.charScore("jiyan") > 70);
+  // 가이드에 공격력이 없는 공명자는 이잘키 기준 공격력(2100)으로 채우고, 체험 무기(물결의 파동) 차이를 더한다
   app.reset({ growth: { zani: { trial: true } } });
-  closeTo(app.finalStats("zani").atk, 2100);
+  closeTo(app.finalStats("zani").atk, 2350.857, 1e-6);
   // 혼자 잰 dps는 버프를 되돌리지 않는다
   closeTo(app.refBuff("yuanwu"), 1);
   assert.ok(app.refBuff("aemeath") > 1);

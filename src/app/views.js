@@ -9,9 +9,11 @@ function tokenHTML(c,extra=""){
 // 공명 모드 아이콘: 배포 때 받은 img/mode/<icon>.webp, 없으면 encore.moe 원본
 const modeIconUrl=icon=>!icon?"":gameImg.mode&&gameImg.mode.has(icon)?assetUrl(`img/mode/${icon}.webp`):`https://api-v2.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Atlas/RoleLabel/${icon}.webp`;
 const modeIcon=(m,cls="micon")=>m&&m.icon?`<img class="${cls}" src="${modeIconUrl(m.icon)}" alt="" draggable="false" onerror="this.remove()">`:"";
-// 파티 슬롯 배지: 파티 계산이 고른 모드 (CharDB.withModes 안에서 부른다)
-function modeBadge(id){if(!CharDB.hasModes(id))return "";const m=CharDB.modes(id)[CharDB.modeOf(id)];
-  return `<span class="mbadge" title="${esc(m.name)} — 이 파티 조합에 가장 좋은 모드로 계산합니다. 에코 세팅도 이 모드 것을 씁니다">${modeIcon(m)}<b>${esc(m.short)}</b></span>`}
+// 파티 슬롯 배지: 이 파티에서 쓰는 모드 (CharDB.withModes 안에서 부른다). 누르면 모드를 고른다 — 자동 = 파티 조합에 가장 좋은 모드
+function modeBadge(id,t,ti){if(!CharDB.hasModes(id))return "";const ms=CharDB.modes(id),m=ms[CharDB.modeOf(id)],picked=t&&t.modes&&t.modes[id]!=null?t.modes[id]:null,auto=picked==null;
+  const opts=`<option value=""${auto?" selected":""}>자동 (지금: ${esc(m.short)})</option>`+ms.map(x=>`<option value="${x.i}"${picked===x.i?" selected":""}>${esc(x.name)}</option>`).join("");
+  const tip=`${m.name}${auto?" — 자동: 이 파티 조합에 가장 좋은 모드로 계산합니다":" — 직접 고른 모드"}. 에코 세팅도 이 모드 것을 씁니다. 눌러서 모드를 바꿀 수 있습니다`;
+  return `<span class="mbadge${auto?"":" fixed"}" title="${esc(tip)}">${modeIcon(m)}<b>${auto?`<span class="auto">자동 </span>`:""}${esc(m.short)}</b><select data-mode="${esc(id)}" data-team="${ti}" aria-label="${esc((charMap[id]||{}).name||id)} 공명 모드">${opts}</select></span>`}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderFilter(){
   const box=$("#elFilter");
@@ -142,7 +144,7 @@ function renderTeams(){
       const l=sy.links.filter(x=>x.i===si-1&&x.j===si).map(x=>x.txt);return `<span class="lnk ${on?"on":""}" title="${esc(on?l.join("\n"):"연결된 시너지 없음")}">${on?"✓":""}</span>`};
     return `<div class="team${sy.adj.wrap?" wrap":""}" data-team="${i}">
       <div class="no">${String(i+1).padStart(2,"0")}<small>${t.example?"예시":"PARTY"}</small></div>
-      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" data-drag="1" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c,modeBadge(c.id))}</div>`:""}</div>`}).join("")}
+      ${t.slots.map((id,si)=>{const c=id&&charMap[id];return `<div class="slot ${c?"filled":"empty"}${linked.has(si)?" syn":""}" data-team="${i}" data-slot="${si}">${lk(si)}${c?`<div class="tok" data-drag="1" data-id="${c.id}" data-src="slot" data-team="${i}" data-slot="${si}">${tokenHTML(c,modeBadge(c.id,t,i))}</div>`:""}</div>`}).join("")}
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>

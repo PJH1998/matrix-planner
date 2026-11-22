@@ -19,8 +19,8 @@
     chainMul(id){const c=this.charMap()[id],table=this.db.chain(id)||this.config.chain[c&&c.role]||this.config.chain.sub;return table[this.echoes.chainOf(id)]||1}
     // 강도에 곱하는 체인 배율: 상시 체인 스탯 몫은 최종 스탯(공명력)에 들어가므로 나눠서 뺀다
     chainRemain(id){const chain=this.echoes.chainOf(id);return this.chainMul(id)/this.echoes.chainStatMul(id,chain)}
-    // 무기 패시브 계수: 무기 성능 % 중 스탯 몫(공명력에 이미 들어감)을 빼고 패시브 몫만 남긴다
-    weaponPassive(id){const weapon=this.weapons.weaponOf(id);if(weapon.pct==null||!weapon.w)return 1;return this.clamp(weapon.pct/100/this.echoes.weaponStatRatio(id,weapon.w.id),.5,1.3)}
+    // 무기 패시브 계수: 무기 성능 % 중 스탯 몫(기본 공격력·부옵·상시 패시브, 재련 포함 — 공명력에 이미 들어감)을 빼고 전투 중 패시브 몫만 남긴다
+    weaponPassive(id){const weapon=this.weapons.weaponOf(id);if(weapon.pct==null||!weapon.w)return 1;return this.clamp(weapon.pct/100/this.echoes.weaponStatRatio(id,weapon.w.id,weapon.ref),.5,1.3)}
     rot(id){return this.db.rot(id)||this.fallbackRot}
     // Prydwen이 dps를 잴 때 넣은 파티원의 버프력(기준 세팅, 우리 계산식). 혼자 잰 값이면 1
     // 측정 파티에 모드 공명자가 있으면 이 공명자가 가장 많이 받는 모드 조합으로 본다. 본인도 모드 공명자인데 모드별 dps가 없으면 본인 모드도 고른다
