@@ -138,6 +138,7 @@
 .pk-ct{font-family:var(--f-display);font-size:18px;font-weight:700}
 .pk-ct.up{color:var(--ok)}.pk-ct.down{color:var(--danger)}
 .pk-cn{grid-column:1/-1;margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
+.pk-ctag{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;font-weight:700;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
 .pk-combo.miss{border-style:dashed}
 .pk-combo.miss .pk-cn{color:var(--warn)}
 .pk-give{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--warn) 55%,transparent);border-radius:var(--r);background:color-mix(in srgb,var(--warn) 9%,transparent)}
