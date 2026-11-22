@@ -145,6 +145,16 @@ test("서브 딜러는 새 메인 딜러와 시너지가 더 클 때만 다른 �
   }
 });
 
+test("데려오는 서브 딜러가 그 파티의 메인 딜러 자신이면 시너지 비교 이유를 남기지 않는다", () => {
+  const app = loadCurrentApp();
+  withoutBanner(app);
+  // 젠니·페비·벨리나 파티는 피해가 가장 큰 페비가 메인 딜러로 잡힌다 → 페비를 데려올 때 비교할 상대가 없다
+  app.reset({ owned: app.state().owned, teams: [{ slots: ["zani", "phoebe", "verina"], buff: null }] });
+  const takes = app.pickupCombos("xuanling").flatMap((c) => (c.giveUp || []).flatMap((g) => g.take || []));
+  assert.ok(takes.some((t) => t.id === "phoebe"), "페비를 데려오는 조합이 있어야 한다");
+  takes.forEach((t) => { if (t.why) assert.notEqual(t.why.from, t.id, t.id); });
+});
+
 test("새로 뽑기 분석은 상태를 바꾸지 않고, 전용 무기를 고르면 조합 점수가 오른다", () => {
   const app = loadCurrentApp();
   withoutBanner(app);
