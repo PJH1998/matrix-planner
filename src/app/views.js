@@ -374,13 +374,15 @@ function echoWorker(){return _ew||(_ew=loadTesseract().then(async T=>{const w=aw
 let _eq=Promise.resolve();
 async function readEcho(blob){const w=await echoWorker();const got=[];
   for(const [th,sc] of ECHO_PASSES){const cv=await prepImage(blob,th,sc||0);const {data}=await w.recognize(cv);const e=EchoDB.parse(data.text);
-    if(e&&e.main)got.push(e);if(got.length===1&&e&&e.subs.length>=5&&!e.subFix)break} // 첫 번째에 깨끗이 읽히면 바로 끝
+    if(e&&e.main)got.push(e);if(got.length===1&&e&&e.subs.length>=5&&!e.subFix&&!e.guessed)break} // 첫 번째에 깨끗이 읽히면 바로 끝
   return EchoDB.merge(got)}
 // i: 넣을 칸. null이면 읽은 뒤 비교할 칸을 고른다. 그 칸에 이미 에코가 있으면 바로 바꾸지 않고 비교 창을 연다
 async function ocrEcho(id,blob,i){const key=id+":"+(i==null?"cmp":i);echoMsg[key]="글자 인식 중… (처음 한 번은 10초 정도 걸립니다)";if(profId===id)renderProfile();
   const job=_eq.then(()=>readEcho(blob));_eq=job.catch(()=>{});
   try{const e=await job;if(!e||!e.main)throw new Error("에코 옵션을 찾지 못했습니다. 주옵부터 부옵까지 보이게 캡처해 주세요.");
-    const ne={cost:e.cost,main:e.main,subs:e.subs};delete echoMsg[key];
+    // 속성 이름이 깨져 속성 피해만 알아낸 주옵은 공명자 속성으로 채운다
+    const main=e.main.k==="el"&&!e.main.elem&&charMap[id]?Object.assign({},e.main,{elem:charMap[id].el}):e.main;
+    const ne={cost:e.cost,main,subs:e.subs};delete echoMsg[key];
     if(i==null)i=cmpSlotFor(id,ne);
     const arr=echoSlots(id);
     if(sameEcho(arr[i],ne)){echoMsg[id+":cmp"]=`${i+1}번 칸에 넣어 둔 에코와 같아서 그대로 뒀어요.`;echoSel=null;if(profId===id)renderProfile();return}
@@ -400,7 +402,7 @@ function statsHTML(id){
     <p class="sbnote">${c.role==="support"?`지원 기준: ${Object.entries(targets).map(([k,v])=>`${({hp:"HP",def:"방어력",atk:"공격력",er:"공명 효율"})[k]} ${v.toLocaleString()}${k==="er"?"%":""}`).join(" · ")}<br>비전투 최종 스탯의 기준 충족 여부를 표시합니다. 지원에 쓰는 공격력·HP·방어력은 해당 캐릭터의 회복·보호막에 도움이 됩니다. 크리티컬은 지원 기준에 넣지 않습니다.`:`기준(이 정도면 잘 키웠다${I.est?" · 표에 없어 추정":""}): ${sc==="hp"?"HP":sc==="def"?"방어력":"공격력"} ${mainRef.toLocaleString()} · 크리티컬 ${gd.cr||I.cr}% · 크리티컬 피해 ${gd.cd||I.cd}% · 3코 ${esc(I.cfg)}<br>칸에 흐리게 보이는 숫자가 기준입니다. 비전투 캐릭터 정보창의 최종 스탯을 입력하면 이 기준과 비교해 강도에 반영합니다.`}</p>
    <div class="srs">${BASE_STATS.map(([k,l,u])=>row(k,l,u,st[k],false,`icons/st-${k}.png`)).join("")}</div>
    <div class="sdiv"><span>피해 보너스</span></div>
-    ${c.role==="support"?"":`<p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}</p>`}
+    ${c.role==="support"?"":`<p class="sbnote">비워 둔 칸은 기준치(속성 ${elRefOf(id)}% · 주력 피해 유형 ${TYPE_REF}%)로 계산합니다. 속성 기준 = 3코 속성 피해 개수 × 30 + 세트 10${I.node?" + 속성 노드 12":""}${echoCalculator.elWeaponRefOf(id)?` + 최고 무기 상시 효과 ${echoCalculator.elWeaponRefOf(id)}`:""}</p>`}
    <div class="srs">${bk.map(k=>row(k,k==="el"?`${EL[c.el]} 피해`:`${BONUS_KEYS[k]} 피해`,"%",b[k],true,k==="el"?`icons/st-${c.el}.png`:`icons/st-${k}.png`)).join("")}</div>
    <button type="button" class="btn ghost sclear" id="pfStClear">스탯 지우기</button>`}`;
 }
@@ -442,6 +444,10 @@ async function ocrStats(blob){
     return got;
   }catch(e){const mm=$("#pfOcr");if(mm)mm.textContent="인식 실패: "+e.message;}
 }
+// 디버그: 에코 캡처 인식을 패스별 원문·결과와 함께 돌려준다 (tests/fixtures/ocr 확인용)
+window.mpOcrEchoTest=async url=>{const b=await fetch(url).then(r=>r.blob());const w=await echoWorker();const passes=[];
+  for(const [th,sc] of ECHO_PASSES){const cv=await prepImage(b,th,sc||0);const {data}=await w.recognize(cv);passes.push({th,sc,text:data.text,parsed:EchoDB.parse(data.text)})}
+  return {passes,result:await readEcho(b)}};
 window.mpOcrTest=async (url,id)=>{const b=await fetch(url).then(r=>r.blob());const T=await loadTesseract();const cv=await prepImage(b);const {data}=await T.recognize(cv,"kor+eng");return {text:data.text,parsed:parseStats(data.text,id?bonusKeysOf(id):["el","heavy"])}};
 window.mpDebug={specUp:(id,o)=>id?specUp.forChar(id):specUp.table(o||{}),teamCalc:(ids,buff)=>teamCalc({slots:ids,buff:buff||null}),charScore:id=>charScore(id),recommend:()=>recommendTeams(),syn:id=>synOf(id),teamSyn:ids=>teamSynergy({slots:ids,buff:null}),sim:()=>simulate(state.teams),order:()=>bestOrder().map(t=>t.slots.join("/")),chars:()=>chars.map(c=>c.id),sorted:m=>sortChars(chars.slice(),m).map(c=>c.id),statF:id=>statFactor(id),weapon:id=>{const w=weaponOf(id);return {id:w.w&&w.w.id,pct:w.pct}}};
 

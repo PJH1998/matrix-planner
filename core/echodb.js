@@ -33,7 +33,18 @@
     if(/공격력/.test(s))return {k:pct?"atk%":"atk"};
     if(/방어력/.test(s))return {k:pct?"def%":"def"};
     if(/HP|체력|H₽/i.test(s))return {k:pct?"hp%":"hp"};
+    // 밝은 배경에서 글자 일부만 읽힌 경우(예: 「격력」, 「> 피해」, 「명 해방 피해」)
+    if(/티[컬칼]|리티/.test(s))return {k:/피해/.test(s)?"cd":"cr"};
+    if(/해방/.test(s))return {k:"lib"};
+    if(/스킬/.test(s))return {k:"skill"};
+    if(/[효요]율|공명[^스해]?율/.test(s))return {k:"er"};
+    if(/격력/.test(s))return {k:pct?"atk%":"atk"};
+    if(/어력/.test(s))return {k:pct?"def%":"def"};
     return null}
+  // 이름을 못 읽은 부옵: 수치가 그 단계에 있는 부옵 종류가 하나뿐이면 그것으로 본다(이미 나온 종류 제외, 「피해」가 보이면 피해 계열만)
+  const DMG_SUBS=new Set(["cd","basic","heavy","skill","lib"]);
+  function guessSub(label,raw,pct,taken){const v=num(raw),T=MP.ECHO_SUB_TIERS||{},dmg=/피해|보너스/.test(label);
+    const c=Object.keys(T).filter(k=>!taken.has(k)&&T[k].includes(v)&&PCT_KEYS.has(k)===pct&&(!dmg||DMG_SUBS.has(k)));return c.length===1?{k:c[0]}:null}
   // 숫자 문자열에서 헷갈리는 숫자를 최대 n개 바꾼 후보들 (바꾼 개수가 적은 순)
   function variants(raw,n){const out=[[raw]];let cur=[raw];const seen=new Set([raw]);
     for(let d=0;d<(n||2);d++){const nx=[];cur.forEach(s=>{for(let i=0;i<s.length;i++){const alt=CONF[s[i]];if(!alt)continue;
@@ -57,7 +68,12 @@
       const L=l.match(/\+\s*(\d{1,2})\b/);if(L&&lv==null&&!/[%]/.test(l))lv=+L[1];
       const t=l.replace(/(?<=\d)[Oo]|[Oo](?=[\d.])/g,"0").replace(/(?<=\d)[lI|]|[lI|](?=\d)/g,"1");
       const m=t.match(/(\d[\d,]*(?:\.\d+)?)\s*(%?)\s*[^\d%]{0,2}$/);if(!m)return;
-      const pct=!!m[2]||/\.\d/.test(m[1]);const label=t.slice(0,m.index);const k=keyOf(label,pct);if(!k)return;
+      const pct=!!m[2]||/\.\d/.test(m[1]);const label=t.slice(0,m.index);let k=keyOf(label,pct);
+      // 주옵 줄의 속성 이름이 깨진 경우(「£8 피해 보너스」): 3코 속성 피해 30%로 본다. 속성은 공명자 속성으로 채운다(elem 없음)
+      if(!k&&!rows.length&&pct&&/피해|보너스/.test(label)&&num(m[1])===((MP.ECHO_MAIN||{})[3]||{main:{}}).main.el)k={k:"el"};
+      if(!k&&rows.length){const isFixed=r=>!r.pct&&((r.k==="atk"&&[100,150].includes(num(r.raw)))||(r.k==="hp"&&num(r.raw)===2280));
+        k=guessSub(label,m[1],pct,new Set(rows.slice(1).filter(r=>!isFixed(r)).map(r=>r.k)));if(k)k.guess=1}
+      if(!k)return;
       rows.push(Object.assign({raw:m[1],pct},k))});
     if(!rows.length)return null;
     // 1번째 줄 = 주옵, 고정 부주옵(공격력 150·100 / HP 2280) = 코스트, 나머지 = 부옵
@@ -67,20 +83,30 @@
     const fixes=[];
     const mk=main.k==="atk"?"atk%":main.k==="hp"?"hp%":main.k==="def"?"def%":main.k; // 주옵은 항상 % (고정값 주옵 없음)
     const ms=snapMain(cost,mk,main.raw);if(ms.fix)fixes.push(`${LABEL[mk]} ${ms.from} → ${ms.v}`);
-    let subFix=0;
-    const subs=rows.filter((r,i)=>i>0&&i!==fi).slice(0,5).map(r=>{const s=snapSub(r.k,r.raw);if(s.fix){subFix++;fixes.push(`${LABEL[r.k]} ${s.from} → ${s.v}`)}return {k:r.k,v:s.v}});
+    let subFix=0;const subOk=[];
+    const subs=rows.filter((r,i)=>i>0&&i!==fi).slice(0,5).map(r=>{const s=snapSub(r.k,r.raw);if(s.fix){subFix++;fixes.push(`${LABEL[r.k]} ${s.from} → ${s.v}`)}subOk.push(!s.fix&&!r.guess);return {k:r.k,v:s.v}});
     // 여러 번 인식한 결과 중 고를 때 쓰는 점수: 읽은 부옵 수가 많고, 고친 숫자가 적을수록 높다
-    const score=subs.length*10-subFix*3+(fi>=0?2:0)-(ms.fix?1:0);
-    return {cost,lv,main:Object.assign({k:mk,v:ms.v},main.elem?{elem:main.elem}:{}),subs,fixes,subFix,score}}
+    // 게임의 부옵은 종류가 겹치지 않으므로 겹치면 잘못 읽은 것으로 보고 크게 깎는다. 이름을 수치로 추정한 줄은 조금 깎는다
+    const dup=subs.length-new Set(subs.map(s=>s.k)).size,guessed=rows.filter((r,i)=>i>0&&i!==fi&&r.guess).length;
+    const score=subs.length*10-subFix*3+(fi>=0?2:0)-(ms.fix?1:0)-dup*8-guessed;
+    return {cost,lv,main:Object.assign({k:mk,v:ms.v},main.elem?{elem:main.elem}:{}),subs,subOk,fixes,subFix,guessed,score}}
 
-  // 같은 캡처를 여러 번 읽은 결과를 줄마다 다수결로 합친다(동점이면 점수가 높은 결과)
+  /* 같은 캡처를 여러 번 읽은 결과를 합친다. 패스마다 놓치는 줄이 달라서(밝은 배경의 줄) 줄 순서가 아니라 부옵 종류별로 모은다.
+     - 주옵·코스트: 모든 패스의 다수결(동점이면 점수가 높은 패스). 속성 이름은 읽힌 패스의 것을 쓴다
+     - 부옵: 게임의 부옵은 종류가 겹치지 않는다. 여러 패스에 나온 종류부터 최대 5개, 수치는 숫자를 고치지 않고 읽힌 값의 다수결
+     - 순서: 패스 안에서의 줄 순서(평균) */
   function merge(list){const L=(list||[]).filter(e=>e&&e.main).sort((a,b)=>b.score-a.score);if(!L.length)return null;if(L.length===1)return L[0];
-    const top=L[0];const n=Math.max(...L.map(e=>e.subs.length));const pool=L.filter(e=>e.subs.length===n);
-    const vote=f=>{const m=new Map();pool.forEach((e,r)=>{const key=f(e);if(key==null)return;const x=m.get(key)||{c:0,r};x.c++;m.set(key,x)});
+    const vote=(rows,f)=>{const m=new Map();rows.forEach((e,r)=>{const key=f(e);if(key==null)return;const x=m.get(key)||{c:0,r};x.c++;m.set(key,x)});
       return [...m.entries()].sort((a,b)=>b[1].c-a[1].c||a[1].r-b[1].r)[0]};
-    const mv=vote(e=>JSON.stringify(e.main));const cv=vote(e=>String(e.cost));
-    const subs=[];for(let i=0;i<n;i++){const v=vote(e=>e.subs[i]?JSON.stringify(e.subs[i]):null);if(v)subs.push(JSON.parse(v[0]))}
-    const base=pool[0];return Object.assign({},base,{cost:+cv[0],main:JSON.parse(mv[0]),subs,fixes:base.fixes,passes:L.length})}
+    const mv=vote(L,e=>e.main.k+"|"+e.main.v),cv=vote(L,e=>String(e.cost));
+    const mainOf=L.find(e=>e.main.k+"|"+e.main.v===mv[0]),withElem=L.find(e=>e.main.k===mainOf.main.k&&e.main.elem);
+    const main=Object.assign({},mainOf.main,withElem?{elem:withElem.main.elem}:{});
+    const by=new Map();
+    L.forEach((e,r)=>e.subs.forEach((s,i)=>{const x=by.get(s.k)||{k:s.k,n:0,r,pos:0,vals:new Map()};x.n++;x.pos+=i/Math.max(1,e.subs.length-1);
+      const v=x.vals.get(s.v)||{c:0,ok:0,r};v.c++;if(!e.subOk||e.subOk[i])v.ok++;x.vals.set(s.v,v);by.set(s.k,x)}));
+    const subs=[...by.values()].sort((a,b)=>b.n-a.n||a.r-b.r).slice(0,5).sort((a,b)=>a.pos/a.n-b.pos/b.n)
+      .map(x=>({k:x.k,v:[...x.vals.entries()].sort((a,b)=>b[1].ok-a[1].ok||b[1].c-a[1].c||a[1].r-b[1].r)[0][0]}));
+    return Object.assign({},L[0],{cost:+cv[0],main,subs,fixes:L[0].fixes,passes:L.length})}
 
   /* ---------- 세트 ---------- */
   function setCounts(echoes){const n={};(echoes||[]).forEach(e=>{if(e&&e.set)n[e.set]=(n[e.set]||0)+1});return n}
