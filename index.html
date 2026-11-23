@@ -53,7 +53,7 @@
     <div class="teams-col">
       <div class="teams-h">
         <h2>파티 편성</h2><span class="total" id="ptsTotal" title="모든 파티의 예상 점수 합 (예측치)"></span>
-        <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도&#10;숙련: 퀵스왑 + 4해방 (실측 기준, ×1)&#10;보통: 평범한 321 사이클 (×0.8)&#10;뉴비: 321 사이클도 잘 못 굴림 (×0.65)&#10;보통·뉴비 배율은 추정치&#10;파티 칸에서 파티마다 따로 정할 수도 있습니다">숙련도 <select id="skillSel"><option value="top" title="퀵스왑 + 4해방">숙련</option><option value="good" title="평범한 321 사이클">보통</option><option value="normal" title="321 사이클도 잘 못 굴림">뉴비</option></select></label>
+        <label class="skill" title="보스 진행 예측에 쓰는 플레이 숙련도&#10;장인: 퀵스왑 + 4해방 (실측 기준, ×1)&#10;숙련: 퀵스왑을 무난하게 굴림 (×0.9)&#10;보통: 평범한 321 사이클 (×0.8)&#10;뉴비: 321 사이클도 잘 못 굴림 (×0.65)&#10;숙련·보통·뉴비 배율은 추정치&#10;파티 칸에서 파티마다 따로 정할 수도 있습니다">숙련도 <select id="skillSel"><option value="top" title="퀵스왑 + 4해방">장인</option><option value="skilled" title="퀵스왑을 무난하게 굴림">숙련</option><option value="good" title="평범한 321 사이클">보통</option><option value="normal" title="321 사이클도 잘 못 굴림">뉴비</option></select></label>
         <button class="btn pri" id="btnAuto" title="보유 공명자로 파티를 자동으로 짭니다. 센 딜러 조합부터 만들고, 5성 서포터를 센 파티에 먼저 넣습니다.">자동 추천</button>
         <span id="recBar" class="recbar" hidden><span class="rec-note" title="적용을 누르기 전까지는 저장되지 않습니다. 새로고침하면 추천 전 편성으로 돌아갑니다">추천 미리보기</span><button class="btn pri" id="btnApply">적용</button><button class="btn ghost" id="btnUndo">되돌리기</button></span>
         <button class="btn pri" id="btnSort" title="보스 순서를 시뮬레이션해서 메인 딜러 속성의 저항 보스를 피하고, 약한 파티가 앞에 오도록 정렬">순서 정렬</button>

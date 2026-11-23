@@ -15,7 +15,8 @@
       this.state=state;this.charMap=charMap;this.cycle=cycle;this.db=charDb;this.bossDb=bossDb;this.echoDb=echoDb;this.characters=characters;this.echoes=echoes;
       this.condWeight=condWeight;this.selectedBuff=selectedBuff;this.damageLabels=damageLabels;this.mechanicLabels=mechanicLabels;this.elementLabels=elementLabels;this.anomalies=anomalies;
       this.atkBase=2;this.strengthScale=.00061;this.strengthRef=37.8;this.damageExp=1.07;this.maxRounds=bossDb.MAX_ROUNDS;
-      this.skillLevels={top:{label:"숙련",mul:1},good:{label:"보통",mul:.8},normal:{label:"뉴비",mul:.65}};this.cache=new Map();
+      // 숙련도 단계 (키는 저장값이라 바꾸지 않는다. top = 실측 기준. skilled는 1.6.3에 추가)
+      this.skillLevels={top:{label:"장인",mul:1},skilled:{label:"숙련",mul:.9},good:{label:"보통",mul:.8},normal:{label:"뉴비",mul:.65}};this.cache=new Map();
     }
     synOf(id){return this.db.syn(id)}
     typeShare(id,key){return this.db.typeShare(id,key)}

@@ -20,6 +20,18 @@ test("파티에 고른 숙련도는 그 파티의 보스 피해에만 반영된�
   assert.equal(dealt("good", "top"), top);
 });
 
+test("숙련도 단계: 장인 ×1 · 숙련 ×0.9 · 보통 ×0.8 · 뉴비 ×0.65", () => {
+  const app = loadCurrentApp();
+  const team = { slots: ["aemeath", "lynae", "mornye"], buff: null };
+  app.reset({ skill: "top" });
+  const hp = app.simulate([team]).res[0].hits[0].from - app.simulate([team]).res[0].hits[0].left;
+  for (const [skill, mul] of [["skilled", 0.9], ["good", 0.8], ["normal", 0.65]]) {
+    app.reset({ skill });
+    const hit = app.simulate([team]).res[0].hits[0];
+    assert.ok(Math.abs((hit.from - hit.left) - hp * mul) < 1e-6, skill);
+  }
+});
+
 test("저장할 때 파티 숙련도는 알맞은 값만 남긴다", () => {
   const app = loadCurrentApp();
   const normalized = app.normalize({ teams: [
