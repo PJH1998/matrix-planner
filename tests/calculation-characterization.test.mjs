@@ -47,8 +47,9 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   });
 
   const simulation = app.simulate(teams);
-  closeTo(simulation.progress, 6.4419734970833895);
-  closeTo(simulation.total, 39083.23139440145);
+  // 1.6.3: 2R 점수 배율 1.1 → 1.15(3.5 공식 패치 노트), 2R 보스 HP 1.77 → 1.69(같은 영상 점수 ÷ 새 배율)
+  closeTo(simulation.progress, 6.5102325975370405);
+  closeTo(simulation.total, 39689.40100323789);
   assert.equal(simulation.bad, 0);
 });
 

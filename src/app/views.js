@@ -122,7 +122,7 @@ function teamWarnings(t){
 }
 // 예상 점수 + 보스별 예상 진행 (예측치)
 function fcastHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return `<span class="none">예상 없음</span>`;
-  const tip=`예상 점수·진행 · 예측치\n점수: 준 피해 × 4,750점(1R 보스 1마리) × 라운드 점수 배율 1R 1.0 / 2R 1.1 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 1.77 / 3R 3.36배, 4R 이후 ×2.1씩(추정), 숙련도 ${SKILL_LV[teamCalculator.skillOf(state.teams[i])].label}`;
+  const tip=`예상 점수·진행 · 예측치\n점수: 준 피해 × 4,750점(1R 보스 1마리) × 라운드 점수 배율 1R 1.0 / 2R 1.15 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 1.69 / 3R 3.36배, 4R 이후 ×2.1씩(추정), 숙련도 ${SKILL_LV[teamCalculator.skillOf(state.teams[i])].label}`;
   const rows=r.hits.map(h=>`<li class="${h.resisted?"res":""}"><span class="bn">${h.round}R ${esc(h.name)}${h.resisted?" <em>저항</em>":""}</span><span class="hp">${Math.round(h.from)}% → ${h.left>0?`<b>${Math.round(h.left)}%</b>`:`<b class="kill">처치</b>`}</span></li>`).join("");
   return `<div class="fc-h" title="${esc(tip)}"><span>예상</span><b>${Math.round(r.pts).toLocaleString()}</b><span>점</span></div><ul class="fc-l">${rows}</ul>`;}
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
