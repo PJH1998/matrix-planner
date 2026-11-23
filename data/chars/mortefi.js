@@ -2,9 +2,10 @@
 MP.addChar({
   id:"mortefi", name:"모르테피", el:"fusion", rar:4, role:"sub",
   release:13, eid:1204, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
-  syn:{o:"다음 캐릭터 강공격 피해 +38% (14초)",ob:["heavy"],w:[],m:[]},
+  syn:{o:"다음 캐릭터 강공격 피해 +38% (14초)",ob:["heavy"],w:[],m:["coord"]},
   // 반주 버프 수치(%)
   outro:{v:{heavy:38}},
   // 피해 비중(%)

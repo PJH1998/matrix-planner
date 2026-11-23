@@ -11,8 +11,8 @@ MP.addChar({
   profile:{basic:30.9,heavy:12.1,skill:7.9,lib:36.1,intro:5,echo:8},
   // 파티 딜증(%)
   amp:10,
-  // 반주: 다음 캐릭터 공명 해방 피해 +38% → 메인 딜러 해방 비중 × 38% ÷ 1.9
-  supCond(x,ids,main,C){if(x!==main)return {a:0,t:[]};const sh=C.share(x,"lib");return sh>0.05?{a:sh*0.38/C.BONUS_BASE,t:["반주: 공명 해방 피해 +38%"]}:{a:0,t:[]}},
+  // 반주: 다음 캐릭터 공명 해방 피해 38% 부스트 → 메인 딜러 해방 비중 × 38% (부스트라 1.9로 나누지 않는다, 1.6.5)
+  supCond(x,ids,main,C){if(x!==main)return {a:0,t:[]};const sh=C.share(x,"lib");return sh>0.05?{a:sh*0.38,t:["반주: 공명 해방 피해 +38%"]}:{a:0,t:[]}},
 
   // 90레벨 기본 [HP, 공격력, 방어력]
   base:[14113,338,1124],

@@ -2,6 +2,7 @@
 MP.addChar({
   id:"rebecca", name:"레베카", el:"electro", rar:5, role:"sub",
   release:68.5, eid:1308, region:"lahairoi",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 전체 피해 +15%, 강공격 피해 최대 +35% (14초)",ob:["all","heavy"],w:["basic"],m:["hack"]},

@@ -56,6 +56,7 @@
     offTune(id,chain){const v=pick(id,"offTune");if(Array.isArray(v))return +v[Math.max(0,Math.min(v.length-1,Math.round(+chain||0)))]||0;return +v||0},
     // 스킬이 에코 어빌리티 발동으로 간주되는 횟수(이름이 다른 에코 어빌리티로 셈). 공명 모드마다 다를 수 있다
     echoExtra:id=>+pick(id,"echoExtra")||0,
+    quick:id=>!!pick(id,"quick"),
     needs:id=>{const c=cur(id);return (c&&c.needs)||pick(id,"needs")||null},
     supCond:id=>pick(id,"supCond")||null,
     /* 피해 비중 */
