@@ -95,6 +95,7 @@
     supportTargetAdjust:id=>raw(id).supportTargetAdjust||[],
     gb:id=>raw(id).gb,
     scale:id=>{const c=cur(id);return (c&&c.statScale)||raw(id).statScale||"atk"},
+    hpConv:id=>raw(id).hpConv||null,          // HP 변환 {cap, screen:{atk, el}, fight:{el}, mul:{피해 유형:{from, per}}} — 공격력 계수인데 HP로 강해지는 공명자(경연)
     nodes:id=>raw(id).nodes||{},
     combatErAtk:id=>raw(id).combatErAtk||null,
     erBuffCap:id=>raw(id).erBuffCap||null,

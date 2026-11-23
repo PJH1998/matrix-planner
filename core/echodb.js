@@ -112,6 +112,10 @@
     else S.types[k]=(S.types[k]||0)+v}
   function finish(S,o,baseAtk){const B=o.base||[0,0,0];
     S.atk=(baseAtk)*(1+S.pct.atk/100)+S.flat.atk;S.hp=B[0]*(1+S.pct.hp/100)+S.flat.hp;S.def=B[2]*(1+S.pct.def/100)+S.flat.def;return S}
+  /* HP 변환(CharDB.hpConv): HP는 cap까지만 센다. part의 키마다 HP 1000당 증가량 */
+  function hpPart(hp,conv,part){const h=Math.min(Math.max(+hp||0,0),conv.cap||Infinity)/1000,out={};Object.entries(part||{}).forEach(([k,v])=>out[k]=v*h);return out}
+  // 스탯 화면에 잡히는 HP 변환(공격력·속성 피해)을 더한다
+  function hpScreen(S,conv){if(!conv||!conv.screen)return S;const x=hpPart(S.hp,conv,conv.screen);if(x.atk)S.atk+=x.atk;if(x.el)S.el+=x.el;if(x.all)S.all+=x.all;return S}
   function build(o){
     const S=blank();const B=o.base||[0,0,0];const W=o.weapon;const C={el:o.el,has:o.has,share:o.share};
     Object.entries(o.nodes||{}).forEach(([k,v])=>addKey(S,k,v,null,o.el));
@@ -123,12 +127,12 @@
     const act=activeFx(setCounts(E));
     act.filter(a=>a.p2).forEach(a=>Object.entries(a.p2).forEach(([k,v])=>{if(k!=="elem")addKey(S,k,v,a.p2.elem,o.el)}));
     // 스탯 화면에 보이는 값(조건부 효과 전) — 공식 추천 스탯과 비교할 때 쓴다
-    {const T=finish(JSON.parse(JSON.stringify(S)),o,B[1]+(W?W[0]:0));S.screen={atk:T.atk,hp:T.hp,def:T.def,cr:T.cr,cd:T.cd,er:T.er,heal:T.heal,el:T.el,all:T.all,types:Object.assign({},T.types),crT:Object.assign({},T.crT)}}
+    {const T=hpScreen(finish(JSON.parse(JSON.stringify(S)),o,B[1]+(W?W[0]:0)),o.hpConv);S.screen={atk:T.atk,hp:T.hp,def:T.def,cr:T.cr,cd:T.cd,er:T.er,heal:T.heal,el:T.el,all:T.all,types:Object.assign({},T.types),crT:Object.assign({},T.crT)}}
     S.fx=[];
     act.filter(a=>a.fx&&a.fx.to!=="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:a.fx.to||"self"});if(m>0)addKey(S,a.fx.k,a.fx.v*m,a.fx.elem,o.el)});
     act.filter(a=>a.fx&&a.fx.to==="next").forEach(a=>{const m=fxMul(a.fx,C,S);S.fx.push({set:a.set,pc:a.pc,k:a.fx.k,v:a.fx.v*(a.fx.st||1),eff:a.fx.v*m,elem:a.fx.elem,to:"next"})});
     S.sets=Object.entries(setCounts(E)).map(([name,c])=>({name,c,on:act.filter(a=>a.set===name).map(a=>a.pc).filter((x,i,l)=>l.indexOf(x)===i)}));
-    return finish(S,o,B[1]+(W?W[0]:0))}
+    return hpScreen(finish(S,o,B[1]+(W?W[0]:0)),o.hpConv)}
   /* 기준 세팅: '이 정도면 잘 키웠다' 스탯(스탯 화면 값, 2세트 고정 스탯 포함) + 기준 세트의 조건부 효과
      o: {el, ijk:{main:[atk|hp, 값], cr, cd}, elRef, typeRef, typeKeys, base, weaponAtk, has, share, counts} */
   function refBuild(o){const S=blank();const C={el:o.el,has:o.has,share:o.share};
@@ -138,9 +142,12 @@
     activeFx(o.counts||{}).filter(a=>a.fx&&a.fx.to!=="next").forEach(a=>{const m=fxMul(a.fx,C,S);if(m<=0)return;const v=a.fx.v*m;
       if(a.fx.k==="atk%")addAtk+=baseAtk*v/100;else if(a.fx.k==="hp%")addHp+=baseHp*v/100;else addKey(S,a.fx.k,v,a.fx.elem,o.el)});
     S.atk=(sc==="atk"?mv:0)+addAtk;S.hp=(sc==="hp"?mv:0)+addHp;return S}
-  /* 기대 피해: 피해 유형별 비중(w)으로 크리티컬·피해 보너스를 나눠 계산 */
-  function dmg(S,scale,w){const ks=Object.keys(w).filter(k=>w[k]>0);const tw=ks.reduce((a,k)=>a+w[k],0)||1;const main=scale==="hp"?S.hp:scale==="def"?S.def:S.atk;
-    let d=0;ks.forEach(k=>{const cr=Math.min(Math.max(S.cr+(S.crT[k]||0),0),100)/100;d+=w[k]*(1+cr*(S.cd/100-1))*(1+(S.el+S.all+(S.types[k]||0))/100)});
+  /* 기대 피해: 피해 유형별 비중(w)으로 크리티컬·피해 보너스를 나눠 계산.
+     conv(HP 변환)가 있으면 공격력 × 피해 유형 배율(HP 비례, cap까지)로 계산하고, 전투 중 HP 변환 피해 보너스를 더한다 (스탯 화면 몫은 S에 이미 들어 있다) */
+  function dmg(S,scale,w,conv){const ks=Object.keys(w).filter(k=>w[k]>0);const tw=ks.reduce((a,k)=>a+w[k],0)||1;const main=conv?S.atk:scale==="hp"?S.hp:scale==="def"?S.def:S.atk;
+    const fight=conv?hpPart(S.hp,conv,conv.fight):{},h=conv?Math.min(Math.max(+S.hp||0,0),conv.cap||Infinity):0,crT=S.crT||{},types=S.types||{};
+    const mul=k=>{const m=conv&&(conv.mul||{})[k];return m?1+m.per/100*Math.max(0,h-(m.from||0))/1000:1};
+    let d=0;ks.forEach(k=>{const cr=Math.min(Math.max(S.cr+(crT[k]||0),0),100)/100;d+=w[k]*mul(k)*(1+cr*(S.cd/100-1))*(1+((S.el||0)+(S.all||0)+(fight.el||0)+(fight.all||0)+(types[k]||0))/100)});
     return main*d/tw}
   /* 파티에 주는 세트 효과(다른 파티원 몫): to party(장착자 제외) / next */
   function teamFx(echoes,C){const E=(echoes||[]).filter(e=>e&&e.main);return activeFx(setCounts(E)).filter(a=>a.fx&&(a.fx.to==="party"||a.fx.to==="next")).map(a=>({set:a.set,to:a.fx.to,k:a.fx.k,elem:a.fx.elem,v:a.fx.v*fxMul(Object.assign({},a.fx,{k:"x"}),C,null)})).filter(x=>x.v>0)}
@@ -175,7 +182,7 @@
     mainSet(id){const s=DB.charSets(id)[0];return s?s[0].split("|")[0]:null},
     refCounts,
     /* 계산 */
-    parse,merge,snapSub,snapMain,build,refBuild,dmg,teamFx,refTeamFx,setCounts,activeFx
+    parse,merge,snapSub,snapMain,build,refBuild,dmg,hpPart,teamFx,refTeamFx,setCounts,activeFx
   };
   MP.EchoDB=DB;
 })(typeof window!=="undefined"?window:globalThis);

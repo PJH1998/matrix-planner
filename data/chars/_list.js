@@ -39,6 +39,9 @@
      er, erNote, erAdj          공명 효율 최소치(%) — 못 채우면 사이클이 밀린다. 출처: 위 위키 표(없으면 공식 추천 guide.er → 역할별 기본값)
                                 erNote: 돌파·조합에 따른 차이(표시용), erAdj: 자동 보정 [{set, n, d}] — 해당 세트를 n개 이상 끼면 최소치 + d
      statScale                  주 스탯(atk|hp|def). 딜러 피해 배율과 서포터 유효 옵션·요약 표시에 사용
+     hpConv                     (선택) 공격력 계수인데 HP로 강해지는 공명자. {cap, screen:{atk, el}, fight:{el}, mul:{피해 유형:{from, per}}}
+                                값은 HP 1000당 증가량, HP는 cap까지만 센다. screen = 스탯 화면에 잡히는 몫, fight = 전투 중 몫,
+                                mul = 그 피해 유형 배율이 HP from 초과 1000당 per% 증가. 피해는 공격력으로 계산하고, HP 부옵은 cap까지만 유효
      supportTargets             서포터의 비전투 최종 스탯 지원 기준 {atk|hp|def|er: 값}. 개인 피해용 크리티컬은 제외
      supportTargetAdjust       체인·세트 조건에 따른 공효 기준 수정 [{chain, set?, er}]
      nodes, sets                고유 스탯 노드 합계, 주력 에코 세트 (sets 출처: 위 위키)

@@ -19,6 +19,8 @@ MP.addChar({
   // 공식 공략 사이트(wuwaguide.kurogames.com) 추천 스탯 — Lv.90 스탯 화면 기준. gt: '초과' 조건인 항목, src: 공략 id
   guide:{def:3500,er:110,cr:70,cd:210,src:13029},
   gb:1303,
+  // 주 스탯: 공명 스킬·해방·변주·공명 회로 피해 계수가 방어력 (encore.moe). 공격력 계수는 일반 공격뿐(피해 비중 없음)
+  statScale:"def",
   // 고유 스탯 노드 합계
   nodes:{el:12,"def%":15.2},
 

@@ -263,17 +263,19 @@ function echoSumHTML(id){const c=charMap[id];const eb=echoBuild(id);if(!eb)retur
   // 막대: 금색 눈금 = 기준(공식 가이드 추천 → 이잘키). 눈금은 막대의 77% 위치
   const bar=(label,v,ref,unit,warn,tip)=>{const w=ref?Math.min(100,v/ref*77):0;return `<div class="es-st${warn?" warn":""}" title="${esc(tip||"")}"><span>${label}<b>${unit==="%"?v.toFixed(1)+"%":Math.round(v).toLocaleString()}</b></span><div class="ebar"><i style="width:${w}%"></i>${ref?`<u style="left:77%"></u>`:""}</div></div>`};
   const mainV=X[sc],mainRef=gd[sc]||I.main[1],mainLabel=sc==="hp"?"HP":sc==="def"?"방어력":"공격력";
-  const crRef=gd.cr||I.cr,cdRef=gd.cd||I.cd;
+  const crRef=gd.cr||I.cr,cdRef=gd.cd||I.cd,conv=CharDB.hpConv(id),hpOver=conv&&X.hp>conv.cap;
   const fx=eb.fx.filter(f=>f.to!=="next"&&f.eff>0).map(f=>`${echoLab(f.k,f.elem)} +${+f.eff.toFixed(1)}`);
   const supportRows=sp?Object.entries(sp.targets).map(([k,ref])=>bar(({hp:"HP",def:"방어력",atk:"공격력",er:"공명 효율"})[k]||k,X[k],ref,k==="er"?"%":"",X[k]+.05<ref,`지원 기준 ${ref}${k==="er"?"%":""}`)).join(""):"";
   return `<div class="esum2">${support?`<div class="es-score"><span>지원 기준</span><b>${sp.met}/${sp.total} 충족</b></div>${supportRows}`:`
     <div class="es-score"><span>스탯 배율</span><b>${sf?(sf.f*100).toFixed(0)+"%":"–"}</b></div>
-    ${bar(mainLabel,mainV,mainRef,"",false,`기준 ${Math.round(mainRef).toLocaleString()}`)}
+    ${bar(mainLabel,mainV,mainRef,"",hpOver,`기준 ${Math.round(mainRef).toLocaleString()}${conv?` · ${conv.cap.toLocaleString()}까지만 효과`:""}`)}
+    ${conv&&gd.atk?bar("공격력",X.atk,gd.atk,"",false,`기준 ${gd.atk.toLocaleString()} (공식 가이드 추천)`):""}
     ${bar("크리티컬",X.cr,crRef,"%",false,`기준 ${crRef}%${gd.cr?" (공식 가이드 추천)":""}`)}
     ${bar("크리 피해",X.cd,cdRef,"%",false,`기준 ${cdRef}%${gd.cd?" (공식 가이드 추천)":""}`)}
     ${bar(`${EL[c.el]} 피해`,X.el,elRefOf(id),"%",false,`기준 ${elRefOf(id)}%`)}
     ${bar("공명 효율",X.er,erm.min,"%",erLow,`최소 ${erm.min}%${erm.src==="guide"?" (공식 가이드)":erm.est?" (추정)":" (이잘키)"}`)}`}
     <div class="es-note">${eb.sets.map(x=>`<img class="esi" src="${setIconUrl(x.name)}" alt="" onerror="this.remove()">${esc(x.name)} ${x.c}개${x.on.length?` (${x.on.map(p=>p+"세트").join("·")})`:""}`).join(" · ")}${fx.length?` · 조건부 효과(유지율 반영): ${fx.join(", ")}`:""}${Object.entries(X.types).filter(([k,v])=>v>0).length?` · 피해 보너스: ${Object.entries(X.types).filter(([k,v])=>v>0).map(([k,v])=>`${EchoDB.LABEL[k]} ${v.toFixed(1)}%`).join(", ")}`:""}</div>
+    ${!support&&conv?`<div class="es-note${hpOver?" warn":""}">스킬 계수는 공격력이에요. HP는 ${conv.cap.toLocaleString()}까지만 공격력·${EL[c.el]} 피해·강공격 배율로 바뀌어요.${hpOver?` 지금 HP가 ${Math.round(X.hp-conv.cap).toLocaleString()} 넘쳐서 그만큼은 쓸모없어요.`:""}</div>`:""}
     ${!support&&(erm.note||erm.adjText)?`<div class="es-note">공명 효율 최소치 ${erm.min}%: ${[erm.adjText?`${esc(erm.adjText)} 적용`:"",erm.note?esc(erm.note):""].filter(Boolean).join(" · ")}</div>`:""}
     ${!support&&erLow?`<div class="es-note warn">공명 효율이 최소치보다 ${(erm.min-X.er).toFixed(1)}% 낮아 사이클이 밀릴 수 있어요. 다른 칸의 부옵, 3코 공명 효율 주옵, 떠오르는 구름 2세트로 채우는 걸 먼저 고려하세요. (강도에는 반영하지 않음)</div>`:""}
     ${echoSlots(id).filter(Boolean).length<5?`<div class="es-note">에코 ${echoSlots(id).filter(Boolean).length}/5 — 빈 칸은 스탯 0으로 계산합니다.</div>`:""}</div>`}
@@ -336,7 +338,7 @@ function echoCmpHTML(id){const C=echoCmp;if(!C||C.id!==id)return "";const c=char
   const VS={better:`${sn} ${A.score.toFixed(1)} → ${B.score.toFixed(1)} (+${d.toFixed(1)}%)`,worse:`새 에코로 바꾸면 ${sn} ${A.score.toFixed(1)} → ${B.score.toFixed(1)} (${d.toFixed(1)}%)`,
     even:`${sn} 차이 ${d>=0?"+":""}${d.toFixed(2)}%`,warn:`${sn} +${d.toFixed(1)}% · 공명 효율 ${A.X.er.toFixed(1)}% → ${B.X.er.toFixed(1)}% (최소 ${B.erMin}%)`,trial:`체험 세팅을 끄면 에코 기준 ${sn}으로 비교할 수 있어요. 아래 스탯 변화는 참고하세요.`};
   const sc=scaleOf(id),SL={hp:"HP",atk:"공격력",def:"방어력",er:"공명 효율",cr:"크리티컬",cd:"크리티컬 피해"};
-  const keys=A.sp?Object.keys(A.sp.targets):[sc,"cr","cd","el","er"];
+  const keys=A.sp?Object.keys(A.sp.targets):[sc,...(CharDB.hpConv(id)&&sc!=="atk"?["atk"]:[]),"cr","cd","el","er"]; // HP 변환 공명자는 공격력도 보여 준다
   const row=(label,a,b,pct)=>{const dd=b-a,z=Math.abs(dd)<(pct?.05:.5);const f=x=>pct?x.toFixed(1)+"%":Math.round(x).toLocaleString();
     return `<tr><th>${label}</th><td>${f(a)}</td><td>${f(b)}</td><td class="${z?"":dd>0?"up":"down"}">${z?"—":(dd>0?"+":"−")+(pct?Math.abs(dd).toFixed(1)+"%":Math.round(Math.abs(dd)).toLocaleString())}</td></tr>`};
   const stRows=keys.map(k=>row(k==="el"?`${EL[c.el]} 피해`:SL[k]||k,A.X[k]||0,B.X[k]||0,["er","cr","cd","el"].includes(k))).join("");
