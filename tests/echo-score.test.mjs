@@ -96,9 +96,12 @@ test("서포터는 지원 기준 스탯·공명 효율을 세고, 유효 부옵 
   const sup = [E(4, "cr", 22, [["hp%", 11.6], ["er", 12.4], ["hp", 580], ["cd", 21], ["atk%", 11.6]]), E(3, "er", 32, [["hp%", 11.6], ["er", 6.8]]), E(3, "hp%", 30, [["hp%", 9.4]]), E(1, "hp%", 22.8, [["hp%", 8.6]]), E(1, "hp%", 22.8, [["hp%", 7.9]])];
   const s = score(app, "suisui", sup);
   assert.ok(s.total > 0);
-  assert.equal(s.weights["hp%"], 1);
-  assert.equal(s.weights.cd || 0, 0);               // 크리티컬 피해 추천이 없는 서포터
-  assert.equal(s.weights["atk%"] || 0, 0);
+  assert.equal(s.weights["hp%"], 1.5);              // 1.6.6: 지원 스탯 · 기준치까지의 공명 효율은 1.5
+  // 1.6.6: 서포터도 딜 스탯을 절반(0.5)만큼 센다 — 크리티컬 피해 추천이 없어도 0.5, 크리티컬은 목표치까지 0.5
+  assert.equal(s.weights.cd, 0.5);
+  assert.ok(s.weights.cr > 0 && s.weights.cr <= 0.5, `${s.weights.cr}`);
+  assert.equal(s.weights.lib, 0.25);                // 피해 비중 데이터가 없으면 피해 보너스 네 종류 모두 0.25
+  assert.equal(s.weights["atk%"] || 0, 0);          // HP 계수 서포터는 공격력%가 피해를 올리지 않는다
   assert.ok(s.norm > 1, `${s.norm}`);
   s.slots.forEach(x => assert.ok(x.score <= 100 + 1e-9));
 });

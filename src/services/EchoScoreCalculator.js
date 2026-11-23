@@ -8,8 +8,10 @@
                     HP 변환 공명자(경연): 공격력 1, HP는 상한(hpConv.cap)을 채울 때까지 1·넘는 부분은 0
        피해 보너스    그 공격의 피해 비중 ÷ 60% (60% 이상이면 1)
        공명 효율      최소치를 채울 때까지 1, 넘는 부분은 0
-     서포터 가중치: 지원 기준 스탯(HP·공격력·방어력)·주력 스탯 1, 공명 효율은 기준치(버프 상한이 더 높으면 상한)까지 1,
-       공식 가이드에 크리티컬·크리티컬 피해 추천이 있으면 딜러처럼, 가이드가 「높을수록 좋음」(gt)으로 둔 스탯은 넘는 부분도 1.
+     서포터 가중치: 지원 기준 스탯(HP·공격력·방어력)·주력 스탯 supportMain(1.5), 공명 효율은 기준치(버프 상한이 더 높으면 상한)까지 1.5,
+       공식 가이드에 크리티컬·크리티컬 피해 추천이 있으면 딜러처럼(1), 가이드가 「높을수록 좋음」(gt)으로 둔 공명 효율은 넘는 부분도 1.5.
+       딜 스탯(1.6.6): 서포터도 딜을 하므로 아래는 supportDeal(0.5)만큼 — 기준치를 넘은 공명 효율, 크리티컬(이잘키 목표치까지, 넘으면 0.25배),
+       크리티컬 피해, 피해 보너스(피해 비중이 있으면 딜러처럼, 없으면 네 종류 모두 절반). 공격력%는 피해 계수가 공격력인 서포터만(주력 스탯).
      「채울 때까지」는 비전투 최종 스탯으로 본다(무기·주옵이 이미 채운 몫은 빼고). 넘는 부분은 그 부옵을 가진 에코들에 고르게 나눈다.
      보정: 쓸모 있는 부옵 종류는 공명자마다 다르고(서포터는 2~3종), 크리티컬·공명 효율은 넘치면 덜 쳐준다.
        지금 주옵·세트·무기에서 에코마다 가장 좋은 부옵 5종이 최대 수치로 붙은 「완벽한 세팅」 = 500점이 되도록 배율을 곱한다(ideal).
@@ -17,7 +19,7 @@
   class EchoScoreCalculator{
     constructor({charMap,charDb,echoDb,echoes,weapons}){
       this.charMap=charMap;this.db=charDb;this.echoDb=echoDb;this.echoes=echoes;this.weapons=weapons;
-      this.critOver=.25;this.mainOver=.25;this.typeFull=.6;this.perLine=20;this.maxTotal=500;
+      this.critOver=.25;this.mainOver=.25;this.supportDeal=.5;this.supportMain=1.5;this.typeFull=.6;this.perLine=20;this.maxTotal=500;
       this.types=["basic","heavy","skill","lib"];this.cache=new Map();
     }
     isSupport(id){const c=this.charMap()[id];return !!c&&c.role==="support"}
@@ -38,10 +40,16 @@
       const full=(k,v)=>{w[k]=best[k]=v};
       const stat=s=>{full(s+"%",1);full(s,this.flatWeight(id,s))};
       const erMin=()=>this.echoes.erMin(id,this.echoes.build(id,list)).min;
-      if(this.isSupport(id)){const targets=this.echoes.supportTargets(id),guide=this.db.guide(id)||{},gt=guide.gt||[];
-        new Set([scale,...["hp","atk","def"].filter(k=>targets[k]!=null)]).forEach(stat);
-        cap("er",Math.max(targets.er||0,this.db.erBuffCap(id)||0)||erMin(),gt.includes("er")?1:0);
-        if(guide.cr)cap("cr",guide.cr,this.critOver);if(guide.cd)full("cd",1);
+      if(this.isSupport(id)){const targets=this.echoes.supportTargets(id),guide=this.db.guide(id)||{},gt=guide.gt||[],D=this.supportDeal,S=this.supportMain;
+        // 지원 스탯(HP·공격력·방어력 · 주력 스탯)과 기준치까지의 공명 효율은 S(1.5)
+        new Set([scale,...["hp","atk","def"].filter(k=>targets[k]!=null)]).forEach(s=>{stat(s);[s+"%",s].forEach(k=>{w[k]*=S;best[k]*=S})});
+        // 서포터도 딜을 한다(1.6.6): 기준치를 넘은 공명 효율 · 크리티컬 · 크리티컬 피해 · 피해 보너스를 딜 스탯으로 D만큼 쳐준다
+        cap("er",Math.max(targets.er||0,this.db.erBuffCap(id)||0)||erMin(),gt.includes("er")?1:D/S);w.er*=S;best.er*=S;
+        if(guide.cr)cap("cr",guide.cr,this.critOver);else{cap("cr",this.echoes.ijkOf(id).cr,this.critOver);w.cr*=D;best.cr*=D}
+        full("cd",guide.cd?1:D);
+        // 피해 보너스: 피해 비중 데이터가 있으면 딜러처럼(× D), 없으면 어느 공격이 주력인지 몰라 네 종류 모두 D의 절반
+        const typed=this.types.some(k=>this.db.share(id,k)>0);
+        this.types.forEach(k=>{const share=this.db.share(id,k);if(!typed)full(k,D/2);else if(share>0)full(k,D*Math.min(1,share/this.typeFull))});
         return {w,best}}
       const ijk=this.echoes.ijkOf(id),guide=this.db.guide(id)||{};
       cap("cr",guide.cr||ijk.cr,this.critOver);full("cd",1);
