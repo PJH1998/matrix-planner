@@ -198,12 +198,16 @@ test("서포터 유효 옵션과 릴리 공효 190~260 구간을 실제 최종 �
   assert.equal(app.teamCalc(team).supx.length, 0);
   assert.equal(app.usefulStat("lily", "er"), true);
   assert.equal(app.usefulStat("lily", "hp%"), true);
-  assert.equal(app.usefulStat("lily", "cr"), false);
+  // 1.6.6: 서포터도 크리티컬·크리티컬 피해·피해 보너스를 유효로 본다(에코 점수 0.5배와 같은 규칙)
+  assert.equal(app.usefulStat("lily", "cr"), true);
+  assert.equal(app.usefulStat("lily", "cd"), true);
+  assert.equal(app.usefulStat("lily", "lib"), true);
+  assert.equal(app.usefulStat("lily", "atk%"), false); // HP 계수
 
   app.reset({ growth: { lily: { wid: 21030076, echoes: echoes(82.96) } } });
   closeTo(app.sheetStats("lily").er, 260);
   assert.deepEqual(app.teamCalc(team).supx.map(x => x.e), [0.28, 0.28]);
-  assert.equal(app.usefulStat("lily", "er"), false);
+  assert.equal(app.usefulStat("lily", "er"), true); // 1.6.6: 기준치를 넘은 공명 효율도 0.5배로 유효
   assert.equal(app.usefulStat("mornye", "def%"), true);
   assert.equal(app.usefulStat("mornye", "hp%"), false);
   assert.equal(app.usefulStat("baizhi", "hp%"), true);
@@ -218,9 +222,7 @@ test("모니에·수수·파수인 버프와 브렌트 전투 공격력이 입�
   const mornyeTeam = ["qingxiao", "denia", "mornye"];
   closeTo(buff("mornye", 100, mornyeTeam, "qingxiao"), 0);
   closeTo(buff("mornye", 260, mornyeTeam, "qingxiao"), 0.4 / 1.9);
-  assert.equal(app.usefulStat("mornye", "er"), false);
-  buff("mornye", 250, mornyeTeam, "qingxiao");
-  assert.equal(app.usefulStat("mornye", "er"), true);
+  assert.equal(app.usefulStat("mornye", "er"), true); // 1.6.6: 기준치를 넘어도 유효(에코 점수 0.5배)
   app.reset({ growth: { mornye: { chain: 1, stats: { er: 260 } } } });
   closeTo(app.teamCalc({ slots: ["camellya", "sanhua", "mornye"], buff: null }).supx.find(x => x.from === "mornye" && x.to === "camellya")?.e || 0, 0.4 / 1.9);
 
@@ -256,8 +258,10 @@ test("서포터 10명의 지원 기준과 기본 무기를 캐릭터별로 구�
     assert.equal(app.weapon(id).w?.id, weapon, id);
     assert.equal(app.supportProgress(id).total, Object.keys(targets).length, id);
   }
-  assert.equal(app.usefulStat("jianxin", "cr"), false);
-  assert.equal(app.usefulStat("youhu", "cd"), false);
+  assert.equal(app.usefulStat("jianxin", "cr"), true); // 1.6.6: 서포터도 크리티컬·크리티컬 피해 유효
+  assert.equal(app.usefulStat("youhu", "cd"), true);
+  assert.equal(app.usefulStat("jianxin", "heavy"), true);  // 피해 비중 12.1%
+  assert.equal(app.usefulStat("taoqi", "heavy"), false);   // 피해 비중 0
   assert.equal(app.usefulStat("verina", "atk%"), true);
   assert.equal(app.usefulStat("buling", "atk%"), true);
   assert.equal(app.weapon("jianxin").pct, null);
@@ -291,7 +295,7 @@ test("복링 2체인과 도기 5체인 구름 세트의 공효 기준을 낮춘�
   assert.equal(app.supportProgress("taoqi").targets.er, 126);
   app.reset({ growth: { taoqi: { chain: 5, echoSet: { mode: "5", a: "떠오르는 구름" } } } });
   assert.equal(app.supportProgress("taoqi").targets.er, 100);
-  assert.equal(app.usefulStat("taoqi", "er"), false);
+  assert.equal(app.usefulStat("taoqi", "er"), true); // 1.6.6: 기준치를 넘은 공명 효율도 서포터 딜 스탯(0.5배)으로 유효
 });
 
 test("상시 체인 스탯은 최종 스탯에 더하고 체인 배율에서는 그 몫을 뺀다", () => {

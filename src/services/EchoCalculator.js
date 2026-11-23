@@ -133,7 +133,9 @@
       if(c.role!=="support"){if(k==="cr"||k==="cd"||k==="er")return true;const conv=this.conv(id);if(k==="atk%"||k==="atk")return scale==="atk"||!!conv;if(k==="hp%"||k==="hp")return scale==="hp"&&(!conv||this.sheetStats(id).hp<conv.cap);if(k==="def%"||k==="def")return scale==="def";if(["basic","heavy","skill","lib"].includes(k))return this.db.share(id,k)>=.08;return false}
       const guide=this.db.guide(id)||{},base=k.endsWith("%")?k.slice(0,-1):k;
       const targets=this.supportTargets(id);
-      if(k==="er")return targets.er!=null&&this.sheetStats(id).er+.05<Math.max(targets.er,this.db.erBuffCap(id)||0);
+      // 서포터도 딜 스탯을 유효로 본다(1.6.6, 에코 점수와 같은 규칙): 공명 효율(기준치를 넘어도 0.5배) · 크리티컬 · 크리티컬 피해 · 피해 보너스
+      if(k==="er"||k==="cr"||k==="cd")return true;
+      if(["basic","heavy","skill","lib"].includes(k)){const typed=["basic","heavy","skill","lib"].some(t=>this.db.share(id,t)>0);return !typed||this.db.share(id,k)>=.08}
       if(["atk","hp","def"].includes(base))return base===scale||targets[base]!=null;
       if(k==="heal")return guide.heal!=null;
       return false}
