@@ -62,3 +62,16 @@ test("저장할 때 파티 칸에 있는 공명자의 모드 선택만 남긴다
   assert.deepEqual(normalized.teams[0], { slots: ["aemeath", "lynae", "mornye"], buff: "tune", example: false, modes: { aemeath: 1 } });
   assert.deepEqual(normalized.teams[1], { slots: ["hiyuki", null, null], buff: null, example: false });
 });
+
+// 1.6.6: 이잘키 기준 스탯은 최고 무기를 낀 정보창 값이다. 내 스탯에는 장착 무기의 상시 속성 피해가 들어가므로
+// 기준 속성 피해에도 최고 무기(기준 재련)의 상시 속성 피해를 넣어야 두 번 세지 않는다
+test("기준 속성 피해에 최고 무기의 상시 속성 피해를 넣는다", () => {
+  const app = loadCurrentApp();
+  // 여우의 별자리: 이잘키 3코 속성 1개(30) + 세트 10 + 옥궐에 피는 꽃 상시 전도 피해 12
+  closeTo(app.elRef("hsin"), 52);
+  // 최고 무기에 상시 속성 피해가 없으면 그대로(히유키: 3코 속성 1개 + 세트)
+  closeTo(app.elRef("hiyuki"), app.ijk("hiyuki").el * 30 + 10);
+  // 최고 무기를 끼고 기준과 같은 정보창 스탯이면 공명력 100 — 상시 효과 12%를 덤으로 받지 않는다
+  app.reset({ growth: { hsin: { chain: 0, wid: 21050116, ref: 1, stats: { atk: 2400, cr: 75, cd: 260, b: { el: 52 } } } } });
+  closeTo(app.charScore("hsin"), 100, 1e-6);
+});

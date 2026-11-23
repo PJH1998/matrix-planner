@@ -24,7 +24,12 @@
     ijkOf(id){const ijk=this.db.ijk(id);if(ijk)return ijk;const c=this.charMap()[id]||{},scale=this.scaleOf(id);
       const guide=this.db.guide(id)||{}; // 방어력 계수는 이잘키 기준이 없어 공식 가이드 추천 방어력을 기준으로 쓴다
       return {main:[scale,scale==="hp"?45000:scale==="def"&&guide.def?+guide.def:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
-    elRefOf(id){const ijk=this.ijkOf(id);return ijk.el*30+10+(ijk.node?12:0)}
+    // 기준 무기 = 무기 성능표 1위와 그 기준 재련. 이잘키·공식 가이드 기준 스탯은 이 무기를 낀 정보창 값이다
+    refWeapon(id){const best=this.weapons.bestWeaponId(id);return {id:best,ref:((this.weapons.perfList(id).find(x=>x.id===best)||{}).r)||1}}
+    // 기준 속성 피해 = 3코 속성 피해 개수 × 30 + 세트 10 + 속성 노드 12 + 기준 무기의 상시 속성 피해(예: 옥궐에 피는 꽃 12%).
+    // 내 스탯에는 장착 무기의 상시 효과가 들어가므로 기준에도 넣어야 두 번 세지 않는다(1.6.6)
+    elWeaponRefOf(id){const w=this.refWeapon(id);return w.id?(+this.weapons.sheetFx(w.id,w.ref).el||0):0}
+    elRefOf(id){const ijk=this.ijkOf(id);return ijk.el*30+10+(ijk.node?12:0)+this.elWeaponRefOf(id)}
     expDmg(main,cr,cd,bonus){return main*(1+Math.min(Math.max(cr,0),100)/100*(cd/100-1))*(1+bonus/100)}
     refDmg(id){if(this.conv(id))return this.convDmg(id,this.refStats(id));const ijk=this.ijkOf(id);return this.expDmg(ijk.main[1],ijk.cr,ijk.cd,this.elRefOf(id)+this.typeRef)}
     /* HP 변환 공명자(CharDB.hpConv, 경연): 피해는 공격력 × HP 비례 배율. HP는 cap까지만 센다 */
@@ -39,7 +44,7 @@
     /* 이잘키 기준 스탯(최고 무기·그 무기의 기준 재련)에서 무기만 wid(재련 ref)로 바꿨을 때의 스탯.
        무기 기본 공격력·부옵과 비전투 상시 패시브(WEAPON_SHEET_FX)의 차이를 반영한다. bonus = 피해 보너스 차이(%) */
     statsWithWeapon(cid,wid,ref){const ijk=this.ijkOf(cid),scale=ijk.main[0],base=this.db.base(cid)||[11000,400,1150];
-      const best=this.weapons.bestWeaponId(cid),bestRef=((this.weapons.perfList(cid).find(x=>x.id===best)||{}).r)||1,r1=ref||bestRef;
+      const {id:best,ref:bestRef}=this.refWeapon(cid),r1=ref||bestRef;
       const result={main:ijk.main[1],cr:ijk.cr,cd:ijk.cd,bonus:0},w0=this.weapons.stat(best),w1=this.weapons.stat(wid);if(!w0||!w1||(best===wid&&r1===bestRef))return result;
       const f0=this.weapons.sheetFx(best,bestRef),f1=this.weapons.sheetFx(wid,r1),sub=(w,f,k)=>(w[1]===k?w[2]:0)+(f[k]||0),diff=k=>sub(w1,f1,k)-sub(w0,f0,k);
       if(scale==="atk"){const b=base[1],p0=Math.max(0,(ijk.main[1]-this.flatAtk)/(b+w0[0])-1),p1=p0+diff("atk%")/100;result.main=(b+w1[0])*(1+p1)+this.flatAtk}

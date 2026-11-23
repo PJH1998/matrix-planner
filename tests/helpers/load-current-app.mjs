@@ -67,6 +67,7 @@ export function loadCurrentApp() {
       chainRemain:id=>characterCalculator.dealers.chainRemain(id),
       finalStats:id=>clone(echoCalculator.finalStats(id)),
       ijk:id=>clone(echoCalculator.ijkOf(id)),
+      elRef:id=>echoCalculator.elRefOf(id),
       teamCalc:t=>clone(teamCalc(clone(t))),
       modes:id=>clone(CharDB.modes(id)),
       modeIds:()=>CharDB.ids().filter(id=>CharDB.hasModes(id)),

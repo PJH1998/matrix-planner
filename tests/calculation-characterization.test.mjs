@@ -16,7 +16,8 @@ test("기본 캐릭터 데이터와 대표 강도 결과를 고정한다", () =>
   closeTo(app.charScore("cantarella"), 86.11000380911887);
   // 1.6.5: 세트 파티 효과를 차이가 아니라 전부 넣는다 — 파수인 찬란한 광휘(파티 공격력 +15%)가 협주력에 들어간다
   closeTo(app.charScore("shorekeeper"), 98.19676582670883);
-  closeTo(app.charScore("jinhsi"), 103.73421121593287);
+  // 1.6.6: 기준 속성 피해에 최고 무기의 상시 속성 피해를 넣는다(금희 — 기준 무기 상시 효과가 기준과 체험 세팅에 같이 들어감)
+  closeTo(app.charScore("jinhsi"), 103.81037490172953);
 
   assert.deepEqual(app.reference("hiyuki"), {
     sets: [["소리 없이 내려앉은 기도의 눈", 5]],
@@ -39,7 +40,7 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
     ["qingxiao", 65.4343696375669, 81.79296204695862],
     // 1.6.4: 경연은 공격력 계수 + HP 변환(HP 50,000 상한) — 체험 세팅 공격력은 가이드 값(HP 변환 포함)
     ["jingran", 61.72409928701196, 68.38813946883994],
-    ["hsin", 57.572351312756865, 89.23714453477314],
+    ["hsin", 57.6034410714534, 89.28533366075278],
   ];
 
   teams.forEach((team, index) => {
@@ -52,8 +53,9 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const simulation = app.simulate(teams);
   // 1.6.3: 2R 점수 배율 1.1 → 1.15(3.5 공식 패치 노트), 2R 보스 HP 1.77 → 1.69(같은 영상 점수 ÷ 새 배율)
   // 1.6.5: 위 반주·세트 수정으로 경연·여우의 별자리 파티가 내려감(측정 파티 세트 버프를 빼서)
-  closeTo(simulation.progress, 6.446214764989839);
-  closeTo(simulation.total, 39098.412379849324);
+  // 1.6.6: 기준 속성 피해에 최고 무기 상시 효과 반영(여우의 별자리 파티 소폭 변화)
+  closeTo(simulation.progress, 6.4470719534191865);
+  closeTo(simulation.total, 39106.32562198339);
   assert.equal(simulation.bad, 0);
 });
 
@@ -105,13 +107,14 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
 
   assert.equal(teams.length, 18);
   // 1.6.5: 서브 딜러 교환 — 절지는 카를로타에게, 금희는 연무(협동 공격). 루미(빠른 협주 아님)는 사용감 감점
+  // 1.6.6: 기준 속성 피해에 최고 무기 상시 효과를 넣어 마지막 두 파티(카를로타 · 기염) 순서가 바뀜
   assert.deepEqual(teams.map(team => `${team.slots.join("/")}:${team.buff}`), [
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:tune",
     "aemeath/lynae/mornye:tune", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
     "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "jinhsi/yuanwu/shorekeeper:general",
     "lucy/rebecca/verina:tune", "zani/phoebe/baizhi:negative", "xiangliyao/yinlin/buling:negative",
-    "camellya/sanhua/baizhi:general", "jiyan/mortefi/jianxin:general", "carlotta/zhezhi/buling:negative",
+    "camellya/sanhua/baizhi:general", "carlotta/zhezhi/buling:negative", "jiyan/mortefi/jianxin:general",
   ]);
 });
 
@@ -337,7 +340,8 @@ test("에코 미입력과 체험 세팅은 공식 가이드 스탯을 쓴다", (
   closeTo(sheet.atk, 2573.977, 1e-6);
   closeTo(sheet.cr, 70);
   closeTo(sheet.cd, 211.4, 1e-9);
-  assert.ok(app.charScore("jiyan") > 70);
+  // 1.6.6: 기준 속성 피해에 최고 무기 상시 효과(12%)가 들어가 체험 세팅(가이드 속성 40%)이 기준보다 낮다
+  assert.ok(app.charScore("jiyan") > 65);
   // 가이드에 공격력이 없는 공명자는 이잘키 기준 공격력(2100)으로 채우고, 체험 무기(물결의 파동) 차이를 더한다
   app.reset({ growth: { zani: { trial: true } } });
   closeTo(app.finalStats("zani").atk, 2350.857, 1e-6);
@@ -383,5 +387,5 @@ test("연무는 방어력 계수로 계산한다", () => {
   assert.deepEqual(app.ijk("yuanwu").main, ["def", 3500]);
   assert.equal(app.usefulStat("yuanwu", "def%"), true);
   assert.equal(app.usefulStat("yuanwu", "atk%"), false);
-  closeTo(app.charScore("yuanwu"), 69.05951134380454);
+  closeTo(app.charScore("yuanwu"), 69.66050392670157); // 1.6.6: 기준 속성 피해에 최고 무기 상시 효과
 });
