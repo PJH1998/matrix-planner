@@ -5,6 +5,7 @@
        크리티컬      목표치(공식 가이드 → 이잘키)를 채울 때까지 1, 넘는 부분은 0.25
        크리티컬 피해  1 (높을수록 좋음)
        주력 스탯%    1 (공격력·HP·방어력 중 이 공명자가 쓰는 것) / 같은 스탯 고정 수치는 %로 바꾼 값만큼
+                    HP 변환 공명자(경연): 공격력 1, HP는 상한(hpConv.cap)을 채울 때까지 1·넘는 부분은 0
        피해 보너스    그 공격의 피해 비중 ÷ 60% (60% 이상이면 1)
        공명 효율      최소치를 채울 때까지 1, 넘는 부분은 0
      서포터 가중치: 지원 기준 스탯(HP·공격력·방어력)·주력 스탯 1, 공명 효율은 기준치(버프 상한이 더 높으면 상한)까지 1,
@@ -28,6 +29,9 @@
     flatWeight(id,stat){const base=this.db.base(id)||[11000,400,1150],w=this.weapons.weaponOf(id),ws=w.w?this.weapons.stat(w.w.id):null;
       const b=stat==="atk"?base[1]+(ws?ws[0]:0):stat==="hp"?base[0]:base[2],flat=this.echoDb.subMax(stat),pct=this.echoDb.subMax(stat+"%");
       return b>0&&flat&&pct?Math.min(1,flat/b/(pct/100)):0}
+    /* HP 변환 공명자(경연): HP 부옵은 HP 상한(cap)을 채울 때까지 1, 넘는 부분은 0. HP%·고정 HP 부옵을 HP 수치로 합쳐 같은 비율을 준다 */
+    hpCapped(id,list,sheet,cap,w,best){const base=(this.db.base(id)||[11000,400,1150])[0],have=base*this.sum(list,"hp%")/100+this.sum(list,"hp"),without=sheet.hp-have;
+      const r=this.capped(have,without,cap,0),fw=this.flatWeight(id,"hp");w["hp%"]=r;w.hp=fw*r;best["hp%"]=without<cap?1:0;best.hp=without<cap?fw:0}
     /* 에코 목록(세트 배정 포함) 기준 부옵 키별 가중치 {w:{키: 가중치}, best:{키: 남은 몫이 있으면 1, 없으면 넘는 부분 가중치}} */
     weights(id,list){const sheet=this.echoes.sheetBuild(id,list).screen,scale=this.echoes.scaleOf(id),w={},best={};
       const cap=(k,target,over)=>{const have=this.sum(list,k),without=sheet[k]-have;w[k]=this.capped(have,without,target,over);best[k]=without<target?1:over};
@@ -40,7 +44,9 @@
         if(guide.cr)cap("cr",guide.cr,this.critOver);if(guide.cd)full("cd",1);
         return {w,best}}
       const ijk=this.echoes.ijkOf(id),guide=this.db.guide(id)||{};
-      cap("cr",guide.cr||ijk.cr,this.critOver);full("cd",1);stat(scale);
+      cap("cr",guide.cr||ijk.cr,this.critOver);full("cd",1);
+      const conv=this.db.hpConv(id);
+      if(conv){stat("atk");this.hpCapped(id,list,sheet,conv.cap,w,best)}else stat(scale);
       this.types.forEach(k=>{const share=this.db.share(id,k);if(share>0)full(k,Math.min(1,share/this.typeFull))});
       cap("er",erMin(),0);return {w,best}}
     /* 보정 배율: 지금 주옵·세트·무기 그대로, 에코마다 가장 좋은 부옵 5종이 최대 수치로 붙은 「완벽한 세팅」 = 500점이 되도록.

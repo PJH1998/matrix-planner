@@ -35,7 +35,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
     ["camellya", 27.4563960912223, 36.38874756021543],
     // 1.4: 공명 모드 공명자는 파티마다 한 모드로 계산한다(데니아 조화 밀집, 여우의 별자리 전자 — 이상 효과 서킷)
     ["qingxiao", 64.6519560068525, 80.81494500856563],
-    ["jingran", 63.59063742236907, 70.46568607792942],
+    // 1.6.4: 경연은 공격력 계수 + HP 변환(HP 50,000 상한) — 체험 세팅 공격력은 가이드 값(HP 변환 포함)
+    ["jingran", 64.1751669555827, 71.11252645938363],
     ["hsin", 59.05310498992667, 91.53231273438635],
   ];
 
@@ -48,8 +49,8 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
 
   const simulation = app.simulate(teams);
   // 1.6.3: 2R 점수 배율 1.1 → 1.15(3.5 공식 패치 노트), 2R 보스 HP 1.77 → 1.69(같은 영상 점수 ÷ 새 배율)
-  closeTo(simulation.progress, 6.5102325975370405);
-  closeTo(simulation.total, 39689.40100323789);
+  closeTo(simulation.progress, 6.5215533559739605);
+  closeTo(simulation.total, 39793.90999984311);
   assert.equal(simulation.bad, 0);
 });
 
@@ -104,7 +105,7 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:tune",
     "aemeath/lynae/mornye:tune", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
-    "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "lucy/rebecca/verina:tune",
+    "jingran/lynae/verina:tune", "sigrika/qiuyuan/lily:basic", "lucy/rebecca/verina:tune",
     "jinhsi/zhezhi/shorekeeper:general", "zani/phoebe/baizhi:negative", "camellya/sanhua/baizhi:general",
     "xiangliyao/yinlin/buling:negative", "jiyan/mortefi/jianxin:general", "carlotta/lumi/buling:negative",
   ]);
@@ -337,4 +338,35 @@ test("에코 미입력과 체험 세팅은 공식 가이드 스탯을 쓴다", (
   // 혼자 잰 dps는 버프를 되돌리지 않는다
   closeTo(app.refBuff("yuanwu"), 1);
   assert.ok(app.refBuff("aemeath") > 1);
+});
+
+test("경연은 공격력 계수이고 HP는 50,000까지만 강해진다", () => {
+  const app = loadCurrentApp();
+  const set = "황천길을 밝히는 등불";
+  const echo = (cost, main, subs) => ({ cost, lv: 25, main, subs, set });
+  const build = (a, b) => [
+    echo(4, { k: "cr", v: 22 }, [{ k: "cd", v: 21 }, { k: "cr", v: 8.1 }, a, b]),
+    echo(3, { k: "el", v: 30, elem: "fusion" }, [{ k: "cr", v: 8.1 }, { k: "cd", v: 16.2 }, a, b]),
+    echo(3, { k: "el", v: 30, elem: "fusion" }, [{ k: "cr", v: 8.1 }, { k: "cd", v: 16.2 }, a, b]),
+    echo(1, { k: "hp%", v: 22.8 }, [{ k: "cr", v: 8.1 }, { k: "cd", v: 16.2 }, a, b]),
+    echo(1, { k: "hp%", v: 22.8 }, [{ k: "cr", v: 8.1 }, { k: "cd", v: 16.2 }, a, b]),
+  ];
+  const hp = { k: "hp%", v: 10.1 }, atk = { k: "atk%", v: 10.1 }, def = { k: "def%", v: 10.1 };
+  const run = (a, b) => {
+    app.reset({ growth: { jingran: { lv: 90, chain: 0, echoSet: { mode: "5", a: set }, echoes: build(a, b) } } });
+    return { stats: app.finalStats("jingran"), score: app.charScore("jingran"), echo: app.echoScore("jingran") };
+  };
+  const overCap = run(hp, hp), mixed = run(hp, atk), useless = run(hp, def);
+
+  // HP 변환: HP 1000당 공격력 +36 · 용융 피해 +1.5% (스탯 화면, HP 50,000 상한)
+  assert.ok(overCap.stats.hp > 50000 && mixed.stats.hp < 50000);
+  closeTo(mixed.stats.atk - useless.stats.atk, (313 + 413) * 0.101 * 5, 1e-6); // 공격력% 10.1 × 5줄 (HP는 같다)
+  // HP가 넘치는 세팅보다 HP를 상한 근처에서 멈추고 공격력을 단 세팅이 강하다
+  assert.ok(mixed.score > overCap.score);
+  assert.ok(mixed.score > useless.score);
+  // 공격력 부옵은 유효, HP 부옵은 상한을 넘은 몫만큼 덜 쳐준다
+  assert.equal(mixed.echo.weights["atk%"], 1);
+  assert.equal(mixed.echo.weights["hp%"], 1);
+  assert.ok(overCap.echo.weights["hp%"] < 1);
+  assert.equal(app.usefulStat("jingran", "atk%"), true);
 });
