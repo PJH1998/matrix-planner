@@ -8,13 +8,14 @@
   const MP=g.MP;
   const EMPTY={name:"",period:"",bosses:[],buffs:[],vigor2:[],emergency:null,dmgBonus:{},partyBonus:{},examples:[]};
   /* 보스 HP·점수 (2026-11-16 재보정 — 상위권 플레이 영상의 파티별 점수·보스 HP 14건)
-     점수 = 준 피해(1R 보스 HP 단위) × 4,750점 × 라운드 점수 배율(1R 1.0 / 2R 1.1 / 3R 이후 1.25, 게임 표기).
-     라운드별 보스 HP: 2R 1.77배, 3R 3.36배(영상의 라운드별 점수 ÷ 점수 배율), 4R 이후는 라운드마다 ×2.1로 가정(측정 없음).
+     점수 = 준 피해(1R 보스 HP 단위) × 4,750점 × 라운드 점수 배율(1R 1.0 / 2R 1.15 / 3R 이후 1.25, 3.5 공식 패치 노트).
+     라운드별 보스 HP: 2R 1.69배, 3R 3.36배(영상의 라운드별 점수 ÷ 점수 배율), 4R 이후는 라운드마다 ×2.1로 가정(측정 없음).
+     1.6.3: 2R 배율을 1.1 → 1.15로 고치면서 2R HP도 1.77 × 1.1 ÷ 1.15 ≈ 1.69로 다시 계산(같은 영상 점수 기준).
      매트릭스 미믹은 라운드 마지막 5번째, HP 1.1배 · 점수 1.1배 · 처치 1,000점(data/cycle.js의 hpMul·scoreMul·killBonus).
      메인 딜러 속성을 보스가 저항하면 피해 × RES_MUL. */
-  const ROUND_HP_TABLE=[1,1.77,3.36], ROUND_HP_GROW=2.1;
+  const ROUND_HP_TABLE=[1,1.69,3.36], ROUND_HP_GROW=2.1;
   const PTS_PER_BOSS=4750, RES_MUL=0.6, MAX_ROUNDS=8;
-  const roundPts=r=>r<=1?1:r===2?1.1:1.25;
+  const roundPts=r=>r<=1?1:r===2?1.15:1.25;
   const roundHp=r=>r<=ROUND_HP_TABLE.length?ROUND_HP_TABLE[r-1]:ROUND_HP_TABLE[ROUND_HP_TABLE.length-1]*Math.pow(ROUND_HP_GROW,r-ROUND_HP_TABLE.length);
   let cur=null;
   const DB={

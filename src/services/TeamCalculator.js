@@ -15,7 +15,8 @@
       this.state=state;this.charMap=charMap;this.cycle=cycle;this.db=charDb;this.bossDb=bossDb;this.echoDb=echoDb;this.characters=characters;this.echoes=echoes;
       this.condWeight=condWeight;this.selectedBuff=selectedBuff;this.damageLabels=damageLabels;this.mechanicLabels=mechanicLabels;this.elementLabels=elementLabels;this.anomalies=anomalies;
       this.atkBase=2;this.strengthScale=.00061;this.strengthRef=37.8;this.damageExp=1.07;this.maxRounds=bossDb.MAX_ROUNDS;
-      this.skillLevels={top:{label:"숙련",mul:1},good:{label:"보통",mul:.8},normal:{label:"뉴비",mul:.65}};this.cache=new Map();
+      // 숙련도 단계 (키는 저장값이라 바꾸지 않는다. top = 실측 기준. skilled는 1.6.3에 추가)
+      this.skillLevels={top:{label:"장인",mul:1},skilled:{label:"숙련",mul:.9},good:{label:"보통",mul:.8},normal:{label:"뉴비",mul:.65}};this.cache=new Map();
     }
     synOf(id){return this.db.syn(id)}
     typeShare(id,key){return this.db.typeShare(id,key)}
@@ -89,8 +90,10 @@
       result.base=damage*multiplier;result.total=circuitDamage*multiplier;result.circuit=result.total-result.base;return result}
     teamBase(team){return (this.cache.get(team)||this.teamCalc(team)).base}
     teamScore(team){return (this.cache.get(team)||this.teamCalc(team)).total}
-    skillMul(){return (this.skillLevels[this.state().skill]||this.skillLevels.top).mul}
-    partyDamage(score){return Math.pow(Math.max(0,score)/this.strengthRef,this.damageExp)*this.skillMul()}
+    // 숙련도: 파티에 따로 고른 값(team.skill)이 있으면 그 값, 없으면 위쪽 전체 숙련도(state.skill)
+    skillOf(team){const own=team&&team.skill;return own&&this.skillLevels[own]?own:(this.skillLevels[this.state().skill]?this.state().skill:"top")}
+    skillMul(team){return this.skillLevels[this.skillOf(team)].mul}
+    partyDamage(score,team){return Math.pow(Math.max(0,score)/this.strengthRef,this.damageExp)*this.skillMul(team)}
     // 보스 효과 피해 %. stack:{per,max,full}이면 이름이 다른 에코 어빌리티 수(공명자 1명당 1 + 스킬이 에코 어빌리티로 간주되는 횟수 echoExtra)만큼
     // 중첩: 중첩당 per%, max중첩이면 full% 추가. 아니면 dmg
     effectDmg(effect,team){const st=effect.stack;if(!st)return +effect.dmg||0;
@@ -101,7 +104,7 @@
       return (boss.effects||[]).reduce((mul,effect)=>{const value=this.effectDmg(effect,team)*this.upOf(effect,team);if(!value)return mul;const weight=!effect.cond?1:sum>0?dealers.reduce((a,id,i)=>a+dmg[i]*this.condWeight(effect.cond,team,id),0)/sum:0;return mul*(1+value*weight/100)},1)}
     simulate(teams){const bosses=this.bossDb.bosses(),live=teams.filter(team=>team.slots.some(Boolean)),res=teams.map(()=>({hits:[]}));if(!bosses.length||!live.length)return {progress:0,res,bad:0};
       const bossHp=this.bossDb.hp;let bossIndex=0,round=1,hp=bossHp(bosses[0],1),progress=0,bad=0;
-      teams.forEach((team,teamIndex)=>{if(!team.slots.some(Boolean))return;this.inModes(team,()=>{const main=this.mainDps(team),element=main&&this.charMap()[main].el;let damage=this.partyDamage(this.teamScore(team));
+      teams.forEach((team,teamIndex)=>{if(!team.slots.some(Boolean))return;this.inModes(team,()=>{const main=this.mainDps(team),element=main&&this.charMap()[main].el;let damage=this.partyDamage(this.teamScore(team),team);
         while(damage>1e-9&&round<=this.maxRounds){const boss=bosses[bossIndex],resistance=this.bossDb.resMul(boss,element),eff=resistance*this.bossMul(team,boss);if(!res[teamIndex].hits.length&&resistance<1)bad++;
           const maxHp=bossHp(boss,round),hit={name:boss.name,round,resisted:resistance<1,from:hp/maxHp*100,left:0,pts:0};res[teamIndex].hits.push(hit);const points=dealt=>this.bossDb.points(dealt,boss,round);
           if(damage*eff>=hp){damage-=hp/eff;progress+=hp/maxHp;hit.pts=points(hp)+this.bossDb.killBonus(boss);bossIndex++;if(bossIndex>=bosses.length){bossIndex=0;round++}hp=bossHp(bosses[bossIndex],round)}

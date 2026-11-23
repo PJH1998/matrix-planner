@@ -104,6 +104,8 @@ body.dnd,body.dnd *{cursor:grabbing!important}
 .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
 .meta .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .meta select{width:auto;max-width:100%;padding:4px 6px;font-size:14px}
+.meta select.tskill{color:var(--muted)}
+.meta select.tskill.fixed{color:var(--fg);border-color:color-mix(in srgb,var(--gold) 45%,var(--line));font-weight:600}
 .score{font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums}
 .score b{font-size:17px}
 .chip{font-size:13px;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
