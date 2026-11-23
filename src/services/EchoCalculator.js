@@ -22,7 +22,8 @@
     bonusKeysOf(id){const syn=this.db.syn(id);return ["el",...(syn.w||[]).filter(k=>this.bonusKeys[k])]}
     scaleOf(id){return this.db.scale(id)}
     ijkOf(id){const ijk=this.db.ijk(id);if(ijk)return ijk;const c=this.charMap()[id]||{},scale=this.scaleOf(id);
-      return {main:[scale,scale==="hp"?45000:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
+      const guide=this.db.guide(id)||{}; // 방어력 계수는 이잘키 기준이 없어 공식 가이드 추천 방어력을 기준으로 쓴다
+      return {main:[scale,scale==="hp"?45000:scale==="def"&&guide.def?+guide.def:(c.rar===5?2300:1900)],cr:c.rar===5?70:65,cd:c.rar===5?260:240,el:2,cfg:"속속",node:0,est:1}}
     elRefOf(id){const ijk=this.ijkOf(id);return ijk.el*30+10+(ijk.node?12:0)}
     expDmg(main,cr,cd,bonus){return main*(1+Math.min(Math.max(cr,0),100)/100*(cd/100-1))*(1+bonus/100)}
     refDmg(id){if(this.conv(id))return this.convDmg(id,this.refStats(id));const ijk=this.ijkOf(id);return this.expDmg(ijk.main[1],ijk.cr,ijk.cd,this.elRefOf(id)+this.typeRef)}

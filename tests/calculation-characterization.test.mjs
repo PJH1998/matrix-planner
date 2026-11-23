@@ -370,3 +370,12 @@ test("경연은 공격력 계수이고 HP는 50,000까지만 강해진다", () =
   assert.ok(overCap.echo.weights["hp%"] < 1);
   assert.equal(app.usefulStat("jingran", "atk%"), true);
 });
+
+test("연무는 방어력 계수로 계산한다", () => {
+  const app = loadCurrentApp();
+  // 공명 스킬·해방·변주·공명 회로 피해가 방어력 계수 — 기준 방어력은 공식 가이드 3500
+  assert.deepEqual(app.ijk("yuanwu").main, ["def", 3500]);
+  assert.equal(app.usefulStat("yuanwu", "def%"), true);
+  assert.equal(app.usefulStat("yuanwu", "atk%"), false);
+  closeTo(app.charScore("yuanwu"), 69.05951134380454);
+});
