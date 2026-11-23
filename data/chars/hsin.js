@@ -8,10 +8,10 @@ MP.addChar({
   // outro.cond.to: 받는 쪽 본인이 m을 갖고 파티에 m 공명자가 2명 이상일 때 · noSelf: 반주를 쓴 본인은 받지 않음
   modes:[
     {id:"unison",name:"공명 모드 · 합일",icon:"SP_RoleLabelI8",
-      syn:{o:"합일을 얻은 파티원(여우의 별자리 제외) 전체 피해 +20% (30초)",ob:["all"],p:1,w:["skill"],m:["unison"]},
+      syn:{o:"합일을 얻은 파티원(여우의 별자리 제외) 전체 피해 +20% (30초)",ob:["all"],p:1,w:["skill"],m:["unison","coord"]},
       outro:{v:{},cond:{m:["unison"],to:1,v:{all:20}},noSelf:1}},
     {id:"flare",name:"공명 모드 · 전자",icon:"SP_RoleLabelI9",
-      syn:{o:"여우의 별자리를 제외한 파티 전도 피해 +20% (20초)",ob:["el"],p:1,w:["skill"],m:["flare"]},
+      syn:{o:"여우의 별자리를 제외한 파티 전도 피해 +20% (20초)",ob:["el"],p:1,w:["skill"],m:["flare","coord"]},
       outro:{v:{el:20},noSelf:1}},
   ],
   // 피해 비중(%) — 합일 모드 기준(Prydwen 측정 파티: 쇄명·파수인)

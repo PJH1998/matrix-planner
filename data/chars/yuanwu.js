@@ -2,9 +2,10 @@
 MP.addChar({
   id:"yuanwu", name:"연무", el:"electro", rar:4, role:"sub",
   release:15, eid:1303, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
-  syn:{o:"공진 수치 피해 (버프 없음)",ob:[],w:[],m:[]},
+  syn:{o:"공진 수치 피해 (버프 없음)",ob:[],w:[],m:["coord"]},
   // 피해 비중(%)
   profile:{skill:48.5,lib:39.6,intro:4.9,echo:7},
   // S0 기본 DPS

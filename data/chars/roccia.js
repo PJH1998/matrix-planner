@@ -2,6 +2,7 @@
 MP.addChar({
   id:"roccia", name:"로코코", el:"havoc", rar:5, role:"sub",
   release:33, eid:1606, region:"rinascita",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 인멸 피해 +20%, 일반 공격 피해 +25% (14초)",ob:["el","basic"],w:["heavy"],m:[]},

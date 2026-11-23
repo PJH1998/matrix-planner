@@ -2,6 +2,7 @@
 MP.addChar({
   id:"danjin", name:"단근", el:"havoc", rar:4, role:"dps",
   release:10, eid:1602, region:"jinzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 인멸 피해 +23% (14초)",ob:["el"],w:["heavy"],m:[]},

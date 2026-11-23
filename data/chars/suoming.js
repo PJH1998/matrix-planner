@@ -2,6 +2,7 @@
 MP.addChar({
   id:"suoming", name:"쇄명", el:"electro", rar:5, role:"dps",
   release:76, eid:1312, region:"mengzhou",  // 출시 순서 · encore.moe 번호(이미지) · 지역(등급 아이콘)
+  quick:1,  // 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용) — 자동 추천의 사용감에만 쓴다
 
   // 반주·메커니즘
   syn:{o:"다음 캐릭터 전도 피해 +20%, 합일 버프 보유 시 공명 스킬 피해 +25% (8초)",ob:["el","skill"],w:["basic"],m:["unison"]},

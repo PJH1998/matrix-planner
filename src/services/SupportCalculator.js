@@ -32,20 +32,24 @@
       if(outro.cond.rx)return receiver&&this.db.has(receiver,outro.cond.m)?outro.cond.v:outro.v;
       return ids.some(id=>id!==giver&&this.db.has(id,outro.cond.m))?outro.cond.v:outro.v}
     outroSkipsSelf(giver){const outro=this.db.outro(giver);return !!(outro&&outro.noSelf)}
-    /* 키: all 전체 피해 부스트 · el 같은 속성 피해 보너스 · 피해 유형(basic 등) 보너스 · 이상 효과(frost·burn 등) 피해 부스트
-       이상 효과 부스트는 그 이상 효과를 거는 공명자의 이상 효과 피해(피해 비중 other)에만 붙는다 */
+    /* 키: all 전체 피해 부스트 · el 같은 속성 피해 부스트 · 피해 유형(basic 등) 피해 부스트 · 이상 효과(frost·burn 등) 피해 부스트
+       반주는 모두 게임 문구가 「부스트」(피해 보너스와 따로 곱하는 증폭)라서 피해 보너스 기준값(bonusBase)으로 나누지 않는다(1.6.5).
+       피해 유형 부스트는 받는 공명자의 그 피해 유형 비중만큼, 이상 효과 부스트는 그 이상 효과를 거는 공명자의 이상 효과 피해(피해 비중 other)에만 붙는다 */
     outroGain(giver,receiver,ids,ref){if(giver===receiver&&this.outroSkipsSelf(giver))return 0;const values=this.outroValues(giver,ids,receiver);if(!values)return 0;const map=this.charMap(),cg=map[giver],cr=map[receiver];if(!cg||!cr)return 0;let gain=0;const anom=g.MP.ANOM||[];
-      Object.entries(values).forEach(([key,value])=>{if(key==="all")gain+=value;else if(key==="el"){if(cg.el===cr.el)gain+=value/this.config.bonusBase}
+      Object.entries(values).forEach(([key,value])=>{if(key==="all")gain+=value;else if(key==="el"){if(cg.el===cr.el)gain+=value}
         else if(anom.includes(key)){if(this.db.has(receiver,[key]))gain+=value*this.db.share(receiver,"other")}
-        else gain+=value*this.db.typeShare(receiver,key)/this.config.bonusBase});
+        else gain+=value*this.db.typeShare(receiver,key)});
       return gain/100*this.buffChainMul(giver,ref)}
-    /* 한 공명자가 파티원에게 주는 반주 외 버프 목록 [{kind: sup|set|weapon, to, e, …}]. ref면 기준 세팅(세트 차이 0, 기본 추천 무기) */
+    /* 한 공명자가 파티원에게 주는 반주 외 버프 목록 [{kind: sup|set|weapon, to, e, …}]. ref면 기준 세팅(주력 세트, 기본 추천 무기)
+       세트 파티 효과는 전부 넣는다(1.6.5): 에코를 넣었으면 그 에코의 세트, 안 넣었으면(체험 세팅·ref) 주력 세트.
+       (예전에는 주력 세트 대비 차이만 넣었다. 그러면 파수인 찬란한 광휘처럼 주력 세트의 파티 버프가 어디에도 안 들어갔고,
+        Prydwen 측정 파티의 세트 버프가 딜러의 버프 전 피해에 남아 있었다) */
     giverBuffs(giver,ids,main,context,ref){const map=this.charMap(),out=[];
       const condition=this.db.supCond(giver);if(condition&&this.usesAmp(giver)){const mul=this.buffChainMul(giver,ref);
         ids.forEach(receiver=>{if(receiver===giver||map[receiver].role==="support")return;const value=condition(receiver,ids,main,context);if(value.a>0)out.push({kind:"sup",to:receiver,e:value.a*mul,t:value.t})})}
-      const echoes=ref?[]:this.echoes.echoesOf(giver);if(echoes.length){const echoContext=this.echoes.context(giver),receivers=to=>to==="party"?ids.filter(id=>id!==giver):[giver===main?ids[(ids.indexOf(giver)+1)%ids.length]:main].filter(id=>id&&id!==giver);
-        const add=(list,sign)=>list.forEach(effect=>receivers(effect.to).forEach(receiver=>{const amount=sign*this.setFxGain(effect,receiver);if(amount)out.push({kind:"set",to:receiver,e:amount,set:effect.set,sign})}));
-        add(this.echoDb.teamFx(echoes,echoContext),1);add(this.echoDb.refTeamFx(this.echoDb.refCounts(giver),echoContext),-1)}
+      {const echoes=ref?[]:this.echoes.echoesOf(giver),echoContext=this.echoes.context(giver),receivers=to=>to==="party"?ids.filter(id=>id!==giver):[giver===main?ids[(ids.indexOf(giver)+1)%ids.length]:main].filter(id=>id&&id!==giver);
+        const list=echoes.length?this.echoDb.teamFx(echoes,echoContext):this.echoDb.refTeamFx(this.echoDb.refCounts(giver),echoContext);
+        list.forEach(effect=>receivers(effect.to).forEach(receiver=>{const amount=this.setFxGain(effect,receiver);if(amount)out.push({kind:"set",to:receiver,e:amount,set:effect.set,sign:1})}))}
       // 지원 무기의 명시된 팀 버프만 반영한다(공명자 파일의 teamWeaponBuff). 장착자의 스킬로 회복해야 발동하는 교향곡은 해당 공명자 파일에만 적는다.
       const weapon=ref?this.db.defaultWeaponId(giver):this.weapons.weaponOf(giver).w?.id,buffs=weapon?this.db.teamWeaponBuff(giver,weapon):null;
       if(buffs)ids.forEach(receiver=>{let amount=0;

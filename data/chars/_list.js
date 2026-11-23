@@ -5,6 +5,7 @@
    필드 (없는 값은 생략 — 역할·등급별 기본값을 쓴다)
      id, name, el, rar, role    기본 정보. role: dps 메인 딜러 / sub 서브 딜러 / support 서포터
      release                    출시 순서(클수록 최근)        eid   encore.moe 공명자 번호(이미지 받기용)
+     quick                      (선택) 1 = 게임 태그 「빠른 협주」(짧게 나왔다 빠지는 교대용, encore.moe Tags). 자동 추천의 사용감에만 쓴다(강도에는 안 씀)
      region                     지역 id(아래 MP.REGIONS). 출시 버전으로 정한다 — 에코 등급 아이콘을 그 지역 것으로 보여 준다
      syn   {o, ob, p, w, m}     반주·메커니즘 (출처: encore.moe 반주·고유 스킬 설명)
              o  반주 요약 / ob 반주 버프 대상(basic·heavy·skill·lib·echo·coord·el·all)

@@ -75,7 +75,8 @@ test("파티 계산은 조합에 가장 좋은 모드를 고른다", () => {
   // 메커니즘 시너지 보너스 때문에 실제 버프를 잃는 모드를 고르지 않는다 (모니에는 조화 파동·조화 밀집 둘 다)
   assert.deepEqual(modes(["aemeath", "lynae", "mornye"]), { aemeath: 0, lynae: 0 });
   assert.deepEqual(modes(["aemeath", "lynae", "mornye"], "negative"), { aemeath: 1, lynae: 0 });
-  assert.deepEqual(modes(["chisa", "aemeath", "denia"], "tune"), { aemeath: 1, denia: 1 });
+  // 1.6.5: 세트 파티 효과를 전부 넣으면서 연소 모드 데니아의 오색찬란한 거품(다음 캐릭터 용융 피해 +25%)이 반영돼 조화 파동 에이메스 + 연소 데니아가 낫다
+  assert.deepEqual(modes(["chisa", "aemeath", "denia"], "tune"), { aemeath: 0, denia: 0 });
 });
 
 test("고른 모드가 다른 모드보다 강도가 낮지 않다", () => {

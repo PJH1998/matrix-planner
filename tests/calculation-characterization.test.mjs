@@ -14,7 +14,8 @@ test("기본 캐릭터 데이터와 대표 강도 결과를 고정한다", () =>
   // 1.3.3: 딜러 점수 = 공명력, 서포터 점수 = 협주력(기준 세팅 = 100). 에코 미입력은 체험 세팅 기준 스탯
   closeTo(app.charScore("hiyuki"), 95.43983369313185);
   closeTo(app.charScore("cantarella"), 86.11000380911887);
-  closeTo(app.charScore("shorekeeper"), 97.87094737992825);
+  // 1.6.5: 세트 파티 효과를 차이가 아니라 전부 넣는다 — 파수인 찬란한 광휘(파티 공격력 +15%)가 협주력에 들어간다
+  closeTo(app.charScore("shorekeeper"), 98.19676582670883);
   closeTo(app.charScore("jinhsi"), 103.73421121593287);
 
   assert.deepEqual(app.reference("hiyuki"), {
@@ -32,12 +33,13 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
   const teams = app.state().teams.slice(0, 4);
   const expected = [
     // 1.5.1: 체험 세팅 스탯에 장착 무기와 최고 무기의 스탯 차이를 더한다(산화 4성 무기)
-    ["camellya", 27.4563960912223, 36.38874756021543],
+    // 1.6.5: 반주 「부스트」를 1.9로 나누지 않는다 · 세트 파티 효과 전부 반영 · Prydwen 측정 파티의 세트 버프도 뺀다
+    ["camellya", 27.667380419609962, 36.66654179563288],
     // 1.4: 공명 모드 공명자는 파티마다 한 모드로 계산한다(데니아 조화 밀집, 여우의 별자리 전자 — 이상 효과 서킷)
-    ["qingxiao", 64.6519560068525, 80.81494500856563],
+    ["qingxiao", 65.4343696375669, 81.79296204695862],
     // 1.6.4: 경연은 공격력 계수 + HP 변환(HP 50,000 상한) — 체험 세팅 공격력은 가이드 값(HP 변환 포함)
-    ["jingran", 64.1751669555827, 71.11252645938363],
-    ["hsin", 59.05310498992667, 91.53231273438635],
+    ["jingran", 61.72409928701196, 68.38813946883994],
+    ["hsin", 57.572351312756865, 89.23714453477314],
   ];
 
   teams.forEach((team, index) => {
@@ -49,8 +51,9 @@ test("대표 파티의 메인 딜러와 점수를 고정한다", () => {
 
   const simulation = app.simulate(teams);
   // 1.6.3: 2R 점수 배율 1.1 → 1.15(3.5 공식 패치 노트), 2R 보스 HP 1.77 → 1.69(같은 영상 점수 ÷ 새 배율)
-  closeTo(simulation.progress, 6.5215533559739605);
-  closeTo(simulation.total, 39793.90999984311);
+  // 1.6.5: 위 반주·세트 수정으로 경연·여우의 별자리 파티가 내려감(측정 파티 세트 버프를 빼서)
+  closeTo(simulation.progress, 6.446214764989839);
+  closeTo(simulation.total, 39098.412379849324);
   assert.equal(simulation.bad, 0);
 });
 
@@ -101,13 +104,14 @@ test("기본 보유 캐릭터의 자동 추천 결과를 고정한다", () => {
   const teams = loadCurrentApp().recommend();
 
   assert.equal(teams.length, 18);
+  // 1.6.5: 서브 딜러 교환 — 절지는 카를로타에게, 금희는 연무(협동 공격). 루미(빠른 협주 아님)는 사용감 감점
   assert.deepEqual(teams.map(team => `${team.slots.join("/")}:${team.buff}`), [
     "hiyuki/lucilla/suisui:negative", "hsin/suoming/lily:basic", "qingxiao/denia/mornye:tune",
     "aemeath/lynae/mornye:tune", "augusta/iuno/shorekeeper:general", "phrolova/cantarella/roccia:general",
     "cartethyia/ciaccona/rover_a:general", "changli/brant/lupa:general", "xuanling/chisa/suisui:negative",
-    "jingran/lynae/verina:tune", "sigrika/qiuyuan/lily:basic", "lucy/rebecca/verina:tune",
-    "jinhsi/zhezhi/shorekeeper:general", "zani/phoebe/baizhi:negative", "camellya/sanhua/baizhi:general",
-    "xiangliyao/yinlin/buling:negative", "jiyan/mortefi/jianxin:general", "carlotta/lumi/buling:negative",
+    "sigrika/qiuyuan/lily:basic", "jingran/lynae/verina:tune", "jinhsi/yuanwu/shorekeeper:general",
+    "lucy/rebecca/verina:tune", "zani/phoebe/baizhi:negative", "xiangliyao/yinlin/buling:negative",
+    "camellya/sanhua/baizhi:general", "jiyan/mortefi/jianxin:general", "carlotta/zhezhi/buling:negative",
   ]);
 });
 
@@ -311,7 +315,9 @@ test("서포터 체인은 버프력에 곱하고, 협주력은 기준 세팅이 
   app.reset({ growth: { verina: { chain: 6, stats: { atk: 2500, er: 220 } } } });
   assert.ok(amp0 > 0);
   closeTo(app.teamCalc(team).amp, amp0 * 1.2);
-  closeTo(app.charScore("verina"), 120, 1e-6);
+  // 1.6.5: 협주력에 세트 파티 효과(체인과 무관)도 들어가므로 6체인 협주력은 120보다 조금 낮다
+  const score6 = app.charScore("verina");
+  assert.ok(score6 > 110 && score6 < 120, String(score6));
   // 파수인·모니에는 supCond가 체인을 직접 읽으므로 buffChain = 1
   app.reset({ growth: { mornye: { stats: { er: 260 } } } });
   const m0 = app.charScore("mornye");
