@@ -133,6 +133,8 @@ document.getElementById("teams").addEventListener("click",e=>{
 // 파티 칸의 공명 모드 고르기: 빈 값 = 자동(파티 조합에 가장 좋은 모드)
 document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-mode]");if(!sel)return;const t=state.teams[+sel.dataset.team];if(!t)return;
   appMediator.teams.setMode(t,sel.dataset.mode,sel.value===""?null:+sel.value);t.example=false;persist();renderTeams()});
+document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-skill]");if(!sel)return;const t=state.teams[+sel.dataset.skill];if(!t)return;
+  if(sel.value)t.skill=sel.value;else delete t.skill;persist();renderTeams()});
 document.getElementById("teams").addEventListener("change",e=>{const sel=e.target.closest("select[data-buff]");if(!sel)return;state.teams[+sel.dataset.buff].buff=sel.value||null;persist();renderTeams()});
 $("#q").addEventListener("input",e=>{ui.q=e.target.value;renderPool()});
 $("#elFilter").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.el=b.dataset.el||null;renderFilter();renderPool()});

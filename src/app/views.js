@@ -122,11 +122,15 @@ function teamWarnings(t){
 }
 // 예상 점수 + 보스별 예상 진행 (예측치)
 function fcastHTML(i){const r=simCache&&simCache.res[i];if(!r||!r.hits.length)return `<span class="none">예상 없음</span>`;
-  const tip=`예상 점수·진행 · 예측치\n점수: 준 피해 × 4,750점(1R 보스 1마리) × 라운드 점수 배율 1R 1.0 / 2R 1.1 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 1.77 / 3R 3.36배, 4R 이후 ×2.1씩(추정), 숙련도 ${(SKILL_LV[state.skill]||SKILL_LV.top).label}`;
+  const tip=`예상 점수·진행 · 예측치\n점수: 준 피해 × 4,750점(1R 보스 1마리) × 라운드 점수 배율 1R 1.0 / 2R 1.1 / 3R 이후 1.25\n진행: 앞 파티가 남긴 HP를 이어받음, 라운드별 HP 1R 1 / 2R 1.77 / 3R 3.36배, 4R 이후 ×2.1씩(추정), 숙련도 ${SKILL_LV[teamCalculator.skillOf(state.teams[i])].label}`;
   const rows=r.hits.map(h=>`<li class="${h.resisted?"res":""}"><span class="bn">${h.round}R ${esc(h.name)}${h.resisted?" <em>저항</em>":""}</span><span class="hp">${Math.round(h.from)}% → ${h.left>0?`<b>${Math.round(h.left)}%</b>`:`<b class="kill">처치</b>`}</span></li>`).join("");
   return `<div class="fc-h" title="${esc(tip)}"><span>예상</span><b>${Math.round(r.pts).toLocaleString()}</b><span>점</span></div><ul class="fc-l">${rows}</ul>`;}
 function scoreTip(t){const r=teamCalc(t);if(!r.main)return "";
   return `메인 딜러: ${charMap[r.main].name} (반주·파티 버프 +${Math.round((r.gain[r.main]||0)*100)}%)\n서포터 딜증 +${Math.round(r.amp)}% · 메커니즘·추천 조합 +${Math.round(r.syn)}%${r.weak.length?`\n반주 시너지 없음(비중 ×${NOSYN_W}): ${r.weak.map(id=>charMap[id].name).join(", ")}`:""}\n${t.buff?`파워 서킷 반영 +${r.circuit.toFixed(1)}`:"강화 효과를 고르면 파워 서킷이 반영됩니다"}`;}
+// 파티별 숙련도: 빈 값 = 위쪽 전체 숙련도를 따름
+function skillSelect(t,i){const all=SKILL_LV[state.skill]||SKILL_LV.top,own=t.skill&&SKILL_LV[t.skill]?t.skill:"";
+  const opts=`<option value="">기본 (${esc(all.label)})</option>`+Object.entries(SKILL_LV).map(([k,v])=>`<option value="${k}"${own===k?" selected":""}>${esc(v.label)}</option>`).join("");
+  return `<select class="tskill${own?" fixed":""}" data-skill="${i}" aria-label="${i+1}번 파티 숙련도" title="이 파티만 숙련도를 따로 정합니다&#10;기본: 위쪽 숙련도를 따름">${opts}</select>`}
 let simCache=null;
 function renderTeams(){
   queueMicrotask(()=>{const el=$("#ptsTotal");if(el)el.innerHTML=simCache&&simCache.total?`예상 총점 <b>${Math.round(simCache.total).toLocaleString()}</b>`:""});
@@ -148,7 +152,7 @@ function renderTeams(){
       <div class="meta">
         <div class="row"><span class="score" title="${esc(scoreTip(t))}">강도 <b>${sc.toFixed(1)}</b>${t.buff&&sc>teamBase(t)?`<small class="up">+${Math.round((sc/teamBase(t)-1)*100)}%</small>`:""}</span>
           <div class="mini"><button data-act="up" data-team="${i}" aria-label="위로">▲</button><button data-act="down" data-team="${i}" aria-label="아래로">▼</button><button data-act="del" data-team="${i}" aria-label="파티 삭제">✕</button></div></div>
-        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select></div>
+        <div class="row"><select data-buff="${i}" aria-label="${i+1}번 파티 강화 효과">${buffOptions(t.buff,t)}</select>${skillSelect(t,i)}</div>
         <div class="row">${teamWarnings(t)}</div>
 
       </div>
